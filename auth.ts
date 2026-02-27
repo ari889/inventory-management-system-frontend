@@ -43,6 +43,9 @@ export const authOptions: NextAuthOptions = {
         const refreshResponse = await getRefreshToken(
           token.refreshToken as string,
         );
+
+        if (!refreshResponse.success) return {};
+
         return {
           ...token,
           accessToken: refreshResponse.data.accessToken,
