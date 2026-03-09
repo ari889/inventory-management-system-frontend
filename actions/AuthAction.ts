@@ -1,5 +1,6 @@
 "use server";
 
+import { MyJWT } from "@/@types/auth.types";
 import { fetchData } from "@/lib/api";
 
 /**
@@ -32,26 +33,34 @@ export const getAuth = async (email: string, password: string) => {
   }
 };
 
-export const getRefreshToken = async (refreshToken: string) => {
+let isCalled = false;
+export const getRefreshToken = async (token: MyJWT) => {
+  if (isCalled) return token;
+  isCalled = true;
   try {
-    const data = await fetchData("auth/refresh-token", {
+    const data = await fetchData("auth/refresh", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${refreshToken}`,
+        Authorization: `Bearer ${token.refreshToken}`,
       },
     });
 
-    return data;
+    if (!data.success) throw new Error(data.message);
+
+    return {
+      ...token,
+      accessToken: data.data.accessToken,
+      expiresIn: data.data.expiresIn,
+    };
   } catch (error) {
     if (error instanceof Error) {
       return {
-        success: false,
-        message: error.message || "Something went wrong",
+        ...token,
+        error: "RefreshAccessTokenError",
       };
     }
-    return {
-      success: false,
-      message: "Something went wrong",
-    };
+    return token;
+  } finally {
+    isCalled = false;
   }
 };

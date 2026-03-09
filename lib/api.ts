@@ -6,31 +6,25 @@ export const fetchData = async (url: string, options: RequestInit = {}) => {
   const session = await getServerSession(authOptions);
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  if (options.body && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (session?.accessToken && !headers["Authorization"]) {
     headers["Authorization"] = `Bearer ${session.accessToken}`;
   }
 
-  let body: string | undefined = undefined;
-  if (options.body) {
-    if (typeof options.body === "string") {
-      body = options.body;
-    } else {
-      body = JSON.stringify(options.body);
-    }
-  }
-
   const response = await fetch(`${process.env.API_URL}/api/admin/v1/${url}`, {
     ...options,
     headers,
-    body,
   });
 
   const text = await response.text();
   let data;
+
   try {
     data = JSON.parse(text);
   } catch {

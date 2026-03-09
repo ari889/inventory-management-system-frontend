@@ -7,10 +7,15 @@ import { ZodError } from "zod";
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
+    maxAge: Number(process.env.NEXTAUTH_SESSION_MAX_AGE),
+  },
+  jwt: {
+    maxAge: Number(process.env.NEXTAUTH_JWT_MAX_AGE),
   },
   pages: {
     signIn: "/login",
   },
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       credentials: {},
@@ -39,21 +44,15 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) return { ...token, ...user };
 
-      if (token.expiresIn && (token.expiresIn as number) < Date.now()) {
-        const refreshResponse = await getRefreshToken(
-          token.refreshToken as string,
-        );
-
-        if (!refreshResponse.success) return {};
-
-        return {
-          ...token,
-          accessToken: refreshResponse.data.accessToken,
-          expiresIn: refreshResponse.data.expiresIn,
-        };
+      if (Date.now() < Number(token.expiresIn)) {
+        return token;
       }
 
-      return token;
+      if (token.error === "RefreshAccessTokenError") {
+        return {};
+      }
+
+      return getRefreshToken(token);
     },
 
     async session({ session, token }) {
