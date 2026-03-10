@@ -5,8 +5,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
   useReactTable,
   ColumnSort,
 } from "@tanstack/react-table";
@@ -23,11 +21,16 @@ import {
 import {
   MoreHorizontal,
   ArrowUpDown,
-  CirclePlus,
   Menu as MenuIcon,
+  BadgeCheck,
+  CircleX,
+  Eye,
+  Trash,
+  SquarePen,
+  ListCheck,
 } from "lucide-react";
 import { InitialMenuState, Menu } from "@/@types/menu.types";
-import { getMenus } from "@/actions/MenuAction";
+import { deleteMenuById, getMenus } from "@/actions/MenuAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
@@ -49,11 +52,17 @@ import TableLoading from "@/components/common/TableLoading";
 import { ActionType } from "@/@types/reducer.types";
 import TableAlert from "@/components/common/TableAlert";
 import { Input } from "@/components/ui/input";
+import CreateMenu from "./CreateMenu";
+import DeleteModal from "../../../../components/common/DeleteModal";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import UpdateMenu from "./UpdateMenu";
 
 /**
  * initial state
  */
 const initialState: InitialMenuState = {
+  open: false,
   isLoading: true,
   search: "",
   sorting: [],
@@ -61,8 +70,12 @@ const initialState: InitialMenuState = {
   error: null,
   menus: [],
   totalCount: 0,
-  page: 1,
+  page: 0,
   limit: 10,
+  deleteOpen: false,
+  selectedId: null,
+  deleteLoading: false,
+  showUpdateModal: false,
 };
 
 /**
@@ -80,7 +93,7 @@ const reducer = (
       return {
         ...state,
         sorting: action.payload as ColumnSort[],
-        page: 1,
+        page: 0,
       };
     case "SET_ERROR":
       return {
@@ -123,7 +136,55 @@ const reducer = (
       return {
         ...state,
         search: action.payload as string,
-        page: 1,
+        page: 0,
+      };
+    case "TOGGLE_MODAL":
+      return {
+        ...state,
+        open: !state.open,
+      };
+    case "REFRESH":
+      const newMenus = [action.payload as Menu, ...state.menus];
+
+      if (newMenus.length > state.limit) newMenus.pop();
+
+      return {
+        ...state,
+        menus: newMenus,
+      };
+    case "OPEN_DELETE_MODAL":
+      return {
+        ...state,
+        deleteOpen: !state.deleteOpen,
+        selectedId: action.payload as number,
+      };
+    case "CLOSE_DELETE_MODAL":
+      return {
+        ...state,
+        deleteOpen: false,
+        selectedId: null,
+      };
+    case "SET_DELETE_LOADING":
+      return {
+        ...state,
+        deleteLoading: action.payload as boolean,
+      };
+    case "TOGGLE_UPDATE_MODAL":
+      return {
+        ...state,
+        showUpdateModal: !state.showUpdateModal,
+        selectedId: state.selectedId ? null : (action.payload as number),
+      };
+    case "UPDATE_SUCCESS":
+      const updatedMenu = action.payload as Menu;
+
+      return {
+        ...state,
+        showUpdateModal: false,
+        selectedId: null,
+        menus: state.menus.map((menu) =>
+          menu.id === updatedMenu.id ? updatedMenu : menu,
+        ),
       };
 
     default:
@@ -135,6 +196,7 @@ export default function MenuTable() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const {
+    open,
     isLoading,
     sorting,
     isError,
@@ -144,7 +206,13 @@ export default function MenuTable() {
     page,
     limit,
     search,
+    deleteOpen,
+    selectedId,
+    deleteLoading,
+    showUpdateModal,
   } = state;
+
+  const totalPages = Math.ceil(totalCount / limit);
 
   /**
    * fetch data from server by payload
@@ -160,18 +228,49 @@ export default function MenuTable() {
         const data = await getMenus({ page, limit, order, direction, search });
         if (!data.success) throw new Error(data.message);
         dispatch({ type: "SET_MENUS", payload: data.data.items });
-        dispatch({ type: "SET_COUNT", payload: data.data.totalCount });
+        dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
-        if (error instanceof Error)
+        if (error instanceof Error) {
           dispatch({ type: "SET_ERROR", payload: error.message });
-
-        dispatch({ type: "SET_ERROR", payload: "Something went wrong" });
+        } else {
+          dispatch({ type: "SET_ERROR", payload: "Something went wrong!" });
+        }
       } finally {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
     [page, limit, search, sorting],
   );
+
+  /**
+   * delete meny by id
+   */
+  const deleteMenu = useCallback(async () => {
+    dispatch({ type: "SET_DELETE_LOADING", payload: true });
+    try {
+      const data = await deleteMenuById(selectedId!);
+      if (!data.success) throw new Error(data.message);
+      toast.success(data.message, {
+        position: "top-right",
+      });
+      if (menus.length === 1 && page > 1)
+        dispatch({ type: "SET_PAGE", payload: page - 1 });
+      fetchMenusDebounced(page, limit);
+      dispatch({ type: "CLOSE_DELETE_MODAL" });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          position: "top-right",
+        });
+      } else {
+        toast.error("Something went wrong!", {
+          position: "top-right",
+        });
+      }
+    } finally {
+      dispatch({ type: "SET_DELETE_LOADING", payload: false });
+    }
+  }, [selectedId, page, limit, fetchMenusDebounced, menus.length]);
 
   /**
    * call to server action
@@ -189,6 +288,19 @@ export default function MenuTable() {
    */
   const columns = useMemo<ColumnDef<Menu>[]>(
     () => [
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            SL <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => page * limit + row.index + 1,
+      },
       {
         accessorKey: "menuName",
         header: ({ column }) => (
@@ -209,14 +321,24 @@ export default function MenuTable() {
         header: () => <div className="text-center">Deletable</div>,
         cell: ({ row }) => (
           <div className="text-center text-sm text-muted-foreground">
-            {row.getValue("deletable") ? "Yes" : "No"}
+            {row.getValue("deletable") ? (
+              <Badge>
+                <BadgeCheck data-icon="inline-start" />
+                Yes
+              </Badge>
+            ) : (
+              <Badge variant="destructive">
+                <CircleX data-icon="inline-start" />
+                No
+              </Badge>
+            )}
           </div>
         ),
       },
       {
         id: "actions",
         header: () => <div className="text-center">Actions</div>,
-        cell: () => {
+        cell: ({ row }) => {
           return (
             <div className="flex justify-center">
               <DropdownMenu>
@@ -226,11 +348,32 @@ export default function MenuTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem>
+                    <ListCheck />
+                    Menu Builder
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>View</DropdownMenuItem>
-                  <DropdownMenuItem>Edit</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      dispatch({
+                        type: "TOGGLE_UPDATE_MODAL",
+                        payload: row.getValue("id"),
+                      })
+                    }
+                  >
+                    <SquarePen />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() =>
+                      dispatch({
+                        type: "OPEN_DELETE_MODAL",
+                        payload: row.getValue("id"),
+                      })
+                    }
+                  >
+                    <Trash />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -240,7 +383,7 @@ export default function MenuTable() {
         },
       },
     ],
-    [],
+    [page, limit],
   );
 
   /**
@@ -251,6 +394,7 @@ export default function MenuTable() {
     columns,
     state: { sorting },
     manualPagination: true,
+    manualSorting: true,
     onSortingChange: (updater) => {
       const newSorting =
         typeof updater === "function" ? updater(sorting) : updater;
@@ -261,22 +405,49 @@ export default function MenuTable() {
       });
     },
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageIndex: page, pageSize: limit } },
   });
+
+  /**
+   * When user create a new menu then close the modal and add the new item to the table
+   * @param data
+   */
+  const onSuccess = (data: Menu) => {
+    if (page === 0) {
+      dispatch({
+        type: "REFRESH",
+        payload: data,
+      });
+    } else {
+      dispatch({
+        type: "SET_PAGE",
+        payload: 0,
+      });
+    }
+    dispatch({
+      type: "SET_COUNT",
+      payload: totalCount + 1,
+    });
+    dispatch({ type: "TOGGLE_MODAL" });
+  };
+
+  const onUpdateSuccess = (data: Menu) => {
+    dispatch({
+      type: "UPDATE_SUCCESS",
+      payload: data,
+    });
+  };
 
   /**
    * decide what to be rendered
    */
   let content = null;
 
-  if (isLoading) content = <TableLoading columns={3} />;
+  if (isLoading) content = <TableLoading columns={4} />;
   if (!isLoading && isError)
     content = (
       <TableAlert
         message={error as string}
-        colspan={3}
+        colspan={4}
         variant="destructive"
         heading="Failed to fetch!"
         className="w-full"
@@ -286,7 +457,7 @@ export default function MenuTable() {
     content = (
       <TableAlert
         message="No data found!"
-        colspan={3}
+        colspan={4}
         heading="Info!"
         className="w-full"
       />
@@ -314,10 +485,11 @@ export default function MenuTable() {
                 <h3 className="text-gray-500">See and manage your menus</h3>
               </div>
             </div>
-            <Button>
-              <CirclePlus />
-              Create New
-            </Button>
+            <CreateMenu
+              open={open}
+              onSuccess={onSuccess}
+              toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
+            />
           </div>
           <div className="flex flex-row justify-between items-center mb-4">
             <Field className="w-1/3">
@@ -386,22 +558,19 @@ export default function MenuTable() {
                 <PaginationItem>
                   <PaginationPrevious
                     onClick={() =>
-                      page > 1 &&
+                      page > 0 &&
                       dispatch({ type: "SET_PAGE", payload: page - 1 })
                     }
-                    isActive={page > 1}
+                    isActive={page > 0}
                   />
                 </PaginationItem>
                 <PaginationItem>
                   <PaginationNext
                     onClick={() =>
-                      page < Math.ceil(totalCount / limit) - 1 &&
-                      dispatch({
-                        type: "SET_PAGE",
-                        payload: page + 1,
-                      })
+                      page < totalPages - 1 &&
+                      dispatch({ type: "SET_PAGE", payload: page + 1 })
                     }
-                    isActive={page < Math.ceil(totalCount / limit) - 1}
+                    isActive={page < totalPages - 1}
                   />
                 </PaginationItem>
               </PaginationContent>
@@ -409,6 +578,24 @@ export default function MenuTable() {
           </div>
         </CardContent>
       </Card>
+      {selectedId && showUpdateModal && (
+        <UpdateMenu
+          id={selectedId as number}
+          open={showUpdateModal}
+          toggleModal={() =>
+            dispatch({ type: "TOGGLE_UPDATE_MODAL", payload: null })
+          }
+          onSuccess={onUpdateSuccess}
+        />
+      )}
+      <DeleteModal
+        open={deleteOpen}
+        loading={deleteLoading}
+        onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
+        action={deleteMenu}
+        title="Delete Menu!"
+        description="Are you sure you want to delete this menu?"
+      />
     </div>
   );
 }

@@ -13,4 +13,6 @@ export interface Menu {
 export interface InitialMenuState extends InitialStateType {
   menus: Menu[];
   search: string;
+  open: boolean;
+  showUpdateModal: boolean;
 }

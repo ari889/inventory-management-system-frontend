@@ -8,6 +8,9 @@ export interface InitialStateType {
   totalCount: number;
   page: number;
   limit: number;
+  deleteOpen: boolean;
+  deleteLoading: boolean;
+  selectedId: number | null;
 }
 
 export interface ActionType {

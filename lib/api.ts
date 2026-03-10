@@ -31,9 +31,5 @@ export const fetchData = async (url: string, options: RequestInit = {}) => {
     data = { message: text, success: response.ok };
   }
 
-  if (!response.ok || !data.success) {
-    throw new Error(data.message || response.statusText);
-  }
-
   return data;
 };
