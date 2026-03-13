@@ -60,7 +60,6 @@ const EditModuleForm = ({
         const response = await updateModule(id, module?.menuId, data);
 
         if (!response.success) throw new Error(response.message);
-        console.log(response);
         onSuccess();
       } catch (error) {
         if (error instanceof Error) setError(error?.message);

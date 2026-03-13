@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { icons } from "lucide-react";
+
+const validIconNames = Object.keys(icons);
 
 export const createModuleSchema = z
   .object({
@@ -8,7 +11,13 @@ export const createModuleSchema = z
 
     moduleName: z.string().optional(),
     dividerTitle: z.string().optional(),
-    iconClass: z.string().optional(),
+
+    iconClass: z
+      .string()
+      .refine((val) => validIconNames.includes(val), {
+        message: "Invalid lucide icon name!",
+      })
+      .optional(),
 
     url: z
       .string()
@@ -34,7 +43,6 @@ export const createModuleSchema = z
   })
   .superRefine((data, ctx) => {
     if (data.type) {
-      // Divider validation
       if (!data.dividerTitle?.trim()) {
         ctx.addIssue({
           path: ["dividerTitle"],
@@ -43,7 +51,6 @@ export const createModuleSchema = z
         });
       }
     } else {
-      // Module validation
       if (!data.moduleName?.trim()) {
         ctx.addIssue({
           path: ["moduleName"],

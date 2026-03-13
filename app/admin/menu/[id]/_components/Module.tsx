@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Grip, SquarePen } from "lucide-react";
 import DeleteModuleButton from "./DeleteModuleButton";
+import DynamicIcon from "@/components/common/DynamicIcon";
 
 const Module = ({
   module,
@@ -25,9 +26,9 @@ const Module = ({
       <div className="flex flex-row justify-between items-center px-3 py-2">
         <div>
           <h3 className="font-medium flex flex-row items-center space-x-2 mb-1">
-            {/* {module?.iconClass ? (
-              <DynamicIcon name={module?.iconClass as IconName} />
-            ) : null} */}
+            {module?.iconClass ? (
+              <DynamicIcon name={module?.iconClass} />
+            ) : null}
             <span>{module?.moduleName ?? module?.dividerTitle}</span>
             {module?.url && (
               <Badge variant="outline">Path: {module?.url}</Badge>

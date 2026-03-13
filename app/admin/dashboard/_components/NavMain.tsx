@@ -1,6 +1,5 @@
 "use client";
 
-import { DynamicIcon, IconName } from "lucide-react/dynamic";
 import Link from "next/link";
 import {
   Collapsible,
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ChevronRight } from "lucide-react";
 import { Module } from "@/@types/module.types";
+import DynamicIcon from "@/components/common/DynamicIcon";
 
 export function NavMain({ items }: { items: Module[] }) {
   return (
@@ -33,15 +33,13 @@ export function NavMain({ items }: { items: Module[] }) {
           // Module
           <SidebarMenu id={String(item.id)} key={item.id}>
             {item.children?.length > 0 ? (
-              // Module with children → collapsible
               <SidebarMenuItem key={item.id}>
                 <Collapsible defaultOpen={false} className="group/collapsible">
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton tooltip={item.moduleName as string}>
-                      {/* <DynamicIcon
-                        name={(item.iconClass || "camera") as IconName}
-                        className="mr-2"
-                      /> */}
+                      {item?.iconClass && (
+                        <DynamicIcon name={item.iconClass} className="mr-2" />
+                      )}
                       <span>{item.moduleName}</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
@@ -53,10 +51,12 @@ export function NavMain({ items }: { items: Module[] }) {
                         <SidebarMenuSubItem key={child.id}>
                           <SidebarMenuSubButton asChild>
                             <Link href={child.url || "#"}>
-                              {/* <DynamicIcon
-                                name={(item.iconClass || "camera") as IconName}
-                                className="mr-2"
-                              /> */}
+                              {item?.iconClass && (
+                                <DynamicIcon
+                                  name={item.iconClass}
+                                  className="mr-2"
+                                />
+                              )}
                               <span>{child.moduleName}</span>
                             </Link>
                           </SidebarMenuSubButton>
@@ -67,14 +67,12 @@ export function NavMain({ items }: { items: Module[] }) {
                 </Collapsible>
               </SidebarMenuItem>
             ) : (
-              // Module without children → normal link
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton asChild>
                   <Link href={item.url || "#"}>
-                    {/* <DynamicIcon
-                      name={(item.iconClass || "camera") as IconName}
-                      className="mr-2"
-                    /> */}
+                    {item?.iconClass && (
+                      <DynamicIcon name={item.iconClass} className="mr-2" />
+                    )}
                     <span>{item.moduleName}</span>
                   </Link>
                 </SidebarMenuButton>
