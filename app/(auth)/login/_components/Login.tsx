@@ -12,16 +12,14 @@ import { authSchema, AuthSchema } from "@/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-const Login = () => {
+const Login = ({ callbackUrl }: { callbackUrl: string }) => {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/admin/dashboard";
   const { control, handleSubmit } = useForm<AuthSchema>({
     defaultValues: {
       email: "",

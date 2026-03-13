@@ -24,12 +24,23 @@ const FormInput = <T extends FieldValues>({
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
           {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
+
           <Input
             {...field}
             id={field.name}
             aria-invalid={fieldState.invalid}
+            type={props.type}
+            onChange={(e) =>
+              field.onChange(
+                props.type === "number"
+                  ? Number(e.target.value)
+                  : e.target.value,
+              )
+            }
+            value={field.value ?? ""}
             {...props}
           />
+
           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
         </Field>
       )}

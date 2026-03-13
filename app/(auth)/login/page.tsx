@@ -14,7 +14,12 @@ export const metadata = {
   description: "IMS - Login admin",
 };
 
-const LoginPage = () => {
+const LoginPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) => {
+  const params = await searchParams;
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
@@ -25,7 +30,7 @@ const LoginPage = () => {
               <CardDescription>Inventory Management System</CardDescription>
             </CardHeader>
             <CardContent>
-              <Login />
+              <Login callbackUrl={params?.callbackUrl || "/admin/dashboard"} />
             </CardContent>
           </Card>
           <FieldDescription className="px-6 text-center">

@@ -10,7 +10,7 @@ import {
 } from "../ui/select";
 
 type SelectOption = {
-  value: string;
+  value: string | number | boolean;
   label: string;
 };
 
@@ -38,8 +38,14 @@ const CustomSelect = <T extends FieldValues>({
           <FieldLabel htmlFor={name}>{label}</FieldLabel>
 
           <Select
-            value={String(field.value)}
-            onValueChange={(val) => field.onChange(val === "true")}
+            value={String(field.value ?? "")} // convert current value to string for UI
+            onValueChange={(val) => {
+              // map string back to original type
+              const original = data.find(
+                (item) => String(item.value) === val,
+              )?.value;
+              field.onChange(original);
+            }}
             disabled={disabled}
           >
             <SelectTrigger id={name} aria-invalid={fieldState.invalid}>
@@ -49,7 +55,7 @@ const CustomSelect = <T extends FieldValues>({
             <SelectContent>
               <SelectGroup>
                 {data.map((item, index) => (
-                  <SelectItem value={item.value} key={index}>
+                  <SelectItem value={String(item.value)} key={index}>
                     {item.label}
                   </SelectItem>
                 ))}

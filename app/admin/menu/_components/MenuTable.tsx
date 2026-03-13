@@ -57,6 +57,7 @@ import DeleteModal from "../../../../components/common/DeleteModal";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import UpdateMenu from "./UpdateMenu";
+import Link from "next/link";
 
 /**
  * initial state
@@ -348,9 +349,11 @@ export default function MenuTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuItem>
-                    <ListCheck />
-                    Menu Builder
+                  <DropdownMenuItem asChild>
+                    <Link href={`/admin/menu/${row.getValue("id")}`}>
+                      <ListCheck />
+                      Menu Builder
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

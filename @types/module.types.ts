@@ -2,6 +2,7 @@ import { BaseType, Deletable } from "./common.types";
 
 export interface Module extends BaseType, Deletable {
   id: number;
+  menuId: number;
   type: boolean; // true = Divider, False = Module
   moduleName: string | null;
   dividerTitle: string | null;
