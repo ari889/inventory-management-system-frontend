@@ -18,7 +18,7 @@ const Module = ({
 }) => {
   return (
     <div
-      className={`border rounded grid grid-cols-[auto_1fr] overflow-hidden ${isChild ? "ml-10" : ""}`}
+      className={`border rounded grid grid-cols-[auto_1fr] overflow-hidden bg-white ${isChild ? "ml-10" : ""}`}
     >
       <div className="bg-gray-100 flex items-center justify-center aspect-square h-full cursor-grab">
         <Grip className="w-5 h-5 text-gray-500" />

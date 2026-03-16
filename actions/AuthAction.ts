@@ -33,6 +33,9 @@ export const getAuth = async (email: string, password: string) => {
   }
 };
 
+/**
+ * Generate new access token using refresh token
+ */
 let isCalled = false;
 export const getRefreshToken = async (token: MyJWT) => {
   if (isCalled) return token;
@@ -41,7 +44,7 @@ export const getRefreshToken = async (token: MyJWT) => {
     const data = await fetchData("auth/refresh", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token.refreshToken}`,
+        Authorization: `Bearer ${token?.refreshToken}`,
       },
     });
 
@@ -49,8 +52,8 @@ export const getRefreshToken = async (token: MyJWT) => {
 
     return {
       ...token,
-      accessToken: data.data.accessToken,
-      expiresIn: data.data.expiresIn,
+      accessToken: data?.data?.accessToken,
+      expiresIn: data?.data?.expiresIn,
     };
   } catch (error) {
     if (error instanceof Error) {

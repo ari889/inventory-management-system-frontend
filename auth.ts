@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
         return {};
       }
 
-      return getRefreshToken(token);
+      return await getRefreshToken(token);
     },
 
     async session({ session, token }) {

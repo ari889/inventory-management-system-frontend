@@ -14,7 +14,7 @@ export const fetchData = async (url: string, options: RequestInit = {}) => {
   }
 
   if (session?.accessToken && !headers["Authorization"]) {
-    headers["Authorization"] = `Bearer ${session.accessToken}`;
+    headers["Authorization"] = `Bearer ${session?.accessToken}`;
   }
 
   const response = await fetch(`${process.env.API_URL}/api/admin/v1/${url}`, {
