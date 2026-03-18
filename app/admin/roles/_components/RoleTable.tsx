@@ -14,20 +14,18 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   MoreHorizontal,
   ArrowUpDown,
-  Menu as MenuIcon,
   BadgeCheck,
   CircleX,
   Trash,
   SquarePen,
-  ListCheck,
   Trash2,
   UserKey,
+  Eye,
 } from "lucide-react";
 import { InitialRoleState, Role } from "@/@types/role.types";
 import { bulkDeleteRole, deleteRoleById, getRoles } from "@/actions/RoleAction";
@@ -57,10 +55,9 @@ import CreateRole from "./CreateRole";
 import DeleteModal from "../../../../components/common/DeleteModal";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import UpdateRole from "./UpdateRole";
-import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
+import Link from "next/link";
 
 /**
  * initial state
@@ -79,7 +76,6 @@ const initialState: InitialRoleState = {
   deleteOpen: false,
   selectedId: null,
   deleteLoading: false,
-  showUpdateModal: false,
   selectedRows: new Set<number>(),
   bulkDeleteLoader: false,
   bulkDeleteOpen: false,
@@ -177,23 +173,6 @@ const reducer = (
         ...state,
         deleteLoading: action.payload as boolean,
       };
-    case "TOGGLE_UPDATE_MODAL":
-      return {
-        ...state,
-        showUpdateModal: !state.showUpdateModal,
-        selectedId: state.selectedId ? null : (action.payload as number),
-      };
-    case "UPDATE_SUCCESS":
-      const updatedRole = action.payload as Role;
-
-      return {
-        ...state,
-        showUpdateModal: false,
-        selectedId: null,
-        roles: state.roles.map((role) =>
-          role.id === updatedRole.id ? updatedRole : role,
-        ),
-      };
     case "TOGGLE_ROW_SELECTION":
       const newSelected = new Set(state.selectedRows);
       const id = action.payload as number;
@@ -246,7 +225,6 @@ export default function RoleTable() {
     deleteOpen,
     selectedId,
     deleteLoading,
-    showUpdateModal,
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
@@ -460,16 +438,17 @@ export default function RoleTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      dispatch({
-                        type: "TOGGLE_UPDATE_MODAL",
-                        payload: row.getValue("id"),
-                      })
-                    }
-                  >
-                    <SquarePen />
-                    Edit
+                  <DropdownMenuItem asChild>
+                    <Link href={`/admin/roles/${row.getValue("id")}/view`}>
+                      <Eye />
+                      View
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/admin/roles/${row.getValue("id")}/edit`}>
+                      <SquarePen />
+                      Edit
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
@@ -535,13 +514,6 @@ export default function RoleTable() {
       payload: totalCount + 1,
     });
     dispatch({ type: "TOGGLE_MODAL" });
-  };
-
-  const onUpdateSuccess = (data: Role) => {
-    dispatch({
-      type: "UPDATE_SUCCESS",
-      payload: data,
-    });
   };
 
   /**
@@ -725,16 +697,6 @@ export default function RoleTable() {
           </div>
         </CardContent>
       </Card>
-      {selectedId && showUpdateModal && (
-        <UpdateRole
-          id={selectedId as number}
-          open={showUpdateModal}
-          toggleModal={() =>
-            dispatch({ type: "TOGGLE_UPDATE_MODAL", payload: null })
-          }
-          onSuccess={onUpdateSuccess}
-        />
-      )}
       <DeleteModal
         open={bulkDeleteOpen}
         loading={bulkDeleteLoader}

@@ -1,4 +1,5 @@
 import { BaseType, Deletable } from "./common.types";
+import { Permission } from "./permission.types";
 
 export interface Module extends BaseType, Deletable {
   id: number;
@@ -13,4 +14,5 @@ export interface Module extends BaseType, Deletable {
   parent: Module | null;
   target: "SELF" | "BLANK";
   children: Module[];
+  permissions: Permission[];
 }

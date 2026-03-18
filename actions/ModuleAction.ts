@@ -32,6 +32,31 @@ export const getModules = async () => {
 };
 
 /**
+ * Get Modules with permissions
+ * @returns Module[]
+ */
+export const getModulesWithPermission = async () => {
+  try {
+    const data = await fetchData("modules/permissions");
+
+    if (!data.success) throw new Error(data.message);
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
  * Get Module by menu id
  * @param menuId
  * @returns Module
