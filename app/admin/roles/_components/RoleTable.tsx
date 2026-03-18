@@ -27,6 +27,7 @@ import {
   SquarePen,
   ListCheck,
   Trash2,
+  UserKey,
 } from "lucide-react";
 import { InitialRoleState, Role } from "@/@types/role.types";
 import { bulkDeleteRole, deleteRoleById, getRoles } from "@/actions/RoleAction";
@@ -586,7 +587,7 @@ export default function RoleTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <MenuIcon className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <UserKey className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
                 <h2 className="text-xl font-semibold">Roles</h2>
                 <h3 className="text-gray-500">See and manage your roles</h3>
