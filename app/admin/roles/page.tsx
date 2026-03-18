@@ -1,4 +1,5 @@
 import RoleTable from "./_components/RoleTable";
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Roles | Inventory Management System",
