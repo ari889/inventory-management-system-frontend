@@ -16,4 +16,7 @@ export interface InititalPermissionState extends InitialStateType {
   permissions: Permission[];
   createModal: boolean;
   editModal: boolean;
+  name: string;
+  slug: string;
+  deletable: boolean | null;
 }

@@ -2,6 +2,7 @@
 
 import { fetchData } from "@/lib/api";
 import { CreateMenuSchemaType } from "@/schemas/create-menu.schema";
+import { revalidatePath } from "next/cache";
 
 /**
  * Get menu from server
@@ -14,17 +15,20 @@ export const getMenus = async ({
   order = "id",
   direction = "desc",
   search = "",
+  deletable = null,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search: string;
+  deletable: boolean | null;
 }) => {
   try {
-    const data = await fetchData(
-      `menus?page=${page}&limit=${limit}&order=${order}&direction=${direction}&search=${search}`,
-    );
+    let url = `menus?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (search) url += `&search=${search}`;
+    if (deletable !== null) url += `&deletable=${deletable}`;
+    const data = await fetchData(url);
 
     if (!data.success) throw new Error(data.message);
 
@@ -146,6 +150,36 @@ export const updateMenu = async (id: number, data: CreateMenuSchemaType) => {
     if (!response.success) throw new Error(response.message);
 
     return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message || "Something went wrong",
+      };
+    } else {
+      return {
+        success: false,
+        message: "Something went wrong",
+      };
+    }
+  }
+};
+
+/**
+ * Bulk delete menus
+ * @param ids
+ * @returns Menus
+ */
+export const bulkDeleteMenu = async (ids: number[]) => {
+  try {
+    const data = await fetchData(`menus/bulk`, {
+      method: "DELETE",
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!data.success) throw new Error(data.message);
+    revalidatePath("/admin/menu");
+    return data;
   } catch (error) {
     if (error instanceof Error) {
       return {

@@ -15,4 +15,5 @@ export interface InitialMenuState extends InitialStateType {
   search: string;
   open: boolean;
   showUpdateModal: boolean;
+  deletable: boolean | null;
 }

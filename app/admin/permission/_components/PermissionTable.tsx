@@ -19,11 +19,12 @@ import {
 import {
   MoreHorizontal,
   ArrowUpDown,
-  Menu as MenuIcon,
   BadgeCheck,
   CircleX,
   Trash,
   SquarePen,
+  Trash2,
+  UserRoundKey,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -31,6 +32,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -50,11 +52,15 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { InititalPermissionState, Permission } from "@/@types/permission.types";
 import {
+  bulkDeletePermission,
   deletePermissionById,
   getPermissions,
 } from "@/actions/PermissionAction";
 import CreatePermissionModal from "./CreatePermissionModal";
 import EditPermissionModal from "./EditPermissionModal";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Input } from "@/components/ui/input";
 
 /**
  * initial state
@@ -73,6 +79,12 @@ const initialState: InititalPermissionState = {
   deleteLoading: false,
   createModal: false,
   editModal: false,
+  selectedRows: new Set<number>(),
+  bulkDeleteLoader: false,
+  bulkDeleteOpen: false,
+  name: "",
+  slug: "",
+  deletable: null,
 };
 
 /**
@@ -186,7 +198,46 @@ const reducer = (
         ...state,
         permissions: updatedPermissions,
       };
+    case "TOGGLE_ROW_SELECTION":
+      const newSelected = new Set(state.selectedRows);
+      const id = action.payload as number;
+      if (newSelected.has(id)) newSelected.delete(id);
+      else newSelected.add(id);
+      return { ...state, selectedRows: newSelected };
 
+    case "SELECT_ALL_ROWS":
+      return {
+        ...state,
+        selectedRows: new Set(state.permissions.map((p) => p.id)),
+      };
+
+    case "DESELECT_ALL_ROWS":
+      return { ...state, selectedRows: new Set() };
+    case "TOGGLE_BULK_DELETE_LOADING":
+      return {
+        ...state,
+        bulkDeleteLoader: action.payload as boolean,
+      };
+    case "TOGGLE_BULK_DELETE_MODAL":
+      return {
+        ...state,
+        bulkDeleteOpen: !state.bulkDeleteOpen,
+      };
+    case "SET_NAME":
+      return {
+        ...state,
+        name: action.payload as string,
+      };
+    case "SET_SLUG":
+      return {
+        ...state,
+        slug: action.payload as string,
+      };
+    case "SET_DELETABLE":
+      return {
+        ...state,
+        deletable: action.payload as boolean | null,
+      };
     default:
       return state;
   }
@@ -209,6 +260,12 @@ export default function PermissionTable() {
     deleteLoading,
     createModal,
     editModal,
+    selectedRows,
+    bulkDeleteLoader,
+    bulkDeleteOpen,
+    name,
+    slug,
+    deletable,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -229,6 +286,9 @@ export default function PermissionTable() {
           limit,
           order,
           direction,
+          name,
+          slug,
+          deletable,
         });
         if (!data.success) throw new Error(data.message);
         dispatch({ type: "SET_PERMISSIONS", payload: data.data.items });
@@ -243,7 +303,7 @@ export default function PermissionTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, name, slug, deletable],
   );
 
   /**
@@ -277,6 +337,36 @@ export default function PermissionTable() {
   }, [selectedId, page, limit, fetchPermissionsDebounced, permissions.length]);
 
   /**
+   * bulk delete permissions
+   */
+  const bulkDelete = async () => {
+    dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
+    try {
+      const response = await bulkDeletePermission(Array.from(selectedRows));
+      if (!response.success) throw new Error(response.message);
+      dispatch({ type: "DESELECT_ALL_ROWS" });
+      dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
+      dispatch({ type: "SET_PAGE", payload: 0 });
+      fetchPermissionsDebounced(0, limit);
+      toast.success(response.message, {
+        position: "top-right",
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          position: "top-right",
+        });
+      } else {
+        toast.error("Something went wrong!", {
+          position: "top-right",
+        });
+      }
+    } finally {
+      dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: false });
+    }
+  };
+
+  /**
    * call to server action
    */
   useEffect(() => {
@@ -293,6 +383,42 @@ export default function PermissionTable() {
   const columns = useMemo<ColumnDef<Permission>[]>(
     () => [
       {
+        id: "select",
+        header: () => {
+          const allSelected =
+            state.selectedRows.size === permissions.length &&
+            permissions.length > 0;
+
+          return (
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => {
+                const allSelected =
+                  state.selectedRows.size === permissions.length &&
+                  permissions.length > 0;
+                if (allSelected) {
+                  dispatch({ type: "DESELECT_ALL_ROWS" });
+                } else {
+                  dispatch({ type: "SELECT_ALL_ROWS" });
+                }
+              }}
+            />
+          );
+        },
+        cell: ({ row }) => (
+          <Checkbox
+            checked={state.selectedRows.has(row.original.id)}
+            onCheckedChange={() =>
+              dispatch({
+                type: "TOGGLE_ROW_SELECTION",
+                payload: row.original.id,
+              })
+            }
+          />
+        ),
+        size: 40,
+      },
+      {
         accessorKey: "id",
         header: ({ column }) => (
           <Button
@@ -307,15 +433,7 @@ export default function PermissionTable() {
       },
       {
         accessorKey: "module.moduleName",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0 text-left"
-          >
-            Module Name <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: () => <div>Module Name</div>,
         cell: ({ row }) => (
           <div className="font-medium">{row.original.module?.moduleName}</div>
         ),
@@ -412,7 +530,7 @@ export default function PermissionTable() {
         },
       },
     ],
-    [page, limit],
+    [page, limit, permissions.length, state.selectedRows],
   );
 
   /**
@@ -477,12 +595,13 @@ export default function PermissionTable() {
    */
   let content = null;
 
-  if (isLoading) content = <TableLoading columns={4} />;
+  if (isLoading)
+    content = <TableLoading columns={table.getAllColumns().length} />;
   if (!isLoading && isError)
     content = (
       <TableAlert
         message={error as string}
-        colspan={4}
+        colspan={table.getAllColumns().length}
         variant="destructive"
         heading="Failed to fetch!"
         className="w-full"
@@ -492,7 +611,7 @@ export default function PermissionTable() {
     content = (
       <TableAlert
         message="No data found!"
-        colspan={4}
+        colspan={table.getAllColumns().length}
         heading="Info!"
         className="w-full"
       />
@@ -514,7 +633,7 @@ export default function PermissionTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <MenuIcon className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <UserRoundKey className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
                 <h2 className="text-xl font-semibold">Permissions</h2>
                 <h3 className="text-gray-500">
@@ -522,14 +641,76 @@ export default function PermissionTable() {
                 </h3>
               </div>
             </div>
-            <CreatePermissionModal
-              open={createModal}
-              toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
-              onSuccess={onSuccess}
-            />
+            <ButtonGroup>
+              <CreatePermissionModal
+                open={createModal}
+                toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
+                onSuccess={onSuccess}
+              />
+              {selectedRows?.size > 0 && (
+                <Button
+                  variant="destructive"
+                  onClick={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
+                >
+                  <Trash2 />
+                  Delete All
+                </Button>
+              )}
+            </ButtonGroup>
           </div>
-          <div className="flex flex-row justify-between items-center mb-4">
-            {/* add filter here */}
+          <div className="grid grid-cols-3 gap-4 mb-3">
+            <Field>
+              <FieldLabel htmlFor="permission-name">Permission Name</FieldLabel>
+              <Input
+                id="permission-name"
+                type="text"
+                placeholder="Type permission name..."
+                value={name}
+                onChange={(e) =>
+                  dispatch({ type: "SET_NAME", payload: e.target.value })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="permission-slug">Permission Slug</FieldLabel>
+              <Input
+                id="permission-slug"
+                type="text"
+                placeholder="Type permission slug..."
+                value={slug}
+                onChange={(e) =>
+                  dispatch({ type: "SET_SLUG", payload: e.target.value })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Is Deletable?</FieldLabel>
+              <Select
+                value={deletable === null ? "all" : String(deletable)}
+                onValueChange={(val) => {
+                  if (val === "all") {
+                    dispatch({ type: "SET_DELETABLE", payload: null });
+                  } else {
+                    dispatch({
+                      type: "SET_DELETABLE",
+                      payload: val === "true",
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Fulter by deletable" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Is Deletable</SelectLabel>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
@@ -609,6 +790,14 @@ export default function PermissionTable() {
         action={deletePermission}
         title="Delete Menu!"
         description="Are you sure you want to delete this menu?"
+      />
+      <DeleteModal
+        open={bulkDeleteOpen}
+        loading={bulkDeleteLoader}
+        onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
+        action={bulkDelete}
+        title="Delete all permissions!"
+        description="Are you sure you want to delete all these permissions?"
       />
       {editModal && selectedId && (
         <EditPermissionModal

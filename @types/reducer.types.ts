@@ -11,6 +11,9 @@ export interface InitialStateType {
   deleteOpen: boolean;
   deleteLoading: boolean;
   selectedId: number | null;
+  selectedRows: Set<number>;
+  bulkDeleteLoader: boolean;
+  bulkDeleteOpen: boolean;
 }
 
 export interface ActionType {

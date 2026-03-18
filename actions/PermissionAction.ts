@@ -4,6 +4,7 @@ import {
   PermissionItemSchemaType,
   PermissionSchemaType,
 } from "@/schemas/permission.schema";
+import { revalidatePath } from "next/cache";
 
 /**
  * Get Permission from server
@@ -15,16 +16,27 @@ export const getPermissions = async ({
   limit = 10,
   order = "id",
   direction = "desc",
+  name = "",
+  slug = "",
+  deletable = null,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
+  name: string;
+  slug: string;
+  deletable: boolean | null;
 }) => {
   try {
-    const data = await fetchData(
-      `permissions?page=${page}&limit=${limit}&order=${order}&direction=${direction}`,
-    );
+    let url = `permissions?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+
+    if (name) url += `&name=${name}`;
+
+    if (slug) url += `&slug=${slug}`;
+
+    if (deletable !== null) url += `&deletable=${deletable}`;
+    const data = await fetchData(url);
 
     if (!data.success) throw new Error(data.message);
 
@@ -148,6 +160,36 @@ export const updatePermission = async (
 
     if (!data.success) throw new Error(data.message);
 
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message || "Something went wrong",
+      };
+    } else {
+      return {
+        success: false,
+        message: "Something went wrong",
+      };
+    }
+  }
+};
+
+/**
+ * Permission
+ * @param ids
+ * @returns Permissions
+ */
+export const bulkDeletePermission = async (ids: number[]) => {
+  try {
+    const data = await fetchData(`permissions/bulk`, {
+      method: "DELETE",
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!data.success) throw new Error(data.message);
+    revalidatePath("/admin/permission");
     return data;
   } catch (error) {
     if (error instanceof Error) {

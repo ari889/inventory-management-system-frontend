@@ -14,7 +14,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -24,19 +23,20 @@ import {
   Menu as MenuIcon,
   BadgeCheck,
   CircleX,
-  Eye,
   Trash,
   SquarePen,
   ListCheck,
+  Trash2,
 } from "lucide-react";
 import { InitialMenuState, Menu } from "@/@types/menu.types";
-import { deleteMenuById, getMenus } from "@/actions/MenuAction";
+import { bulkDeleteMenu, deleteMenuById, getMenus } from "@/actions/MenuAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -58,6 +58,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import UpdateMenu from "./UpdateMenu";
 import Link from "next/link";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ButtonGroup } from "@/components/ui/button-group";
 
 /**
  * initial state
@@ -77,6 +79,10 @@ const initialState: InitialMenuState = {
   selectedId: null,
   deleteLoading: false,
   showUpdateModal: false,
+  selectedRows: new Set<number>(),
+  bulkDeleteLoader: false,
+  bulkDeleteOpen: false,
+  deletable: null,
 };
 
 /**
@@ -187,7 +193,36 @@ const reducer = (
           menu.id === updatedMenu.id ? updatedMenu : menu,
         ),
       };
+    case "TOGGLE_ROW_SELECTION":
+      const newSelected = new Set(state.selectedRows);
+      const id = action.payload as number;
+      if (newSelected.has(id)) newSelected.delete(id);
+      else newSelected.add(id);
+      return { ...state, selectedRows: newSelected };
 
+    case "SELECT_ALL_ROWS":
+      return {
+        ...state,
+        selectedRows: new Set(state.menus.map((p) => p.id)),
+      };
+
+    case "DESELECT_ALL_ROWS":
+      return { ...state, selectedRows: new Set() };
+    case "TOGGLE_BULK_DELETE_LOADING":
+      return {
+        ...state,
+        bulkDeleteLoader: action.payload as boolean,
+      };
+    case "TOGGLE_BULK_DELETE_MODAL":
+      return {
+        ...state,
+        bulkDeleteOpen: !state.bulkDeleteOpen,
+      };
+    case "SET_DELETABLE":
+      return {
+        ...state,
+        deletable: action.payload as boolean | null,
+      };
     default:
       return state;
   }
@@ -211,6 +246,10 @@ export default function MenuTable() {
     selectedId,
     deleteLoading,
     showUpdateModal,
+    selectedRows,
+    bulkDeleteLoader,
+    bulkDeleteOpen,
+    deletable,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -226,7 +265,14 @@ export default function MenuTable() {
         const order = sorting[0]?.id ?? "id";
         const direction =
           sorting.length === 0 ? "desc" : sorting[0].desc ? "desc" : "asc";
-        const data = await getMenus({ page, limit, order, direction, search });
+        const data = await getMenus({
+          page,
+          limit,
+          order,
+          direction,
+          search,
+          deletable,
+        });
         if (!data.success) throw new Error(data.message);
         dispatch({ type: "SET_MENUS", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
@@ -240,7 +286,7 @@ export default function MenuTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, search, sorting],
+    [page, limit, search, sorting, deletable],
   );
 
   /**
@@ -274,6 +320,36 @@ export default function MenuTable() {
   }, [selectedId, page, limit, fetchMenusDebounced, menus.length]);
 
   /**
+   * bulk delete menus
+   */
+  const bulkDelete = async () => {
+    dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
+    try {
+      const response = await bulkDeleteMenu(Array.from(selectedRows));
+      if (!response.success) throw new Error(response.message);
+      dispatch({ type: "DESELECT_ALL_ROWS" });
+      dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
+      dispatch({ type: "SET_PAGE", payload: 0 });
+      fetchMenusDebounced(0, limit);
+      toast.success(response.message, {
+        position: "top-right",
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          position: "top-right",
+        });
+      } else {
+        toast.error("Something went wrong!", {
+          position: "top-right",
+        });
+      }
+    } finally {
+      dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: false });
+    }
+  };
+
+  /**
    * call to server action
    */
   useEffect(() => {
@@ -289,6 +365,40 @@ export default function MenuTable() {
    */
   const columns = useMemo<ColumnDef<Menu>[]>(
     () => [
+      {
+        id: "select",
+        header: () => {
+          const allSelected =
+            state.selectedRows.size === menus.length && menus.length > 0;
+
+          return (
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => {
+                const allSelected =
+                  state.selectedRows.size === menus.length && menus.length > 0;
+                if (allSelected) {
+                  dispatch({ type: "DESELECT_ALL_ROWS" });
+                } else {
+                  dispatch({ type: "SELECT_ALL_ROWS" });
+                }
+              }}
+            />
+          );
+        },
+        cell: ({ row }) => (
+          <Checkbox
+            checked={state.selectedRows.has(row.original.id)}
+            onCheckedChange={() =>
+              dispatch({
+                type: "TOGGLE_ROW_SELECTION",
+                payload: row.original.id,
+              })
+            }
+          />
+        ),
+        size: 40,
+      },
       {
         accessorKey: "id",
         header: ({ column }) => (
@@ -386,7 +496,7 @@ export default function MenuTable() {
         },
       },
     ],
-    [page, limit],
+    [page, limit, menus.length, state.selectedRows],
   );
 
   /**
@@ -445,12 +555,13 @@ export default function MenuTable() {
    */
   let content = null;
 
-  if (isLoading) content = <TableLoading columns={4} />;
+  if (isLoading)
+    content = <TableLoading columns={table.getAllColumns().length} />;
   if (!isLoading && isError)
     content = (
       <TableAlert
         message={error as string}
-        colspan={4}
+        colspan={table.getAllColumns().length}
         variant="destructive"
         heading="Failed to fetch!"
         className="w-full"
@@ -460,7 +571,7 @@ export default function MenuTable() {
     content = (
       <TableAlert
         message="No data found!"
-        colspan={4}
+        colspan={table.getAllColumns().length}
         heading="Info!"
         className="w-full"
       />
@@ -488,14 +599,25 @@ export default function MenuTable() {
                 <h3 className="text-gray-500">See and manage your menus</h3>
               </div>
             </div>
-            <CreateMenu
-              open={open}
-              onSuccess={onSuccess}
-              toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
-            />
+            <ButtonGroup>
+              <CreateMenu
+                open={open}
+                onSuccess={onSuccess}
+                toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
+              />
+              {selectedRows?.size > 0 && (
+                <Button
+                  variant="destructive"
+                  onClick={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
+                >
+                  <Trash2 />
+                  Delete All
+                </Button>
+              )}
+            </ButtonGroup>
           </div>
-          <div className="flex flex-row justify-between items-center mb-4">
-            <Field className="w-1/3">
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <Field>
               <FieldLabel htmlFor="search">Search</FieldLabel>
               <Input
                 id="search"
@@ -505,6 +627,34 @@ export default function MenuTable() {
                   dispatch({ type: "SET_SEARCH", payload: e.target.value })
                 }
               />
+            </Field>
+            <Field>
+              <FieldLabel>Is Deletable?</FieldLabel>
+              <Select
+                value={deletable === null ? "all" : String(deletable)}
+                onValueChange={(val) => {
+                  if (val === "all") {
+                    dispatch({ type: "SET_DELETABLE", payload: null });
+                  } else {
+                    dispatch({
+                      type: "SET_DELETABLE",
+                      payload: val === "true",
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Fulter by deletable" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Is Deletable</SelectLabel>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </Field>
           </div>
           <div className="rounded-xl border overflow-hidden">
@@ -591,6 +741,14 @@ export default function MenuTable() {
           onSuccess={onUpdateSuccess}
         />
       )}
+      <DeleteModal
+        open={bulkDeleteOpen}
+        loading={bulkDeleteLoader}
+        onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
+        action={bulkDelete}
+        title="Delete all menus!"
+        description="Are you sure you want to delete all these menus?"
+      />
       <DeleteModal
         open={deleteOpen}
         loading={deleteLoading}
