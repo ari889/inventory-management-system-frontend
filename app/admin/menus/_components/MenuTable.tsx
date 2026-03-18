@@ -460,7 +460,7 @@ export default function MenuTable() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
                   <DropdownMenuItem asChild>
-                    <Link href={`/admin/menu/${row.getValue("id")}`}>
+                    <Link href={`/admin/menus/${row.getValue("id")}`}>
                       <ListCheck />
                       Menu Builder
                     </Link>

@@ -62,8 +62,8 @@ const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: Menu) => void }) => {
         <FormInput
           control={control}
           name="menuName"
-          label="Email"
-          placeholder="Enter a valid email"
+          label="Menu Name"
+          placeholder="Enter a valid menu name"
           disabled={isPending}
         />
         <CustomSelect
@@ -72,8 +72,8 @@ const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: Menu) => void }) => {
           label="Deletable"
           disabled={isPending}
           data={[
-            { value: "true", label: "Yes" },
-            { value: "false", label: "No" },
+            { value: true, label: "Yes" },
+            { value: false, label: "No" },
           ]}
         />
         <Field>

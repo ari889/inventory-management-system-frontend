@@ -1,15 +1,15 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { CreateMenuSchemaType } from "@/schemas/create-menu.schema";
+import { CreateRoleSchemaType } from "@/schemas/role.schema";
 import { revalidatePath } from "next/cache";
 
 /**
- * Get menu from server
+ * Get role from server
  * @param param0
- * @returns Menu
+ * @returns Role
  */
-export const getMenus = async ({
+export const getRoles = async ({
   page = 1,
   limit = 10,
   order = "id",
@@ -25,7 +25,7 @@ export const getMenus = async ({
   deletable: boolean | null;
 }) => {
   try {
-    let url = `menus?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `roles?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
     if (deletable !== null) url += `&deletable=${deletable}`;
     const data = await fetchData(url);
@@ -49,13 +49,13 @@ export const getMenus = async ({
 };
 
 /**
- * Create new Menu
+ * Create new role
  * @param formData
- * @returns Menu
+ * @returns ROle
  */
-export const createMenu = async (formData: CreateMenuSchemaType) => {
+export const createRole = async (formData: CreateRoleSchemaType) => {
   try {
-    const data = await fetchData("menus", {
+    const data = await fetchData("roles", {
       method: "POST",
       body: JSON.stringify(formData),
     });
@@ -79,13 +79,13 @@ export const createMenu = async (formData: CreateMenuSchemaType) => {
 };
 
 /**
- * Delete meny by id
+ * Delete role by id
  * @param id
- * @returns Menu
+ * @returns role
  */
-export const deleteMenuById = async (id: number) => {
+export const deleteRoleById = async (id: number) => {
   try {
-    const data = await fetchData(`menus/${id}`, {
+    const data = await fetchData(`roles/${id}`, {
       method: "DELETE",
     });
 
@@ -108,13 +108,13 @@ export const deleteMenuById = async (id: number) => {
 };
 
 /**
- * Get menu by id
+ * Get role by id
  * @param id
- * @returns Menu
+ * @returns Role
  */
-export const getMenuById = async (id: number) => {
+export const getRoleById = async (id: number) => {
   try {
-    const data = await fetchData(`menus/${id}`);
+    const data = await fetchData(`roles/${id}`);
 
     if (!data.success) throw new Error(data.message);
 
@@ -135,14 +135,14 @@ export const getMenuById = async (id: number) => {
 };
 
 /**
- * Update menu schema
+ * Update role schema
  * @param id
  * @param data
- * @returns Menu
+ * @returns Role
  */
-export const updateMenu = async (id: number, data: CreateMenuSchemaType) => {
+export const updateRole = async (id: number, data: CreateRoleSchemaType) => {
   try {
-    const response = await fetchData(`menus/${id}`, {
+    const response = await fetchData(`roles/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
@@ -166,19 +166,19 @@ export const updateMenu = async (id: number, data: CreateMenuSchemaType) => {
 };
 
 /**
- * Bulk delete menus
+ * Bulk delete roles
  * @param ids
- * @returns Menus
+ * @returns roles
  */
-export const bulkDeleteMenu = async (ids: number[]) => {
+export const bulkDeleteRole = async (ids: number[]) => {
   try {
-    const data = await fetchData(`menus/bulk`, {
+    const data = await fetchData(`roles/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
 
     if (!data.success) throw new Error(data.message);
-    revalidatePath("/admin/menus");
+    revalidatePath("/admin/roles");
     return data;
   } catch (error) {
     if (error instanceof Error) {

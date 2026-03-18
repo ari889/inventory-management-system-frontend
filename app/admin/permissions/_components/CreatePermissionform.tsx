@@ -200,8 +200,8 @@ const CreatePermission = ({
               label="Deletable"
               disabled={isPending}
               data={[
-                { value: "true", label: "Yes" },
-                { value: "false", label: "No" },
+                { value: true, label: "Yes" },
+                { value: false, label: "No" },
               ]}
             />
             {index === fields.length - 1 ? (
