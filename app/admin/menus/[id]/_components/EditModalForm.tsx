@@ -31,7 +31,7 @@ const EditModuleForm = ({
   modules: Module[];
   id: number;
   module: Module;
-  onSuccess: () => void;
+  onSuccess: (module: Module) => void;
 }) => {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -60,7 +60,7 @@ const EditModuleForm = ({
         const response = await updateModule(id, module?.menuId, data);
 
         if (!response.success) throw new Error(response.message);
-        onSuccess();
+        onSuccess(response?.data);
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
         else setError("Something went wrong");

@@ -29,7 +29,7 @@ const CreateModuleForm = ({
 }: {
   modules: Module[];
   id: number;
-  onSuccess: () => void;
+  onSuccess: (module: Module) => void;
 }) => {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -59,7 +59,7 @@ const CreateModuleForm = ({
 
         if (!response.success) throw new Error(response.message);
 
-        onSuccess();
+        onSuccess(response?.data);
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
         else setError("Something went wrong");

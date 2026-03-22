@@ -15,10 +15,21 @@ import { CirclePlus } from "lucide-react";
 import CreateModuleForm from "./CreateModuleForm";
 import { useState } from "react";
 
-const CreateModule = ({ modules, id }: { modules: Module[]; id: number }) => {
+const CreateModule = ({
+  modules,
+  id,
+  setModules,
+}: {
+  modules: Module[];
+  id: number;
+  setModules: React.Dispatch<React.SetStateAction<Module[]>>;
+}) => {
   const [open, setOpen] = useState(false);
 
-  const onSuccess = () => setOpen(false);
+  const onSuccess = (module: Module) => {
+    setOpen(false);
+    setModules((prev) => [module, ...prev]);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

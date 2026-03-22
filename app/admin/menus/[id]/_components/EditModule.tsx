@@ -17,12 +17,14 @@ import CustomAlert from "@/components/common/CustomAlert";
 
 const EditModule = ({
   open,
-  setOpen,
+  onSuccess,
+  onClose,
   id,
   modules,
 }: {
   open: boolean;
-  setOpen: () => void;
+  onSuccess: (module: Module) => void;
+  onClose: () => void;
   id: number;
   modules: Module[];
 }) => {
@@ -74,13 +76,13 @@ const EditModule = ({
         modules={modules}
         id={id}
         module={module}
-        onSuccess={setOpen}
+        onSuccess={onSuccess}
       />
     );
 
   return open
     ? createPortal(
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={onClose}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>

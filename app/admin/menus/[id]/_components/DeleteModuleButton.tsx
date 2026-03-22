@@ -6,7 +6,15 @@ import { Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-const DeleteModuleButton = ({ id, menuId }: { id: number; menuId: number }) => {
+const DeleteModuleButton = ({
+  id,
+  menuId,
+  onDeleteSuccess,
+}: {
+  id: number;
+  menuId: number;
+  onDeleteSuccess: (id: number) => void;
+}) => {
   const [open, setOpen] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
 
@@ -15,10 +23,11 @@ const DeleteModuleButton = ({ id, menuId }: { id: number; menuId: number }) => {
       try {
         const data = await deleteModule(id, menuId);
         if (!data.success) throw new Error(data.message);
+        setOpen(false);
+        onDeleteSuccess(id);
         toast.success(data.message, {
           position: "top-right",
         });
-        setOpen(false);
       } catch (error) {
         if (error instanceof Error) {
           toast.error(error.message, {
