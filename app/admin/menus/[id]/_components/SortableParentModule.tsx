@@ -94,6 +94,7 @@ export default function SortableParentModule({
                     key={child.id}
                     module={child}
                     openModal={openModal}
+                    onDeleteSuccess={onDeleteSuccess}
                   />,
                 ].filter(Boolean);
               })}

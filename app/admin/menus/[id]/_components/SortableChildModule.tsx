@@ -8,9 +8,11 @@ import Module from "./Module";
 export default function SortableChildModule({
   module,
   openModal,
+  onDeleteSuccess,
 }: {
   module: FlatModule;
   openModal: (id: number) => void;
+  onDeleteSuccess: (id: number) => void;
 }) {
   const {
     attributes,
@@ -36,6 +38,7 @@ export default function SortableChildModule({
         order={module.order}
         openModal={openModal}
         dragHandleProps={{ ...attributes, ...(listeners ?? {}) }}
+        onDeleteSuccess={onDeleteSuccess}
       />
     </div>
   );
