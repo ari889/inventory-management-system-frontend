@@ -6,7 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  ColumnSort,
 } from "@tanstack/react-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ import {
   ListCheck,
   Trash2,
 } from "lucide-react";
-import { InitialMenuState, Menu } from "@/@types/menu.types";
+import { Menu } from "@/@types/menu.types";
 import { bulkDeleteMenu, deleteMenuById, getMenus } from "@/actions/MenuAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -49,7 +48,6 @@ import {
 } from "@/components/ui/pagination";
 import { debounce } from "lodash";
 import TableLoading from "@/components/common/TableLoading";
-import { ActionType } from "@/@types/reducer.types";
 import TableAlert from "@/components/common/TableAlert";
 import { Input } from "@/components/ui/input";
 import CreateMenu from "./CreateMenu";
@@ -60,176 +58,11 @@ import UpdateMenu from "./UpdateMenu";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
-
-/**
- * initial state
- */
-const initialState: InitialMenuState = {
-  open: false,
-  isLoading: true,
-  search: "",
-  sorting: [],
-  isError: false,
-  error: null,
-  menus: [],
-  totalCount: 0,
-  page: 0,
-  limit: 10,
-  deleteOpen: false,
-  selectedId: null,
-  deleteLoading: false,
-  showUpdateModal: false,
-  selectedRows: new Set<number>(),
-  bulkDeleteLoader: false,
-  bulkDeleteOpen: false,
-  deletable: null,
-};
-
-/**
- * reducer function
- * @param state
- * @param action
- * @returns state
- */
-const reducer = (
-  state: InitialMenuState,
-  action: ActionType,
-): InitialMenuState => {
-  switch (action.type) {
-    case "SET_SORTING":
-      return {
-        ...state,
-        sorting: action.payload as ColumnSort[],
-        page: 0,
-      };
-    case "SET_ERROR":
-      return {
-        ...state,
-        isError: true,
-        error: action.payload as string,
-      };
-    case "REMOVE_ERROR":
-      return {
-        ...state,
-        isError: false,
-        error: null,
-      };
-    case "SET_COUNT":
-      return {
-        ...state,
-        totalCount: action.payload as number,
-      };
-    case "SET_PAGE":
-      return {
-        ...state,
-        page: action.payload as number,
-      };
-    case "SET_PAGE_SIZE":
-      return {
-        ...state,
-        limit: action.payload as number,
-      };
-    case "SET_MENUS":
-      return {
-        ...state,
-        menus: action.payload as Menu[],
-      };
-    case "SET_LOADING":
-      return {
-        ...state,
-        isLoading: action.payload as boolean,
-      };
-    case "SET_SEARCH":
-      return {
-        ...state,
-        search: action.payload as string,
-        page: 0,
-      };
-    case "TOGGLE_MODAL":
-      return {
-        ...state,
-        open: !state.open,
-      };
-    case "REFRESH":
-      const newMenus = [action.payload as Menu, ...state.menus];
-
-      if (newMenus.length > state.limit) newMenus.pop();
-
-      return {
-        ...state,
-        menus: newMenus,
-      };
-    case "OPEN_DELETE_MODAL":
-      return {
-        ...state,
-        deleteOpen: !state.deleteOpen,
-        selectedId: action.payload as number,
-      };
-    case "CLOSE_DELETE_MODAL":
-      return {
-        ...state,
-        deleteOpen: false,
-        selectedId: null,
-      };
-    case "SET_DELETE_LOADING":
-      return {
-        ...state,
-        deleteLoading: action.payload as boolean,
-      };
-    case "TOGGLE_UPDATE_MODAL":
-      return {
-        ...state,
-        showUpdateModal: !state.showUpdateModal,
-        selectedId: state.selectedId ? null : (action.payload as number),
-      };
-    case "UPDATE_SUCCESS":
-      const updatedMenu = action.payload as Menu;
-
-      return {
-        ...state,
-        showUpdateModal: false,
-        selectedId: null,
-        menus: state.menus.map((menu) =>
-          menu.id === updatedMenu.id ? updatedMenu : menu,
-        ),
-      };
-    case "TOGGLE_ROW_SELECTION":
-      const newSelected = new Set(state.selectedRows);
-      const id = action.payload as number;
-      if (newSelected.has(id)) newSelected.delete(id);
-      else newSelected.add(id);
-      return { ...state, selectedRows: newSelected };
-
-    case "SELECT_ALL_ROWS":
-      return {
-        ...state,
-        selectedRows: new Set(state.menus.map((p) => p.id)),
-      };
-
-    case "DESELECT_ALL_ROWS":
-      return { ...state, selectedRows: new Set() };
-    case "TOGGLE_BULK_DELETE_LOADING":
-      return {
-        ...state,
-        bulkDeleteLoader: action.payload as boolean,
-      };
-    case "TOGGLE_BULK_DELETE_MODAL":
-      return {
-        ...state,
-        bulkDeleteOpen: !state.bulkDeleteOpen,
-      };
-    case "SET_DELETABLE":
-      return {
-        ...state,
-        deletable: action.payload as boolean | null,
-      };
-    default:
-      return state;
-  }
-};
+import { menuReducer } from "@/reducers/menuReducer";
+import { initialMenuState } from "@/reducerStates/menuState";
 
 export default function MenuTable() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(menuReducer, initialMenuState);
 
   const {
     open,

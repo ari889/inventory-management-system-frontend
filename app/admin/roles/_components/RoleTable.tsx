@@ -6,7 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  ColumnSort,
 } from "@tanstack/react-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ import {
   UserKey,
   Eye,
 } from "lucide-react";
-import { InitialRoleState, Role } from "@/@types/role.types";
+import { Role } from "@/@types/role.types";
 import { bulkDeleteRole, deleteRoleById, getRoles } from "@/actions/RoleAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -48,7 +47,6 @@ import {
 } from "@/components/ui/pagination";
 import { debounce } from "lodash";
 import TableLoading from "@/components/common/TableLoading";
-import { ActionType } from "@/@types/reducer.types";
 import TableAlert from "@/components/common/TableAlert";
 import { Input } from "@/components/ui/input";
 import CreateRole from "./CreateRole";
@@ -58,158 +56,11 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
 import Link from "next/link";
-
-/**
- * initial state
- */
-const initialState: InitialRoleState = {
-  open: false,
-  isLoading: true,
-  search: "",
-  sorting: [],
-  isError: false,
-  error: null,
-  roles: [],
-  totalCount: 0,
-  page: 0,
-  limit: 10,
-  deleteOpen: false,
-  selectedId: null,
-  deleteLoading: false,
-  selectedRows: new Set<number>(),
-  bulkDeleteLoader: false,
-  bulkDeleteOpen: false,
-  deletable: null,
-};
-
-/**
- * reducer function
- * @param state
- * @param action
- * @returns state
- */
-const reducer = (
-  state: InitialRoleState,
-  action: ActionType,
-): InitialRoleState => {
-  switch (action.type) {
-    case "SET_SORTING":
-      return {
-        ...state,
-        sorting: action.payload as ColumnSort[],
-        page: 0,
-      };
-    case "SET_ERROR":
-      return {
-        ...state,
-        isError: true,
-        error: action.payload as string,
-      };
-    case "REMOVE_ERROR":
-      return {
-        ...state,
-        isError: false,
-        error: null,
-      };
-    case "SET_COUNT":
-      return {
-        ...state,
-        totalCount: action.payload as number,
-      };
-    case "SET_PAGE":
-      return {
-        ...state,
-        page: action.payload as number,
-      };
-    case "SET_PAGE_SIZE":
-      return {
-        ...state,
-        limit: action.payload as number,
-      };
-    case "SET_ROLES":
-      return {
-        ...state,
-        roles: action.payload as Role[],
-      };
-    case "SET_LOADING":
-      return {
-        ...state,
-        isLoading: action.payload as boolean,
-      };
-    case "SET_SEARCH":
-      return {
-        ...state,
-        search: action.payload as string,
-        page: 0,
-      };
-    case "TOGGLE_MODAL":
-      return {
-        ...state,
-        open: !state.open,
-      };
-    case "REFRESH":
-      const newRoles = [action.payload as Role, ...state.roles];
-
-      if (newRoles.length > state.limit) newRoles.pop();
-
-      return {
-        ...state,
-        roles: newRoles,
-      };
-    case "OPEN_DELETE_MODAL":
-      return {
-        ...state,
-        deleteOpen: !state.deleteOpen,
-        selectedId: action.payload as number,
-      };
-    case "CLOSE_DELETE_MODAL":
-      return {
-        ...state,
-        deleteOpen: false,
-        selectedId: null,
-      };
-    case "SET_DELETE_LOADING":
-      return {
-        ...state,
-        deleteLoading: action.payload as boolean,
-      };
-    case "TOGGLE_ROW_SELECTION":
-      const newSelected = new Set(state.selectedRows);
-      const id = action.payload as number;
-      if (newSelected.has(id)) newSelected.delete(id);
-      else newSelected.add(id);
-      return { ...state, selectedRows: newSelected };
-
-    case "SELECT_ALL_ROWS":
-      return {
-        ...state,
-        selectedRows: new Set(state.roles.map((p) => p.id)),
-      };
-
-    case "DESELECT_ALL_ROWS":
-      return { ...state, selectedRows: new Set() };
-    case "TOGGLE_BULK_DELETE_LOADING":
-      return {
-        ...state,
-        bulkDeleteLoader: action.payload as boolean,
-      };
-    case "TOGGLE_BULK_DELETE_MODAL":
-      return {
-        ...state,
-        bulkDeleteOpen: !state.bulkDeleteOpen,
-      };
-    case "SET_DELETABLE":
-      return {
-        ...state,
-        deletable: action.payload as boolean | null,
-      };
-    default:
-      return state;
-  }
-};
+import { roleReducer } from "@/reducers/roleReducer";
+import { initialRoleState } from "@/reducerStates/roleState";
 
 export default function RoleTable() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(roleReducer, initialRoleState);
 
   const {
     open,

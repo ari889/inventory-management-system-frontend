@@ -6,7 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  ColumnSort,
 } from "@tanstack/react-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,12 +44,11 @@ import {
 } from "@/components/ui/pagination";
 import { debounce } from "lodash";
 import TableLoading from "@/components/common/TableLoading";
-import { ActionType } from "@/@types/reducer.types";
 import TableAlert from "@/components/common/TableAlert";
 import DeleteModal from "../../../../components/common/DeleteModal";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { InititalPermissionState, Permission } from "@/@types/permission.types";
+import { Permission } from "@/@types/permission.types";
 import {
   bulkDeletePermission,
   deletePermissionById,
@@ -61,190 +59,14 @@ import EditPermissionModal from "./EditPermissionModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
-
-/**
- * initial state
- */
-const initialState: InititalPermissionState = {
-  isLoading: true,
-  sorting: [],
-  isError: false,
-  error: null,
-  permissions: [],
-  totalCount: 0,
-  page: 0,
-  limit: 10,
-  deleteOpen: false,
-  selectedId: null,
-  deleteLoading: false,
-  createModal: false,
-  editModal: false,
-  selectedRows: new Set<number>(),
-  bulkDeleteLoader: false,
-  bulkDeleteOpen: false,
-  name: "",
-  slug: "",
-  deletable: null,
-};
-
-/**
- * reducer function
- * @param state
- * @param action
- * @returns state
- */
-const reducer = (
-  state: InititalPermissionState,
-  action: ActionType,
-): InititalPermissionState => {
-  switch (action.type) {
-    case "SET_SORTING":
-      return {
-        ...state,
-        sorting: action.payload as ColumnSort[],
-        page: 0,
-      };
-    case "SET_ERROR":
-      return {
-        ...state,
-        isError: true,
-        error: action.payload as string,
-      };
-    case "REMOVE_ERROR":
-      return {
-        ...state,
-        isError: false,
-        error: null,
-      };
-    case "SET_COUNT":
-      return {
-        ...state,
-        totalCount: action.payload as number,
-      };
-    case "SET_PAGE":
-      return {
-        ...state,
-        page: action.payload as number,
-      };
-    case "SET_PAGE_SIZE":
-      return {
-        ...state,
-        limit: action.payload as number,
-      };
-    case "SET_PERMISSIONS":
-      return {
-        ...state,
-        permissions: action.payload as Permission[],
-      };
-    case "REFRESH":
-      const newPermissions = action.payload as Permission[];
-      const combined = [...newPermissions, ...state.permissions];
-
-      const limited = combined.slice(0, state.limit);
-
-      return {
-        ...state,
-        permissions: limited,
-      };
-
-    case "SET_LOADING":
-      return {
-        ...state,
-        isLoading: action.payload as boolean,
-      };
-    case "OPEN_DELETE_MODAL":
-      return {
-        ...state,
-        deleteOpen: !state.deleteOpen,
-        selectedId: action.payload as number,
-      };
-    case "CLOSE_DELETE_MODAL":
-      return {
-        ...state,
-        deleteOpen: false,
-        selectedId: null,
-      };
-    case "SET_DELETE_LOADING":
-      return {
-        ...state,
-        deleteLoading: action.payload as boolean,
-      };
-    case "TOGGLE_MODAL":
-      return {
-        ...state,
-        createModal: !state.createModal,
-      };
-    case "OPEN_EDIT_MODAL":
-      return {
-        ...state,
-        editModal: !state.editModal,
-        selectedId: action.payload as number,
-      };
-    case "CLOSE_EDIT_MODAL":
-      return {
-        ...state,
-        editModal: false,
-        selectedId: null,
-      };
-    case "UPDATE_SUCCESS":
-      const payload = action.payload as Permission;
-      const updatedPermissions = state.permissions.map(
-        (permission: Permission) => {
-          if (permission.id === payload?.id) return payload;
-          return permission;
-        },
-      );
-      return {
-        ...state,
-        permissions: updatedPermissions,
-      };
-    case "TOGGLE_ROW_SELECTION":
-      const newSelected = new Set(state.selectedRows);
-      const id = action.payload as number;
-      if (newSelected.has(id)) newSelected.delete(id);
-      else newSelected.add(id);
-      return { ...state, selectedRows: newSelected };
-
-    case "SELECT_ALL_ROWS":
-      return {
-        ...state,
-        selectedRows: new Set(state.permissions.map((p) => p.id)),
-      };
-
-    case "DESELECT_ALL_ROWS":
-      return { ...state, selectedRows: new Set() };
-    case "TOGGLE_BULK_DELETE_LOADING":
-      return {
-        ...state,
-        bulkDeleteLoader: action.payload as boolean,
-      };
-    case "TOGGLE_BULK_DELETE_MODAL":
-      return {
-        ...state,
-        bulkDeleteOpen: !state.bulkDeleteOpen,
-      };
-    case "SET_NAME":
-      return {
-        ...state,
-        name: action.payload as string,
-      };
-    case "SET_SLUG":
-      return {
-        ...state,
-        slug: action.payload as string,
-      };
-    case "SET_DELETABLE":
-      return {
-        ...state,
-        deletable: action.payload as boolean | null,
-      };
-    default:
-      return state;
-  }
-};
+import { permissionReducer } from "@/reducers/permissionReducer";
+import { initialPermissionState } from "@/reducerStates/permissionState";
 
 export default function PermissionTable() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(
+    permissionReducer,
+    initialPermissionState,
+  );
 
   const {
     isLoading,
