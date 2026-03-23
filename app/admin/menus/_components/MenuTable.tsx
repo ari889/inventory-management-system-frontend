@@ -290,6 +290,17 @@ export default function MenuTable() {
   );
 
   /**
+   * call to server action
+   */
+  useEffect(() => {
+    fetchMenusDebounced(page, limit);
+
+    return () => {
+      fetchMenusDebounced.cancel();
+    };
+  }, [page, limit, search, fetchMenusDebounced]);
+
+  /**
    * delete meny by id
    */
   const deleteMenu = useCallback(async () => {
@@ -348,17 +359,6 @@ export default function MenuTable() {
       dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: false });
     }
   };
-
-  /**
-   * call to server action
-   */
-  useEffect(() => {
-    fetchMenusDebounced(page, limit);
-
-    return () => {
-      fetchMenusDebounced.cancel();
-    };
-  }, [page, limit, search, fetchMenusDebounced]);
 
   /**
    * react table column

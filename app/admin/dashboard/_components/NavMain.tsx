@@ -51,9 +51,9 @@ export function NavMain({ items }: { items: Module[] }) {
                         <SidebarMenuSubItem key={child.id}>
                           <SidebarMenuSubButton asChild>
                             <Link href={child.url || "#"}>
-                              {item?.iconClass && (
+                              {child?.iconClass && (
                                 <DynamicIcon
-                                  name={item.iconClass}
+                                  name={child.iconClass}
                                   className="mr-2"
                                 />
                               )}

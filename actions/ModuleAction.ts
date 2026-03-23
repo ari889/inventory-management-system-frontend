@@ -1,7 +1,8 @@
 "use server";
+import { Module } from "@/@types/module.types";
 import { fetchData } from "@/lib/api";
 import { CreateModuleSchemaType } from "@/schemas/module.schema";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 /**
  * Get current logged in user modules
@@ -10,8 +11,7 @@ import { revalidatePath } from "next/cache";
 export const getModules = async () => {
   try {
     const data = await fetchData("modules/role", {
-      cache: "force-cache",
-      next: { revalidate: 3600 },
+      next: { revalidate: 3600, tags: ["modules"] },
     });
 
     if (!data.success) throw new Error(data.message);
@@ -98,7 +98,8 @@ export const createModule = async (
     });
 
     if (!data.success) throw new Error(data.message);
-    revalidatePath(`/admin/menu/${menuId}`);
+    revalidateTag("modules", "max");
+    revalidatePath(`/admin/menus/${menuId}`);
     return data;
   } catch (error) {
     if (error instanceof Error) {
@@ -120,14 +121,15 @@ export const createModule = async (
  * @param menuId
  * @returns Module
  */
-export const deleteModule = async (id: number, menuId: number) => {
+export const deleteModule = async (menuId: number, id: number) => {
   try {
     const data = await fetchData(`modules/${id}`, {
       method: "DELETE",
     });
 
     if (!data.success) throw new Error(data.message);
-    revalidatePath(`/admin/menu/${menuId}`);
+    revalidateTag("modules", "max");
+    revalidatePath(`/admin/menus/${menuId}`);
     return data;
   } catch (error) {
     if (error instanceof Error) {
@@ -186,7 +188,42 @@ export const updateModule = async (
     });
 
     if (!data.success) throw new Error(data.message);
-    revalidatePath(`/admin/menu/${menuId}`);
+    revalidateTag("modules", "max");
+    revalidatePath(`/admin/menus/${menuId}`);
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
+ *
+ * @param menuId
+ * @param formData
+ * @returns Module
+ */
+export const updateModuleRecorder = async (
+  menuId: number,
+  formData: Module[],
+) => {
+  try {
+    const data = await fetchData(`modules/recorder`, {
+      method: "PATCH",
+      body: JSON.stringify(formData),
+    });
+
+    if (!data.success) throw new Error(data.message);
+    revalidateTag("modules", "max");
+    revalidatePath(`/admin/menus/${menuId}`);
     return data;
   } catch (error) {
     if (error instanceof Error) {

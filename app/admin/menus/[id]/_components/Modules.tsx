@@ -19,16 +19,24 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
-  arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { ModulesState, Module as ModuleType } from "@/@types/module.types";
+import {
+  Module,
+  ModulesState,
+  Module as ModuleType,
+} from "@/@types/module.types";
 import EditModule from "./EditModule";
-import { extractModule, flattenModules, reorder } from "@/utils/common";
+import { computeNextModules, flattenModules } from "@/utils/common";
 import SkeletonRow from "./SkeletonRow";
 import SortableParentModule from "./SortableParentModule";
 import DragCard from "./DragCard";
+import { updateModuleRecorder } from "@/actions/ModuleAction";
+import { toast } from "sonner";
 
+/**
+ * module types
+ */
 type ModulesAction =
   | { type: "DRAG_START"; activeId: UniqueIdentifier }
   | { type: "DRAG_OVER"; parentId: UniqueIdentifier | null; index: number }
@@ -39,6 +47,9 @@ type ModulesAction =
   | { type: "MODAL_OPEN"; id: number }
   | { type: "MODAL_CLOSE" };
 
+/**
+ * initial state
+ */
 const initialState: ModulesState = {
   activeId: null,
   skeletonParentId: null,
@@ -48,6 +59,12 @@ const initialState: ModulesState = {
   modalOpen: false,
 };
 
+/**
+ * Reducer function
+ * @param state
+ * @param action
+ * @returns state
+ */
 function reducer(state: ModulesState, action: ModulesAction): ModulesState {
   switch (action.type) {
     case "DRAG_START":
@@ -100,14 +117,14 @@ function reducer(state: ModulesState, action: ModulesAction): ModulesState {
   }
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 const Modules = ({
   modules,
   setModules,
+  menuId,
 }: {
   modules: ModuleType[];
   setModules: React.Dispatch<React.SetStateAction<ModuleType[]>>;
+  menuId: number;
 }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const {
@@ -119,11 +136,19 @@ const Modules = ({
     modalOpen,
   } = state;
 
+  console.log({ modules });
+
+  /**
+   * modules ref
+   */
   const modulesRef = useRef(modules);
   useEffect(() => {
     modulesRef.current = modules;
   }, [modules]);
 
+  /**
+   * drag sensors
+   */
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {
@@ -134,20 +159,33 @@ const Modules = ({
     }),
   );
 
+  /**
+   * flat modules
+   */
   const flat = flattenModules(modules);
   const topItems = flat.filter((f) => f.parentId === null);
 
+  /**
+   * skeleton position
+   */
   const skeletonPos =
     skeletonIndex !== null
       ? { parentId: skeletonParentId, index: skeletonIndex }
       : null;
 
-  // ── Drag handlers ────────────────────────────────────────────────────────────
-
+  /**
+   * On drag start
+   * @param param0
+   */
   function handleDragStart({ active }: DragStartEvent) {
     dispatch({ type: "DRAG_START", activeId: active.id });
   }
 
+  /**
+   * On drag over
+   * @param param0
+   * @returns
+   */
   function handleDragOver({ active, over }: DragOverEvent) {
     if (!over) {
       dispatch({ type: "DRAG_OVER_CLEAR" });
@@ -217,6 +255,22 @@ const Modules = ({
     dispatch({ type: "DRAG_OVER_CLEAR" });
   }
 
+  const updateModuleRecorderAction = async (items: Module[]) => {
+    try {
+      const response = await updateModuleRecorder(menuId, items);
+      if (!response?.success) throw new Error(response?.message);
+      toast.success(response?.message);
+    } catch (error) {
+      if (error instanceof Error) toast.error(error?.message);
+      else toast.error("Something went wrong");
+    }
+  };
+
+  /**
+   * On Drag end
+   * @param param0
+   * @returns
+   */
   function handleDragEnd({ active, over }: DragEndEvent) {
     dispatch({ type: "DRAG_END" });
 
@@ -236,123 +290,91 @@ const Modules = ({
       parentToExpand = overData.parentId;
     }
 
-    setModules((prev) => {
-      // ── Drop into child zone ──
-      if (overData?.type === "childZone" && overData.parentId != null) {
-        const newParentId = overData.parentId;
-        if (active.id === newParentId) return prev;
-        const [extracted, cleaned] = extractModule(prev, active.id as number);
-        if (!extracted) return prev;
+    const nextModules = computeNextModules(
+      modulesRef.current,
+      currentFlat,
+      active,
+      over,
+      overData,
+      overId,
+      activeItem,
+    );
 
-        const orphans: ModuleType[] = extracted.children ?? [];
-        const toInsert: ModuleType = { ...extracted, children: [] };
-        const originalIndex = prev.findIndex((m) => m.id === extracted!.id);
-        const withOrphans = [...cleaned];
-        if (orphans.length > 0) {
-          withOrphans.splice(
-            Math.min(originalIndex, withOrphans.length),
-            0,
-            ...orphans,
-          );
-        }
+    setModules(nextModules);
 
-        return reorder(
-          withOrphans.map((item) =>
-            item.id === newParentId
-              ? {
-                  ...item,
-                  children: reorder([...(item.children ?? []), toInsert]),
-                }
-              : item,
-          ),
-        );
-      }
-
-      const overItem = currentFlat.find((f) => f.id === overId);
-      if (!overItem) return prev;
-
-      // ── Parent reorder ──
-      if (activeItem.depth === 0 && overItem.depth === 0) {
-        const ai = prev.findIndex((m) => m.id === active.id);
-        const oi = prev.findIndex((m) => m.id === overId);
-        return reorder(arrayMove(prev, ai, oi));
-      }
-
-      // ── Child reorder (same parent) ──
-      if (
-        activeItem.depth === 1 &&
-        overItem.depth === 1 &&
-        activeItem.parentId === overItem.parentId
-      ) {
-        return reorder(
-          prev.map((item) => {
-            if (item.id !== activeItem.parentId) return item;
-            const children = item.children ?? [];
-            const ai = children.findIndex((c) => c.id === active.id);
-            const oi = children.findIndex((c) => c.id === overId);
-            return { ...item, children: reorder(arrayMove(children, ai, oi)) };
-          }),
-        );
-      }
-
-      // ── Child → different parent ──
-      if (
-        activeItem.depth === 1 &&
-        overItem.depth === 1 &&
-        activeItem.parentId !== overItem.parentId
-      ) {
-        let moved: ModuleType | null = null;
-        const step1 = prev.map((item) => {
-          if (item.id !== activeItem.parentId) return item;
-          const child = (item.children ?? []).find((c) => c.id === active.id);
-          if (child) moved = child;
-          return {
-            ...item,
-            children: reorder(
-              (item.children ?? []).filter((c) => c.id !== active.id),
-            ),
-          };
-        });
-        if (!moved) return prev;
-        return reorder(
-          step1.map((item) => {
-            if (item.id !== overItem.parentId) return item;
-            const children = [...(item.children ?? [])];
-            const oi = children.findIndex((c) => c.id === overId);
-            children.splice(oi, 0, moved!);
-            return { ...item, children: reorder(children) };
-          }),
-        );
-      }
-
-      // ── Child → promote to top-level ──
-      if (activeItem.depth === 1 && overItem.depth === 0) {
-        const [extracted, cleaned] = extractModule(prev, active.id as number);
-        if (!extracted) return prev;
-        const oi = cleaned.findIndex((m) => m.id === overId);
-        const result = [...cleaned];
-        result.splice(oi, 0, { ...extracted, children: [] });
-        return reorder(result);
-      }
-
-      return prev;
-    });
+    updateModuleRecorderAction(nextModules);
 
     if (parentToExpand !== null) {
       dispatch({ type: "EXPAND_ADD", id: parentToExpand });
     }
   }
 
+  /**
+   * On Edit success
+   * @param module
+   */
   const onEditSuccess = (module: ModuleType) => {
     dispatch({ type: "MODAL_CLOSE" });
-    setModules((prev) => prev.map((m) => (m.id === module.id ? module : m)));
+    setModules((prev) => {
+      const existsAtRoot = prev.some((item) => item.id === module.id);
+      const currentParent = prev.find((item) =>
+        item.children?.some((c) => c.id === module.id),
+      );
+      if (existsAtRoot) {
+        return prev.map((item) => (item.id === module.id ? module : item));
+      }
+      if (currentParent?.id === module.parentId) {
+        return prev.map((item) => {
+          if (item.id !== currentParent.id) return item;
+          return {
+            ...item,
+            children: item.children?.map((c) =>
+              c.id === module.id ? module : c,
+            ),
+          };
+        });
+      }
+      if (currentParent) {
+        return prev.map((item) => {
+          if (item.id === currentParent.id) {
+            return {
+              ...item,
+              children: item.children?.filter((c) => c.id !== module.id),
+            };
+          }
+          if (item.id === module.parentId) {
+            return {
+              ...item,
+              children: [...(item.children ?? []), module],
+            };
+          }
+          return item;
+        });
+      }
+
+      return prev;
+    });
   };
 
+  /**
+   * On delete success
+   * @param id
+   */
   const onDeleteSuccess = (id: number) => {
     dispatch({ type: "MODAL_CLOSE" });
-    setModules((prev) => prev.filter((m) => m.id !== id));
+    setModules((prev) =>
+      prev
+        .filter((item) => item.id !== id)
+        .map((item) => ({
+          ...item,
+          children: item.children?.filter((c) => c.id !== id) ?? [],
+        })),
+    );
   };
 
+  /**
+   * Get active item
+   */
   const activeFlat = activeId ? flat.find((f) => f.id === activeId) : null;
 
   return (

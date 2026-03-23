@@ -24,6 +24,9 @@ const MenuBuilder = ({ menu, id }: { menu: Menu; id: number }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  /**
+   * fetch modules by menu id
+   */
   const fetchModules = useEffectEvent(async () => {
     try {
       const response = await getModuleByMenuId(id);
@@ -38,6 +41,9 @@ const MenuBuilder = ({ menu, id }: { menu: Menu; id: number }) => {
     }
   });
 
+  /**
+   * effect for fetch modules
+   */
   useEffect(() => {
     let mount = true;
 
@@ -64,7 +70,7 @@ const MenuBuilder = ({ menu, id }: { menu: Menu; id: number }) => {
       </Alert>
     );
   } else {
-    content = <Modules modules={modules} setModules={setModules} />;
+    content = <Modules modules={modules} setModules={setModules} menuId={id} />;
   }
 
   return (

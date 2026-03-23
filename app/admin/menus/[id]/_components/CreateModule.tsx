@@ -28,7 +28,16 @@ const CreateModule = ({
 
   const onSuccess = (module: Module) => {
     setOpen(false);
-    setModules((prev) => [module, ...prev]);
+    setModules((prev) => {
+      if (module.parentId) {
+        return prev.map((item) =>
+          item.id === module.parentId
+            ? { ...item, children: [...(item.children ?? []), module] }
+            : item,
+        );
+      }
+      return [module, ...prev];
+    });
   };
 
   return (

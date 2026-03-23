@@ -8,12 +8,12 @@ import { toast } from "sonner";
 
 const DeleteModuleButton = ({
   id,
-  menuId,
   onDeleteSuccess,
+  menuId,
 }: {
   id: number;
-  menuId: number;
   onDeleteSuccess: (id: number) => void;
+  menuId: number;
 }) => {
   const [open, setOpen] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
@@ -21,7 +21,7 @@ const DeleteModuleButton = ({
   const deleteModal = () =>
     startTransition(async () => {
       try {
-        const data = await deleteModule(id, menuId);
+        const data = await deleteModule(menuId, id);
         if (!data.success) throw new Error(data.message);
         setOpen(false);
         onDeleteSuccess(id);
