@@ -22,7 +22,7 @@ const DeleteModuleButton = ({
     startTransition(async () => {
       try {
         const data = await deleteModule(menuId, id);
-        if (!data.success) throw new Error(data.message);
+        if (!data?.success && !data?.errors) throw new Error(data.message);
         setOpen(false);
         onDeleteSuccess(id);
         toast.success(data.message, {

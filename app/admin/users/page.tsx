@@ -1,4 +1,5 @@
 import UserTable from "./_components/UserTable";
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Users | Inventory Management System",

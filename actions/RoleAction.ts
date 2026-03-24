@@ -30,7 +30,7 @@ export const getRoles = async ({
     if (deletable !== null) url += `&deletable=${deletable}`;
     const data = await fetchData(url);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -60,7 +60,7 @@ export const createRole = async (formData: CreateRoleSchemaType) => {
       body: JSON.stringify(formData),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -89,7 +89,7 @@ export const deleteRoleById = async (id: number) => {
       method: "DELETE",
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -116,7 +116,7 @@ export const getRoleById = async (id: number) => {
   try {
     const data = await fetchData(`roles/${id}`);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -177,7 +177,7 @@ export const bulkDeleteRole = async (ids: number[]) => {
       body: JSON.stringify({ ids }),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     revalidatePath("/admin/roles");
     return data;
   } catch (error) {

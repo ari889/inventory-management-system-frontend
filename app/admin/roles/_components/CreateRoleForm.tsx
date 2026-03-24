@@ -14,15 +14,21 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { createRoleSchema } from "@/schemas/role.schema";
 import type { CreateRoleSchemaType } from "@/schemas/role.schema";
+import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const CreateRoleForm = ({ onSuccess }: { onSuccess: (data: Role) => void }) => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
-  const { control, handleSubmit } = useForm<CreateRoleSchemaType>({
+  const {
+    control,
+    handleSubmit,
+    setError: setFormError,
+  } = useForm<CreateRoleSchemaType>({
     defaultValues: {
       roleName: "",
       deletable: true,
@@ -35,9 +41,14 @@ const CreateRoleForm = ({ onSuccess }: { onSuccess: (data: Role) => void }) => {
       try {
         const response = await createRole(data);
 
-        if (!response.success) throw new Error(response.message);
-
-        onSuccess(response?.data);
+        if (!response.success && response?.errors)
+          setApiErrors(response.errors, setFormError);
+        else if (!response.success)
+          throw new Error(response?.message || "Failed to create user");
+        else {
+          onSuccess(response?.data);
+          toast.success("Role created successfully");
+        }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
         else setError("Something went wrong");
@@ -47,7 +58,7 @@ const CreateRoleForm = ({ onSuccess }: { onSuccess: (data: Role) => void }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {error && (
-        <Alert variant="destructive" className="max-w-md">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircleIcon />
           <AlertTitle>Error!</AlertTitle>
           <AlertDescription>{error}</AlertDescription>

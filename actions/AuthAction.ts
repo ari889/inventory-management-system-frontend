@@ -16,7 +16,7 @@ export const getAuth = async (email: string, password: string) => {
       body: JSON.stringify({ email, password }),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -48,7 +48,7 @@ export const getRefreshToken = async (token: MyJWT) => {
       },
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return {
       ...token,

@@ -14,7 +14,7 @@ export const getModules = async () => {
       next: { revalidate: 3600, tags: ["modules"] },
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -39,7 +39,7 @@ export const getModulesWithPermission = async () => {
   try {
     const data = await fetchData("modules/permissions");
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -65,7 +65,7 @@ export const getModuleByMenuId = async (menuId: number) => {
   try {
     const data = await fetchData(`modules/menu/${menuId}`);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -97,7 +97,7 @@ export const createModule = async (
       body: JSON.stringify(module),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
     return data;
@@ -127,7 +127,7 @@ export const deleteModule = async (menuId: number, id: number) => {
       method: "DELETE",
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
     return data;
@@ -154,7 +154,7 @@ export const getModule = async (id: number) => {
   try {
     const data = await fetchData(`modules/${id}`);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     return data;
   } catch (error) {
     if (error instanceof Error) {
@@ -187,7 +187,7 @@ export const updateModule = async (
       body: JSON.stringify(formData),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
     return data;
@@ -221,7 +221,7 @@ export const updateModuleRecorder = async (
       body: JSON.stringify(formData),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
     return data;

@@ -103,7 +103,7 @@ export default function RoleTable() {
           search,
           deletable,
         });
-        if (!data.success) throw new Error(data.message);
+        if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_ROLES", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
@@ -126,7 +126,7 @@ export default function RoleTable() {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
       const data = await deleteRoleById(selectedId!);
-      if (!data.success) throw new Error(data.message);
+      if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });

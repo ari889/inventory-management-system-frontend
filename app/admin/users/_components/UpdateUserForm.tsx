@@ -1,6 +1,6 @@
 "use client";
 import { User } from "@/@types/user.types";
-import { createUser } from "@/actions/UserAction";
+import { updateUser } from "@/actions/UserAction";
 import RoleAutocomplete from "@/components/common/autocompletes/RoleAutocomplete";
 import CustomSelect from "@/components/common/CustomSelect";
 import FormInput from "@/components/common/FormInput";
@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { createUserSchema, CreateUserSchemaType } from "@/schemas/user.schema";
+import { updateUserSchema, UpdateUserSchemaType } from "@/schemas/user.schema";
 import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
@@ -21,31 +21,38 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
+const UpdateUserForm = ({
+  data,
+  onSuccess,
+}: {
+  data: User;
+  onSuccess: (data: User) => void;
+}) => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const {
     control,
     handleSubmit,
     setError: setFormError,
-  } = useForm<CreateUserSchemaType>({
-    resolver: zodResolver(createUserSchema),
+    watch,
+  } = useForm<UpdateUserSchemaType>({
     defaultValues: {
-      name: "",
-      email: "",
-      phoneNo: "",
-      password: "",
-      roleId: undefined,
-      avatar: "",
-      gender: true,
-      status: true,
+      name: data?.name,
+      email: data?.email,
+      roleId: data?.role?.id,
+      phoneNo: data?.phoneNo,
+      password: data?.password,
+      avatar: data?.avatar,
+      gender: data?.gender,
+      status: data?.status,
     },
+    resolver: zodResolver(updateUserSchema),
   });
 
-  const onSubmit = (data: CreateUserSchemaType) =>
+  const onSubmit = (formData: UpdateUserSchemaType) =>
     startTransition(async () => {
       try {
-        const response = await createUser(data);
+        const response = await updateUser(data.id, formData);
 
         if (!response.success && response?.errors)
           setApiErrors(response.errors, setFormError);
@@ -53,7 +60,7 @@ const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
           throw new Error(response?.message || "Failed to create user");
         else {
           onSuccess(response?.data);
-          toast.success("User created successfully");
+          toast.success("User updated successfully");
         }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
@@ -105,7 +112,16 @@ const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
           placeholder="Enter a valid password"
           disabled={isPending}
         />
-        <RoleAutocomplete control={control} name="roleId" label="Role" />
+        <RoleAutocomplete
+          control={control}
+          name="roleId"
+          label="Role"
+          defaultRole={
+            data?.role
+              ? { id: data.role.id, roleName: data.role.roleName }
+              : null
+          }
+        />
         <CustomSelect
           control={control}
           name="gender"
@@ -132,7 +148,7 @@ const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
           <Field>
             <Button type="submit" disabled={isPending}>
               {isPending ? <Spinner data-icon="inline-start" /> : ""}
-              Create New
+              Update
             </Button>
           </Field>
         </div>
@@ -141,4 +157,4 @@ const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
   );
 };
 
-export default CreateMenuForm;
+export default UpdateUserForm;

@@ -30,7 +30,7 @@ export const getMenus = async ({
     if (deletable !== null) url += `&deletable=${deletable}`;
     const data = await fetchData(url);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -60,7 +60,7 @@ export const createMenu = async (formData: CreateMenuSchemaType) => {
       body: JSON.stringify(formData),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -89,7 +89,7 @@ export const deleteMenuById = async (id: number) => {
       method: "DELETE",
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -116,7 +116,7 @@ export const getMenuById = async (id: number) => {
   try {
     const data = await fetchData(`menus/${id}`);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -177,7 +177,7 @@ export const bulkDeleteMenu = async (ids: number[]) => {
       body: JSON.stringify({ ids }),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     revalidatePath("/admin/menus");
     return data;
   } catch (error) {

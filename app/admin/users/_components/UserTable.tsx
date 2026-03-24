@@ -18,11 +18,12 @@ import {
 import {
   MoreHorizontal,
   ArrowUpDown,
-  Trash,
   Trash2,
   Users,
   CircleCheckBig,
   CircleX,
+  Ban,
+  SquarePen,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -63,6 +64,7 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import CreateUser from "./CreateUser";
+import UpdateUserModal from "./UpdateUserModal";
 
 export default function UserTable() {
   const [state, dispatch] = useReducer(userReducer, initialUserState);
@@ -83,6 +85,7 @@ export default function UserTable() {
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
+    showUpdateModal,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -104,7 +107,7 @@ export default function UserTable() {
           order,
           direction,
         });
-        if (!data.success) throw new Error(data.message);
+        if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_USERS", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
@@ -138,7 +141,7 @@ export default function UserTable() {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
       const data = await deleteUserById(selectedId!);
-      if (!data.success) throw new Error(data.message);
+      if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });
@@ -351,7 +354,7 @@ export default function UserTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  {/* <DropdownMenuItem
+                  <DropdownMenuItem
                     onClick={() =>
                       dispatch({
                         type: "TOGGLE_UPDATE_MODAL",
@@ -361,7 +364,7 @@ export default function UserTable() {
                   >
                     <SquarePen />
                     Edit
-                  </DropdownMenuItem> */}
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
                     onClick={() =>
@@ -371,8 +374,8 @@ export default function UserTable() {
                       })
                     }
                   >
-                    <Trash />
-                    Delete
+                    <Ban />
+                    Inactivate
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -578,8 +581,8 @@ export default function UserTable() {
           </div>
         </CardContent>
       </Card>
-      {/* {selectedId && showUpdateModal && (
-        <UpdateMenu
+      {selectedId && showUpdateModal && (
+        <UpdateUserModal
           id={selectedId as number}
           open={showUpdateModal}
           toggleModal={() =>
@@ -587,7 +590,7 @@ export default function UserTable() {
           }
           onSuccess={onUpdateSuccess}
         />
-      )} */}
+      )}
       <DeleteModal
         open={bulkDeleteOpen}
         loading={bulkDeleteLoader}

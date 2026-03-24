@@ -21,6 +21,7 @@ import {
   PermissionSchemaType,
 } from "@/schemas/permission.schema";
 import { stringToSlug } from "@/utils/common";
+import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
 import { useEffect, useEffectEvent, useState, useTransition } from "react";
@@ -35,20 +36,25 @@ const CreatePermission = ({
   const [modules, setModules] = useState<Module[]>([]);
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
-  const { control, handleSubmit, setValue, watch } =
-    useForm<PermissionSchemaType>({
-      defaultValues: {
-        moduleId: null,
-        permissions: [
-          {
-            name: "",
-            slug: "",
-            deletable: true,
-          },
-        ],
-      },
-      resolver: zodResolver(PermissionSchema),
-    });
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    setError: setFormError,
+  } = useForm<PermissionSchemaType>({
+    defaultValues: {
+      moduleId: null,
+      permissions: [
+        {
+          name: "",
+          slug: "",
+          deletable: true,
+        },
+      ],
+    },
+    resolver: zodResolver(PermissionSchema),
+  });
 
   /**
    * auto generate slug
@@ -107,10 +113,14 @@ const CreatePermission = ({
       try {
         const response = await createPermission(data);
 
-        if (!response?.success) throw new Error(response?.message);
-
-        toast.success(response?.message);
-        onSuccess(response?.data);
+        if (!response.success && response?.errors)
+          setApiErrors(response.errors, setFormError);
+        else if (!response.success)
+          throw new Error(response?.message || "Failed to create user");
+        else {
+          onSuccess(response?.data);
+          toast.success("Permissions created successfully");
+        }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
         else setError("Something went wrong");
@@ -157,7 +167,7 @@ const CreatePermission = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircleIcon />
           <AlertTitle>Error!</AlertTitle>
           <AlertDescription>{error}</AlertDescription>

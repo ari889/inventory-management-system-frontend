@@ -21,4 +21,5 @@ export interface User extends BaseType {
 export interface InitialUserState extends InitialStateType {
   users: User[];
   open: boolean;
+  showUpdateModal: boolean;
 }

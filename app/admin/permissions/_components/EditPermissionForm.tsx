@@ -17,6 +17,7 @@ import {
   PermissionItemSchemaType,
 } from "@/schemas/permission.schema";
 import { stringToSlug } from "@/utils/common";
+import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
@@ -32,15 +33,20 @@ const EditPermissionForm = ({
 }) => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
-  const { control, handleSubmit, setValue, watch } =
-    useForm<PermissionItemSchemaType>({
-      defaultValues: {
-        name: permission?.name,
-        slug: permission?.slug,
-        deletable: permission?.deletable,
-      },
-      resolver: zodResolver(PermissionItemSchema),
-    });
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    setError: setFormError,
+  } = useForm<PermissionItemSchemaType>({
+    defaultValues: {
+      name: permission?.name,
+      slug: permission?.slug,
+      deletable: permission?.deletable,
+    },
+    resolver: zodResolver(PermissionItemSchema),
+  });
 
   /**
    * auto generate slug
@@ -59,10 +65,14 @@ const EditPermissionForm = ({
       try {
         const response = await updatePermission(permission.id, data);
 
-        if (!response?.success) throw new Error(response?.message);
-
-        toast.success(response?.message);
-        onSuccess(response?.data);
+        if (!response.success && response?.errors)
+          setApiErrors(response.errors, setFormError);
+        else if (!response.success)
+          throw new Error(response?.message || "Failed to create user");
+        else {
+          onSuccess(response?.data);
+          toast.success("Permission updated successfully");
+        }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
         else setError("Something went wrong");
@@ -72,7 +82,7 @@ const EditPermissionForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircleIcon />
           <AlertTitle>Error!</AlertTitle>
           <AlertDescription>{error}</AlertDescription>

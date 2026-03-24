@@ -37,6 +37,7 @@ import { updateRole } from "@/actions/RoleAction";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Permission } from "@/@types/permission.types";
+import { setApiErrors } from "@/utils/setFormErrors";
 
 const UpdateRoleForm = ({
   role,
@@ -52,22 +53,27 @@ const UpdateRoleForm = ({
   /**
    * React hook form
    */
-  const { control, handleSubmit, getValues, setValue } =
-    useForm<UpdateRoleSchemaType>({
-      defaultValues: {
-        roleName: role?.roleName ?? "",
-        deletable: role?.deletable ?? false,
-        moduleIds:
-          role?.moduleRole?.map(
-            (module: { module: Module }) => module?.module?.id,
-          ) ?? [],
-        permissionIds:
-          role?.permissionRole?.map(
-            (p: { permission: Permission }) => p?.permission?.id,
-          ) ?? [],
-      },
-      resolver: zodResolver(updateRoleSchema),
-    });
+  const {
+    control,
+    handleSubmit,
+    getValues,
+    setValue,
+    setError: setFormError,
+  } = useForm<UpdateRoleSchemaType>({
+    defaultValues: {
+      roleName: role?.roleName ?? "",
+      deletable: role?.deletable ?? false,
+      moduleIds:
+        role?.moduleRole?.map(
+          (module: { module: Module }) => module?.module?.id,
+        ) ?? [],
+      permissionIds:
+        role?.permissionRole?.map(
+          (p: { permission: Permission }) => p?.permission?.id,
+        ) ?? [],
+    },
+    resolver: zodResolver(updateRoleSchema),
+  });
 
   /**
    * Update handler
@@ -77,10 +83,15 @@ const UpdateRoleForm = ({
   const onSubmit = (formData: UpdateRoleSchemaType) =>
     startTransition(async () => {
       try {
-        const data = await updateRole(Number(role?.id), formData);
-        if (!data.success) throw new Error(data.message);
-        toast.success(data.message);
-        router.push("/admin/roles");
+        const response = await updateRole(Number(role?.id), formData);
+        if (!response.success && response?.errors)
+          setApiErrors(response.errors, setFormError);
+        else if (!response.success)
+          throw new Error(response?.message || "Failed to create user");
+        else {
+          toast.success("Role updated successfully");
+          router.push("/admin/roles");
+        }
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -93,7 +104,7 @@ const UpdateRoleForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {error && (
-        <Alert variant="destructive" className="max-w-md">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircleIcon />
           <AlertTitle>Error!</AlertTitle>
           <AlertDescription>{error}</AlertDescription>

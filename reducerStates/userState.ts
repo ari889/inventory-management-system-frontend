@@ -5,4 +5,5 @@ export const initialUserState: InitialUserState = {
   ...baseInitialState,
   users: [],
   open: false,
+  showUpdateModal: false,
 };

@@ -38,7 +38,7 @@ export const getPermissions = async ({
     if (deletable !== null) url += `&deletable=${deletable}`;
     const data = await fetchData(url);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -65,7 +65,7 @@ export const getPermissionById = async (id: number) => {
   try {
     const data = await fetchData(`permissions/${id}`);
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -94,7 +94,7 @@ export const deletePermissionById = async (id: number) => {
       method: "DELETE",
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -124,7 +124,7 @@ export const createPermission = async (formData: PermissionSchemaType) => {
       body: JSON.stringify(formData),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -158,7 +158,7 @@ export const updatePermission = async (
       body: JSON.stringify(formData),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
 
     return data;
   } catch (error) {
@@ -188,7 +188,7 @@ export const bulkDeletePermission = async (ids: number[]) => {
       body: JSON.stringify({ ids }),
     });
 
-    if (!data.success) throw new Error(data.message);
+    if (!data?.success && !data?.errors) throw new Error(data.message);
     revalidatePath("/admin/permission");
     return data;
   } catch (error) {

@@ -17,10 +17,12 @@ import {
   createModuleSchema,
   CreateModuleSchemaType,
 } from "@/schemas/module.schema";
+import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const EditModuleForm = ({
   modules,
@@ -36,7 +38,12 @@ const EditModuleForm = ({
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const { control, handleSubmit, watch } = useForm<CreateModuleSchemaType>({
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setError: setFormError,
+  } = useForm<CreateModuleSchemaType>({
     resolver: zodResolver(createModuleSchema),
     shouldUnregister: true,
     defaultValues: {
@@ -59,8 +66,14 @@ const EditModuleForm = ({
       try {
         const response = await updateModule(id, module?.menuId, data);
 
-        if (!response.success) throw new Error(response.message);
-        onSuccess(response?.data);
+        if (!response.success && response?.errors)
+          setApiErrors(response.errors, setFormError);
+        else if (!response.success)
+          throw new Error(response?.message || "Failed to create user");
+        else {
+          onSuccess(response?.data);
+          toast.success("Module updated successfully");
+        }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
         else setError("Something went wrong");
@@ -70,7 +83,7 @@ const EditModuleForm = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {error && (
-        <Alert variant="destructive" className="max-w-md">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircleIcon />
           <AlertTitle>Error!</AlertTitle>
           <AlertDescription>{error}</AlertDescription>

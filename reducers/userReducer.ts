@@ -18,6 +18,23 @@ const userCustomReducer = (
       if (newUsers.length > state.limit) newUsers.pop();
       return { ...state, users: newUsers, totalCount: state.totalCount + 1 };
     }
+    case "TOGGLE_UPDATE_MODAL":
+      return {
+        ...state,
+        showUpdateModal: !state.showUpdateModal,
+        selectedId: state.selectedId ? null : (action.payload as number),
+      };
+    case "UPDATE_SUCCESS": {
+      const updatedUser = action.payload as User;
+      return {
+        ...state,
+        showUpdateModal: false,
+        selectedId: null,
+        users: state.users.map((u) =>
+          u.id === updatedUser.id ? updatedUser : u,
+        ),
+      };
+    }
     default:
       return state;
   }

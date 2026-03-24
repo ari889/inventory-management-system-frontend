@@ -52,7 +52,7 @@ const Login = ({ callbackUrl }: { callbackUrl: string }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {error && (
-        <Alert variant="destructive" className="max-w-md">
+        <Alert variant="destructive" className="mb-4">
           <AlertCircleIcon />
           <AlertTitle>Login failed</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
