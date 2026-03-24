@@ -136,8 +136,6 @@ const Modules = ({
     modalOpen,
   } = state;
 
-  console.log({ modules });
-
   /**
    * modules ref
    */

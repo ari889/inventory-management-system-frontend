@@ -1,7 +1,7 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { CreateMenuSchemaType } from "@/schemas/create-menu.schema";
+import { UserSchemaType } from "@/schemas/user.schema";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -9,25 +9,19 @@ import { revalidatePath } from "next/cache";
  * @param param0
  * @returns Menu
  */
-export const getMenus = async ({
+export const getUsers = async ({
   page = 0,
   limit = 10,
   order = "id",
   direction = "desc",
-  search = "",
-  deletable = null,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
-  search: string;
-  deletable: boolean | null;
 }) => {
   try {
-    let url = `menus?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
-    if (search) url += `&search=${search}`;
-    if (deletable !== null) url += `&deletable=${deletable}`;
+    const url = `users?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     const data = await fetchData(url);
 
     if (!data.success) throw new Error(data.message);
@@ -49,13 +43,13 @@ export const getMenus = async ({
 };
 
 /**
- * Create new Menu
+ * Create new user
  * @param formData
- * @returns Menu
+ * @returns User
  */
-export const createMenu = async (formData: CreateMenuSchemaType) => {
+export const createUser = async (formData: UserSchemaType) => {
   try {
-    const data = await fetchData("menus", {
+    const data = await fetchData("users", {
       method: "POST",
       body: JSON.stringify(formData),
     });
@@ -79,13 +73,13 @@ export const createMenu = async (formData: CreateMenuSchemaType) => {
 };
 
 /**
- * Delete meny by id
+ * Delete user by id
  * @param id
- * @returns Menu
+ * @returns User
  */
-export const deleteMenuById = async (id: number) => {
+export const deleteUserById = async (id: number) => {
   try {
-    const data = await fetchData(`menus/${id}`, {
+    const data = await fetchData(`users/${id}`, {
       method: "DELETE",
     });
 
@@ -108,77 +102,77 @@ export const deleteMenuById = async (id: number) => {
 };
 
 /**
- * Get menu by id
+ * Get user by id
  * @param id
- * @returns Menu
+ * @returns User
  */
-export const getMenuById = async (id: number) => {
-  try {
-    const data = await fetchData(`menus/${id}`);
+// export const getUserById = async (id: number) => {
+//   try {
+//     const data = await fetchData(`users/${id}`);
 
-    if (!data.success) throw new Error(data.message);
+//     if (!data.success) throw new Error(data.message);
 
-    return data;
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        message: error.message || "Something went wrong",
-      };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
-    }
-  }
-};
+//     return data;
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       return {
+//         success: false,
+//         message: error.message || "Something went wrong",
+//       };
+//     } else {
+//       return {
+//         success: false,
+//         message: "Something went wrong",
+//       };
+//     }
+//   }
+// };
 
 /**
- * Update menu schema
+ * Update user schema
  * @param id
  * @param data
- * @returns Menu
+ * @returns User
  */
-export const updateMenu = async (id: number, data: CreateMenuSchemaType) => {
-  try {
-    const response = await fetchData(`menus/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
+// export const updateUser = async (id: number, data: CreateUserSchemaType) => {
+//   try {
+//     const response = await fetchData(`users/${id}`, {
+//       method: "PATCH",
+//       body: JSON.stringify(data),
+//     });
 
-    if (!response.success) throw new Error(response.message);
+//     if (!response.success) throw new Error(response.message);
 
-    return response;
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        message: error.message || "Something went wrong",
-      };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
-    }
-  }
-};
+//     return response;
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       return {
+//         success: false,
+//         message: error.message || "Something went wrong",
+//       };
+//     } else {
+//       return {
+//         success: false,
+//         message: "Something went wrong",
+//       };
+//     }
+//   }
+// };
 
 /**
- * Bulk delete menus
+ * Bulk delete users
  * @param ids
- * @returns Menus
+ * @returns Users
  */
-export const bulkDeleteMenu = async (ids: number[]) => {
+export const bulkDeleteUsers = async (ids: number[]) => {
   try {
-    const data = await fetchData(`menus/bulk`, {
+    const data = await fetchData(`users/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
 
     if (!data.success) throw new Error(data.message);
-    revalidatePath("/admin/menus");
+    revalidatePath("/admin/users");
     return data;
   } catch (error) {
     if (error instanceof Error) {

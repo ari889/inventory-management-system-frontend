@@ -12,7 +12,7 @@ import { revalidatePath } from "next/cache";
  * @returns Permission
  */
 export const getPermissions = async ({
-  page = 1,
+  page = 0,
   limit = 10,
   order = "id",
   direction = "desc",

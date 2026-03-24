@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
  * @returns Role
  */
 export const getRoles = async ({
-  page = 1,
+  page = 0,
   limit = 10,
   order = "id",
   direction = "desc",
