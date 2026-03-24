@@ -47,6 +47,8 @@ const CreateMenuForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
 
         if (!response.success) throw new Error(response.message);
 
+        console.log({ response });
+
         onSuccess(response?.data);
       } catch (error) {
         if (error instanceof Error) setError(error?.message);

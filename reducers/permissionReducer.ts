@@ -13,7 +13,11 @@ const permissionCustomReducer = (
     case "REFRESH": {
       const newPermissions = action.payload as Permission[];
       const combined = [...newPermissions, ...state.permissions];
-      return { ...state, permissions: combined.slice(0, state.limit) };
+      return {
+        ...state,
+        permissions: combined.slice(0, state.limit),
+        totalCount: state.totalCount + newPermissions.length,
+      };
     }
 
     case "SELECT_ALL_ROWS":

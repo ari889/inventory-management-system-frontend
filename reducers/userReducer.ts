@@ -13,6 +13,11 @@ const userCustomReducer = (
       return { ...state, users: action.payload as User[] };
     case "TOGGLE_MODAL":
       return { ...state, open: !state.open };
+    case "REFRESH": {
+      const newUsers = [action.payload as User, ...state.users];
+      if (newUsers.length > state.limit) newUsers.pop();
+      return { ...state, users: newUsers, totalCount: state.totalCount + 1 };
+    }
     default:
       return state;
   }

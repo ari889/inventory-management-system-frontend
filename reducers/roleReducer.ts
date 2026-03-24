@@ -13,7 +13,7 @@ const roleCustomReducer = (
     case "REFRESH": {
       const newRoles = [action.payload as Role, ...state.roles];
       if (newRoles.length > state.limit) newRoles.pop();
-      return { ...state, roles: newRoles };
+      return { ...state, roles: newRoles, totalCount: state.totalCount + 1 };
     }
 
     case "SET_SEARCH":

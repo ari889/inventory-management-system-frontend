@@ -16,7 +16,7 @@ const menuCustomReducer = (
     case "REFRESH": {
       const newMenus = [action.payload as Menu, ...state.menus];
       if (newMenus.length > state.limit) newMenus.pop();
-      return { ...state, menus: newMenus };
+      return { ...state, menus: newMenus, totalCount: state.totalCount + 1 };
     }
     case "SELECT_ALL_ROWS":
       return { ...state, selectedRows: new Set(state.menus.map((m) => m.id)) };
