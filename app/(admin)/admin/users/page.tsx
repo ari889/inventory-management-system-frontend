@@ -1,4 +1,6 @@
+import { handleResponse } from "@/utils/handle-response";
 import UserTable from "./_components/UserTable";
+import { checkPermission } from "@/actions/PermissionAction";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -6,7 +8,8 @@ export const metadata = {
   description: "Create and manage users",
 };
 
-const UsersPage = () => {
+const UsersPage = async () => {
+  handleResponse(await checkPermission("menu-access"));
   return <UserTable />;
 };
 

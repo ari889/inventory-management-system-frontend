@@ -13,22 +13,18 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   MoreHorizontal,
   ArrowUpDown,
-  Menu as MenuIcon,
   BadgeCheck,
   CircleX,
   Trash,
   SquarePen,
-  ListCheck,
   Trash2,
+  UserRoundKey,
 } from "lucide-react";
-import { Menu } from "@/@types/menu.types";
-import { bulkDeleteMenu, deleteMenuById, getMenus } from "@/actions/MenuAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
@@ -49,39 +45,48 @@ import {
 import { debounce } from "lodash";
 import TableLoading from "@/components/common/TableLoading";
 import TableAlert from "@/components/common/TableAlert";
-import { Input } from "@/components/ui/input";
-import CreateMenu from "./CreateMenu";
-import DeleteModal from "../../../../components/common/DeleteModal";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import UpdateMenu from "./UpdateMenu";
-import Link from "next/link";
+import { Permission } from "@/@types/permission.types";
+import {
+  bulkDeletePermission,
+  deletePermissionById,
+  getPermissions,
+} from "@/actions/PermissionAction";
+import CreatePermissionModal from "./CreatePermissionModal";
+import EditPermissionModal from "./EditPermissionModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { menuReducer } from "@/reducers/menuReducer";
-import { initialMenuState } from "@/reducerStates/menuState";
+import { Input } from "@/components/ui/input";
+import { permissionReducer } from "@/reducers/permissionReducer";
+import { initialPermissionState } from "@/reducerStates/permissionState";
+import DeleteModal from "@/components/common/DeleteModal";
 
-export default function MenuTable() {
-  const [state, dispatch] = useReducer(menuReducer, initialMenuState);
+export default function PermissionTable() {
+  const [state, dispatch] = useReducer(
+    permissionReducer,
+    initialPermissionState,
+  );
 
   const {
-    open,
     isLoading,
     sorting,
     isError,
     error,
-    menus,
+    permissions,
     totalCount,
     page,
     limit,
-    search,
     deleteOpen,
     selectedId,
     deleteLoading,
-    showUpdateModal,
+    createModal,
+    editModal,
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
+    name,
+    slug,
     deletable,
   } = state;
 
@@ -90,7 +95,7 @@ export default function MenuTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchMenusDebounced = useCallback(
+  const fetchPermissionsDebounced = useCallback(
     debounce(async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
@@ -98,16 +103,17 @@ export default function MenuTable() {
         const order = sorting[0]?.id ?? "id";
         const direction =
           sorting.length === 0 ? "desc" : sorting[0].desc ? "desc" : "asc";
-        const data = await getMenus({
+        const data = await getPermissions({
           page,
           limit,
           order,
           direction,
-          search,
+          name,
+          slug,
           deletable,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
-        dispatch({ type: "SET_MENUS", payload: data.data.items });
+        dispatch({ type: "SET_PERMISSIONS", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
         if (error instanceof Error) {
@@ -119,34 +125,23 @@ export default function MenuTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, search, sorting, deletable],
+    [page, limit, sorting, name, slug, deletable],
   );
 
   /**
-   * call to server action
+   * delete permission by id
    */
-  useEffect(() => {
-    fetchMenusDebounced(page, limit);
-
-    return () => {
-      fetchMenusDebounced.cancel();
-    };
-  }, [page, limit, search, fetchMenusDebounced]);
-
-  /**
-   * delete meny by id
-   */
-  const deleteMenu = useCallback(async () => {
+  const deletePermission = useCallback(async () => {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
-      const data = await deleteMenuById(selectedId!);
+      const data = await deletePermissionById(selectedId!);
       if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });
-      if (menus.length === 1 && page > 1)
+      if (permissions.length === 1 && page > 1)
         dispatch({ type: "SET_PAGE", payload: page - 1 });
-      fetchMenusDebounced(page, limit);
+      fetchPermissionsDebounced(page, limit);
       dispatch({ type: "CLOSE_DELETE_MODAL" });
     } catch (error) {
       if (error instanceof Error) {
@@ -161,20 +156,20 @@ export default function MenuTable() {
     } finally {
       dispatch({ type: "SET_DELETE_LOADING", payload: false });
     }
-  }, [selectedId, page, limit, fetchMenusDebounced, menus.length]);
+  }, [selectedId, page, limit, fetchPermissionsDebounced, permissions.length]);
 
   /**
-   * bulk delete menus
+   * bulk delete permissions
    */
   const bulkDelete = async () => {
     dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
     try {
-      const response = await bulkDeleteMenu(Array.from(selectedRows));
+      const response = await bulkDeletePermission(Array.from(selectedRows));
       if (!response.success) throw new Error(response.message);
       dispatch({ type: "DESELECT_ALL_ROWS" });
       dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
       dispatch({ type: "SET_PAGE", payload: 0 });
-      fetchMenusDebounced(0, limit);
+      fetchPermissionsDebounced(0, limit);
       toast.success(response.message, {
         position: "top-right",
       });
@@ -194,22 +189,35 @@ export default function MenuTable() {
   };
 
   /**
+   * call to server action
+   */
+  useEffect(() => {
+    fetchPermissionsDebounced(page, limit);
+
+    return () => {
+      fetchPermissionsDebounced.cancel();
+    };
+  }, [page, limit, fetchPermissionsDebounced]);
+
+  /**
    * react table column
    */
-  const columns = useMemo<ColumnDef<Menu>[]>(
+  const columns = useMemo<ColumnDef<Permission>[]>(
     () => [
       {
         id: "select",
         header: () => {
           const allSelected =
-            state.selectedRows.size === menus.length && menus.length > 0;
+            state.selectedRows.size === permissions.length &&
+            permissions.length > 0;
 
           return (
             <Checkbox
               checked={allSelected}
               onCheckedChange={() => {
                 const allSelected =
-                  state.selectedRows.size === menus.length && menus.length > 0;
+                  state.selectedRows.size === permissions.length &&
+                  permissions.length > 0;
                 if (allSelected) {
                   dispatch({ type: "DESELECT_ALL_ROWS" });
                 } else {
@@ -246,18 +254,40 @@ export default function MenuTable() {
         cell: ({ row }) => page * limit + row.index + 1,
       },
       {
-        accessorKey: "menuName",
+        accessorKey: "module.moduleName",
+        header: () => <div>Module Name</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">{row.original.module?.moduleName}</div>
+        ),
+      },
+      {
+        accessorKey: "name",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="px-0"
           >
-            Menu Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            Name <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("menuName")}</div>
+          <div className="font-medium">{row.getValue("name")}</div>
+        ),
+      },
+      {
+        accessorKey: "slug",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Slug <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("slug")}</div>
         ),
       },
       {
@@ -292,17 +322,10 @@ export default function MenuTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuItem asChild>
-                    <Link href={`/admin/menus/${row.getValue("id")}`}>
-                      <ListCheck />
-                      Menu Builder
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() =>
                       dispatch({
-                        type: "TOGGLE_UPDATE_MODAL",
+                        type: "OPEN_EDIT_MODAL",
                         payload: row.getValue("id"),
                       })
                     }
@@ -329,14 +352,14 @@ export default function MenuTable() {
         },
       },
     ],
-    [page, limit, menus.length, state.selectedRows],
+    [page, limit, permissions.length, state.selectedRows],
   );
 
   /**
    * define react table by it's hook
    */
   const table = useReactTable({
-    data: menus,
+    data: permissions,
     columns,
     state: { sorting },
     manualPagination: true,
@@ -354,10 +377,10 @@ export default function MenuTable() {
   });
 
   /**
-   * When user create a new menu then close the modal and add the new item to the table
+   * When user create a new permission then close the modal and add the new item to the table
    * @param data
    */
-  const onSuccess = (data: Menu) => {
+  const onSuccess = (data: Permission) => {
     if (page === 0) {
       dispatch({
         type: "REFRESH",
@@ -376,7 +399,13 @@ export default function MenuTable() {
     dispatch({ type: "TOGGLE_MODAL" });
   };
 
-  const onUpdateSuccess = (data: Menu) => {
+  /**
+   * When user update a permission then close the modal and add the new item to the table
+   */
+  const onUpdateSuccess = (data: Permission) => {
+    dispatch({
+      type: "CLOSE_EDIT_MODAL",
+    });
     dispatch({
       type: "UPDATE_SUCCESS",
       payload: data,
@@ -400,7 +429,7 @@ export default function MenuTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && !menus?.length)
+  if (!isLoading && !isError && !permissions?.length)
     content = (
       <TableAlert
         message="No data found!"
@@ -409,7 +438,7 @@ export default function MenuTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && menus?.length)
+  if (!isLoading && !isError && permissions?.length)
     content = table.getRowModel().rows.map((row) => (
       <tr key={row.id} className="border-t hover:bg-muted/40 transition">
         {row.getVisibleCells().map((cell) => (
@@ -426,17 +455,19 @@ export default function MenuTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <MenuIcon className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <UserRoundKey className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
-                <h2 className="text-xl font-semibold">Menus</h2>
-                <h3 className="text-gray-500">See and manage your menus</h3>
+                <h2 className="text-xl font-semibold">Permissions</h2>
+                <h3 className="text-gray-500">
+                  See and manage your Permissions
+                </h3>
               </div>
             </div>
             <ButtonGroup>
-              <CreateMenu
-                open={open}
-                onSuccess={onSuccess}
+              <CreatePermissionModal
+                open={createModal}
                 toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
+                onSuccess={onSuccess}
               />
               {selectedRows?.size > 0 && (
                 <Button
@@ -449,15 +480,28 @@ export default function MenuTable() {
               )}
             </ButtonGroup>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-3">
+          <div className="grid grid-cols-3 gap-4 mb-3">
             <Field>
-              <FieldLabel htmlFor="search">Search</FieldLabel>
+              <FieldLabel htmlFor="permission-name">Permission Name</FieldLabel>
               <Input
-                id="search"
+                id="permission-name"
                 type="text"
-                placeholder="Type menu name..."
+                placeholder="Type permission name..."
+                value={name}
                 onChange={(e) =>
-                  dispatch({ type: "SET_SEARCH", payload: e.target.value })
+                  dispatch({ type: "SET_NAME", payload: e.target.value })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="permission-slug">Permission Slug</FieldLabel>
+              <Input
+                id="permission-slug"
+                type="text"
+                placeholder="Type permission slug..."
+                value={slug}
+                onChange={(e) =>
+                  dispatch({ type: "SET_SLUG", payload: e.target.value })
                 }
               />
             </Field>
@@ -496,10 +540,7 @@ export default function MenuTable() {
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-4 py-3 font-medium text-center"
-                      >
+                      <th key={header.id} className="px-4 py-3 font-medium">
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -564,32 +605,30 @@ export default function MenuTable() {
           </div>
         </CardContent>
       </Card>
-      {selectedId && showUpdateModal && (
-        <UpdateMenu
-          id={selectedId as number}
-          open={showUpdateModal}
-          toggleModal={() =>
-            dispatch({ type: "TOGGLE_UPDATE_MODAL", payload: null })
-          }
-          onSuccess={onUpdateSuccess}
-        />
-      )}
+      <DeleteModal
+        open={deleteOpen}
+        loading={deleteLoading}
+        onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
+        action={deletePermission}
+        title="Delete Menu!"
+        description="Are you sure you want to delete this menu?"
+      />
       <DeleteModal
         open={bulkDeleteOpen}
         loading={bulkDeleteLoader}
         onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
         action={bulkDelete}
-        title="Delete all menus!"
-        description="Are you sure you want to delete all these menus?"
+        title="Delete all permissions!"
+        description="Are you sure you want to delete all these permissions?"
       />
-      <DeleteModal
-        open={deleteOpen}
-        loading={deleteLoading}
-        onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
-        action={deleteMenu}
-        title="Delete Menu!"
-        description="Are you sure you want to delete this menu?"
-      />
+      {editModal && selectedId && (
+        <EditPermissionModal
+          id={selectedId as number}
+          open={editModal}
+          toggleModal={() => dispatch({ type: "CLOSE_EDIT_MODAL" })}
+          onSuccess={onUpdateSuccess}
+        />
+      )}
     </div>
   );
 }

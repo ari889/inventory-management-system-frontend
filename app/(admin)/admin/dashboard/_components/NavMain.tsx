@@ -21,6 +21,7 @@ import { Module } from "@/@types/module.types";
 import DynamicIcon from "@/components/common/DynamicIcon";
 
 export function NavMain({ items }: { items: Module[] }) {
+  console.log({ items });
   return (
     <SidebarGroup>
       {items.map((item) =>
@@ -50,7 +51,13 @@ export function NavMain({ items }: { items: Module[] }) {
                       {item.children.map((child: Module) => (
                         <SidebarMenuSubItem key={child.id}>
                           <SidebarMenuSubButton asChild>
-                            <Link href={child.url || "#"}>
+                            <Link
+                              href={
+                                child?.permissions?.length > 0
+                                  ? child.url || "#"
+                                  : "/admin/access-denied"
+                              }
+                            >
                               {child?.iconClass && (
                                 <DynamicIcon
                                   name={child.iconClass}
@@ -69,7 +76,13 @@ export function NavMain({ items }: { items: Module[] }) {
             ) : (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton asChild>
-                  <Link href={item.url || "#"}>
+                  <Link
+                    href={
+                      item?.permissions?.length > 0
+                        ? item.url || "#"
+                        : "/admin/access-denied"
+                    }
+                  >
                     {item?.iconClass && (
                       <DynamicIcon name={item.iconClass} className="mr-2" />
                     )}

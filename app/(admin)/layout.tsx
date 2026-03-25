@@ -4,7 +4,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ReactNode } from "react";
-import { AppSidebar } from "./dashboard/_components/AppSidebar";
+import { AppSidebar } from "./admin/dashboard/_components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,

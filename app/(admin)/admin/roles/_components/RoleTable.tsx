@@ -23,8 +23,11 @@ import {
   Trash,
   SquarePen,
   Trash2,
-  UserRoundKey,
+  UserKey,
+  Eye,
 } from "lucide-react";
+import { Role } from "@/@types/role.types";
+import { bulkDeleteRole, deleteRoleById, getRoles } from "@/actions/RoleAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
@@ -45,48 +48,37 @@ import {
 import { debounce } from "lodash";
 import TableLoading from "@/components/common/TableLoading";
 import TableAlert from "@/components/common/TableAlert";
-import DeleteModal from "../../../../components/common/DeleteModal";
+import { Input } from "@/components/ui/input";
+import CreateRole from "./CreateRole";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Permission } from "@/@types/permission.types";
-import {
-  bulkDeletePermission,
-  deletePermissionById,
-  getPermissions,
-} from "@/actions/PermissionAction";
-import CreatePermissionModal from "./CreatePermissionModal";
-import EditPermissionModal from "./EditPermissionModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Input } from "@/components/ui/input";
-import { permissionReducer } from "@/reducers/permissionReducer";
-import { initialPermissionState } from "@/reducerStates/permissionState";
+import Link from "next/link";
+import { roleReducer } from "@/reducers/roleReducer";
+import { initialRoleState } from "@/reducerStates/roleState";
+import DeleteModal from "@/components/common/DeleteModal";
 
-export default function PermissionTable() {
-  const [state, dispatch] = useReducer(
-    permissionReducer,
-    initialPermissionState,
-  );
+export default function RoleTable() {
+  const [state, dispatch] = useReducer(roleReducer, initialRoleState);
 
   const {
+    open,
     isLoading,
     sorting,
     isError,
     error,
-    permissions,
+    roles,
     totalCount,
     page,
     limit,
+    search,
     deleteOpen,
     selectedId,
     deleteLoading,
-    createModal,
-    editModal,
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
-    name,
-    slug,
     deletable,
   } = state;
 
@@ -95,7 +87,7 @@ export default function PermissionTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchPermissionsDebounced = useCallback(
+  const fetchRolesDebounced = useCallback(
     debounce(async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
@@ -103,17 +95,16 @@ export default function PermissionTable() {
         const order = sorting[0]?.id ?? "id";
         const direction =
           sorting.length === 0 ? "desc" : sorting[0].desc ? "desc" : "asc";
-        const data = await getPermissions({
+        const data = await getRoles({
           page,
           limit,
           order,
           direction,
-          name,
-          slug,
+          search,
           deletable,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
-        dispatch({ type: "SET_PERMISSIONS", payload: data.data.items });
+        dispatch({ type: "SET_ROLES", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
         if (error instanceof Error) {
@@ -125,23 +116,23 @@ export default function PermissionTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting, name, slug, deletable],
+    [page, limit, search, sorting, deletable],
   );
 
   /**
-   * delete permission by id
+   * delete meny by id
    */
-  const deletePermission = useCallback(async () => {
+  const deleteRole = useCallback(async () => {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
-      const data = await deletePermissionById(selectedId!);
+      const data = await deleteRoleById(selectedId!);
       if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });
-      if (permissions.length === 1 && page > 1)
+      if (roles.length === 1 && page > 1)
         dispatch({ type: "SET_PAGE", payload: page - 1 });
-      fetchPermissionsDebounced(page, limit);
+      fetchRolesDebounced(page, limit);
       dispatch({ type: "CLOSE_DELETE_MODAL" });
     } catch (error) {
       if (error instanceof Error) {
@@ -156,20 +147,20 @@ export default function PermissionTable() {
     } finally {
       dispatch({ type: "SET_DELETE_LOADING", payload: false });
     }
-  }, [selectedId, page, limit, fetchPermissionsDebounced, permissions.length]);
+  }, [selectedId, page, limit, fetchRolesDebounced, roles.length]);
 
   /**
-   * bulk delete permissions
+   * bulk delete roles
    */
   const bulkDelete = async () => {
     dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
     try {
-      const response = await bulkDeletePermission(Array.from(selectedRows));
+      const response = await bulkDeleteRole(Array.from(selectedRows));
       if (!response.success) throw new Error(response.message);
       dispatch({ type: "DESELECT_ALL_ROWS" });
       dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
       dispatch({ type: "SET_PAGE", payload: 0 });
-      fetchPermissionsDebounced(0, limit);
+      fetchRolesDebounced(0, limit);
       toast.success(response.message, {
         position: "top-right",
       });
@@ -192,32 +183,30 @@ export default function PermissionTable() {
    * call to server action
    */
   useEffect(() => {
-    fetchPermissionsDebounced(page, limit);
+    fetchRolesDebounced(page, limit);
 
     return () => {
-      fetchPermissionsDebounced.cancel();
+      fetchRolesDebounced.cancel();
     };
-  }, [page, limit, fetchPermissionsDebounced]);
+  }, [page, limit, search, fetchRolesDebounced]);
 
   /**
    * react table column
    */
-  const columns = useMemo<ColumnDef<Permission>[]>(
+  const columns = useMemo<ColumnDef<Role>[]>(
     () => [
       {
         id: "select",
         header: () => {
           const allSelected =
-            state.selectedRows.size === permissions.length &&
-            permissions.length > 0;
+            state.selectedRows.size === roles.length && roles.length > 0;
 
           return (
             <Checkbox
               checked={allSelected}
               onCheckedChange={() => {
                 const allSelected =
-                  state.selectedRows.size === permissions.length &&
-                  permissions.length > 0;
+                  state.selectedRows.size === roles.length && roles.length > 0;
                 if (allSelected) {
                   dispatch({ type: "DESELECT_ALL_ROWS" });
                 } else {
@@ -254,40 +243,18 @@ export default function PermissionTable() {
         cell: ({ row }) => page * limit + row.index + 1,
       },
       {
-        accessorKey: "module.moduleName",
-        header: () => <div>Module Name</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">{row.original.module?.moduleName}</div>
-        ),
-      },
-      {
-        accessorKey: "name",
+        accessorKey: "roleName",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="px-0"
           >
-            Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            Role Name <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("name")}</div>
-        ),
-      },
-      {
-        accessorKey: "slug",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Slug <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("slug")}</div>
+          <div className="font-medium">{row.getValue("roleName")}</div>
         ),
       },
       {
@@ -322,16 +289,17 @@ export default function PermissionTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      dispatch({
-                        type: "OPEN_EDIT_MODAL",
-                        payload: row.getValue("id"),
-                      })
-                    }
-                  >
-                    <SquarePen />
-                    Edit
+                  <DropdownMenuItem asChild>
+                    <Link href={`/admin/roles/${row.getValue("id")}/view`}>
+                      <Eye />
+                      View
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/admin/roles/${row.getValue("id")}/edit`}>
+                      <SquarePen />
+                      Edit
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
@@ -352,14 +320,14 @@ export default function PermissionTable() {
         },
       },
     ],
-    [page, limit, permissions.length, state.selectedRows],
+    [page, limit, roles.length, state.selectedRows],
   );
 
   /**
    * define react table by it's hook
    */
   const table = useReactTable({
-    data: permissions,
+    data: roles,
     columns,
     state: { sorting },
     manualPagination: true,
@@ -377,10 +345,10 @@ export default function PermissionTable() {
   });
 
   /**
-   * When user create a new permission then close the modal and add the new item to the table
+   * When user create a new role then close the modal and add the new item to the table
    * @param data
    */
-  const onSuccess = (data: Permission) => {
+  const onSuccess = (data: Role) => {
     if (page === 0) {
       dispatch({
         type: "REFRESH",
@@ -400,19 +368,6 @@ export default function PermissionTable() {
   };
 
   /**
-   * When user update a permission then close the modal and add the new item to the table
-   */
-  const onUpdateSuccess = (data: Permission) => {
-    dispatch({
-      type: "CLOSE_EDIT_MODAL",
-    });
-    dispatch({
-      type: "UPDATE_SUCCESS",
-      payload: data,
-    });
-  };
-
-  /**
    * decide what to be rendered
    */
   let content = null;
@@ -429,7 +384,7 @@ export default function PermissionTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && !permissions?.length)
+  if (!isLoading && !isError && !roles?.length)
     content = (
       <TableAlert
         message="No data found!"
@@ -438,7 +393,7 @@ export default function PermissionTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && permissions?.length)
+  if (!isLoading && !isError && roles?.length)
     content = table.getRowModel().rows.map((row) => (
       <tr key={row.id} className="border-t hover:bg-muted/40 transition">
         {row.getVisibleCells().map((cell) => (
@@ -455,19 +410,17 @@ export default function PermissionTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <UserRoundKey className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <UserKey className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
-                <h2 className="text-xl font-semibold">Permissions</h2>
-                <h3 className="text-gray-500">
-                  See and manage your Permissions
-                </h3>
+                <h2 className="text-xl font-semibold">Roles</h2>
+                <h3 className="text-gray-500">See and manage your roles</h3>
               </div>
             </div>
             <ButtonGroup>
-              <CreatePermissionModal
-                open={createModal}
-                toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
+              <CreateRole
+                open={open}
                 onSuccess={onSuccess}
+                toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
               />
               {selectedRows?.size > 0 && (
                 <Button
@@ -480,28 +433,15 @@ export default function PermissionTable() {
               )}
             </ButtonGroup>
           </div>
-          <div className="grid grid-cols-3 gap-4 mb-3">
+          <div className="grid grid-cols-2 gap-4 mb-3">
             <Field>
-              <FieldLabel htmlFor="permission-name">Permission Name</FieldLabel>
+              <FieldLabel htmlFor="search">Search</FieldLabel>
               <Input
-                id="permission-name"
+                id="search"
                 type="text"
-                placeholder="Type permission name..."
-                value={name}
+                placeholder="Type role name..."
                 onChange={(e) =>
-                  dispatch({ type: "SET_NAME", payload: e.target.value })
-                }
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="permission-slug">Permission Slug</FieldLabel>
-              <Input
-                id="permission-slug"
-                type="text"
-                placeholder="Type permission slug..."
-                value={slug}
-                onChange={(e) =>
-                  dispatch({ type: "SET_SLUG", payload: e.target.value })
+                  dispatch({ type: "SET_SEARCH", payload: e.target.value })
                 }
               />
             </Field>
@@ -540,7 +480,10 @@ export default function PermissionTable() {
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th key={header.id} className="px-4 py-3 font-medium">
+                      <th
+                        key={header.id}
+                        className="px-4 py-3 font-medium text-center"
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -606,29 +549,21 @@ export default function PermissionTable() {
         </CardContent>
       </Card>
       <DeleteModal
-        open={deleteOpen}
-        loading={deleteLoading}
-        onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
-        action={deletePermission}
-        title="Delete Menu!"
-        description="Are you sure you want to delete this menu?"
-      />
-      <DeleteModal
         open={bulkDeleteOpen}
         loading={bulkDeleteLoader}
         onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
         action={bulkDelete}
-        title="Delete all permissions!"
-        description="Are you sure you want to delete all these permissions?"
+        title="Delete all roles!"
+        description="Are you sure you want to delete all these roles?"
       />
-      {editModal && selectedId && (
-        <EditPermissionModal
-          id={selectedId as number}
-          open={editModal}
-          toggleModal={() => dispatch({ type: "CLOSE_EDIT_MODAL" })}
-          onSuccess={onUpdateSuccess}
-        />
-      )}
+      <DeleteModal
+        open={deleteOpen}
+        loading={deleteLoading}
+        onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
+        action={deleteRole}
+        title="Delete Role!"
+        description="Are you sure you want to delete this role?"
+      />
     </div>
   );
 }

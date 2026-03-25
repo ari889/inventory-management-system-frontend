@@ -1,4 +1,6 @@
+import { handleResponse } from "@/utils/handle-response";
 import RoleTable from "./_components/RoleTable";
+import { checkPermission } from "@/actions/PermissionAction";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -6,7 +8,8 @@ export const metadata = {
   description: "Create and manage roles",
 };
 
-const RolesPage = () => {
+const RolesPage = async () => {
+  handleResponse(await checkPermission("menu-access"));
   return <RoleTable />;
 };
 

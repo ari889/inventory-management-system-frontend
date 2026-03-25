@@ -18,23 +18,19 @@ import {
 import {
   MoreHorizontal,
   ArrowUpDown,
-  BadgeCheck,
-  CircleX,
-  Trash,
-  SquarePen,
   Trash2,
-  UserKey,
-  Eye,
+  Users,
+  CircleCheckBig,
+  CircleX,
+  Ban,
+  SquarePen,
 } from "lucide-react";
-import { Role } from "@/@types/role.types";
-import { bulkDeleteRole, deleteRoleById, getRoles } from "@/actions/RoleAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -48,19 +44,30 @@ import {
 import { debounce } from "lodash";
 import TableLoading from "@/components/common/TableLoading";
 import TableAlert from "@/components/common/TableAlert";
-import { Input } from "@/components/ui/input";
-import CreateRole from "./CreateRole";
-import DeleteModal from "../../../../components/common/DeleteModal";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
-import Link from "next/link";
-import { roleReducer } from "@/reducers/roleReducer";
-import { initialRoleState } from "@/reducerStates/roleState";
+import { userReducer } from "@/reducers/userReducer";
+import { initialUserState } from "@/reducerStates/userState";
+import {
+  bulkDeleteUsers,
+  deleteUserById,
+  getUsers,
+} from "@/actions/UserAction";
+import { User } from "@/@types/user.types";
+import { Badge } from "@/components/ui/badge";
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import CreateUser from "./CreateUser";
+import UpdateUserModal from "./UpdateUserModal";
+import DeleteModal from "@/components/common/DeleteModal";
 
-export default function RoleTable() {
-  const [state, dispatch] = useReducer(roleReducer, initialRoleState);
+export default function UserTable() {
+  const [state, dispatch] = useReducer(userReducer, initialUserState);
 
   const {
     open,
@@ -68,18 +75,17 @@ export default function RoleTable() {
     sorting,
     isError,
     error,
-    roles,
+    users,
     totalCount,
     page,
     limit,
-    search,
     deleteOpen,
     selectedId,
     deleteLoading,
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
-    deletable,
+    showUpdateModal,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -87,7 +93,7 @@ export default function RoleTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchRolesDebounced = useCallback(
+  const fetchUsersDebounced = useCallback(
     debounce(async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
@@ -95,16 +101,14 @@ export default function RoleTable() {
         const order = sorting[0]?.id ?? "id";
         const direction =
           sorting.length === 0 ? "desc" : sorting[0].desc ? "desc" : "asc";
-        const data = await getRoles({
+        const data = await getUsers({
           page,
           limit,
           order,
           direction,
-          search,
-          deletable,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
-        dispatch({ type: "SET_ROLES", payload: data.data.items });
+        dispatch({ type: "SET_USERS", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
         if (error instanceof Error) {
@@ -116,23 +120,34 @@ export default function RoleTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, search, sorting, deletable],
+    [page, limit, sorting],
   );
 
   /**
-   * delete meny by id
+   * call to server action
    */
-  const deleteRole = useCallback(async () => {
+  useEffect(() => {
+    fetchUsersDebounced(page, limit);
+
+    return () => {
+      fetchUsersDebounced.cancel();
+    };
+  }, [page, limit, fetchUsersDebounced]);
+
+  /**
+   * delete user by id
+   */
+  const deleteUser = useCallback(async () => {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
-      const data = await deleteRoleById(selectedId!);
+      const data = await deleteUserById(selectedId!);
       if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });
-      if (roles.length === 1 && page > 1)
+      if (users.length === 1 && page > 1)
         dispatch({ type: "SET_PAGE", payload: page - 1 });
-      fetchRolesDebounced(page, limit);
+      fetchUsersDebounced(page, limit);
       dispatch({ type: "CLOSE_DELETE_MODAL" });
     } catch (error) {
       if (error instanceof Error) {
@@ -147,20 +162,20 @@ export default function RoleTable() {
     } finally {
       dispatch({ type: "SET_DELETE_LOADING", payload: false });
     }
-  }, [selectedId, page, limit, fetchRolesDebounced, roles.length]);
+  }, [selectedId, page, limit, fetchUsersDebounced, users.length]);
 
   /**
-   * bulk delete roles
+   * bulk delete users
    */
   const bulkDelete = async () => {
     dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
     try {
-      const response = await bulkDeleteRole(Array.from(selectedRows));
+      const response = await bulkDeleteUsers(Array.from(selectedRows));
       if (!response.success) throw new Error(response.message);
       dispatch({ type: "DESELECT_ALL_ROWS" });
       dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
       dispatch({ type: "SET_PAGE", payload: 0 });
-      fetchRolesDebounced(0, limit);
+      fetchUsersDebounced(0, limit);
       toast.success(response.message, {
         position: "top-right",
       });
@@ -180,33 +195,22 @@ export default function RoleTable() {
   };
 
   /**
-   * call to server action
-   */
-  useEffect(() => {
-    fetchRolesDebounced(page, limit);
-
-    return () => {
-      fetchRolesDebounced.cancel();
-    };
-  }, [page, limit, search, fetchRolesDebounced]);
-
-  /**
    * react table column
    */
-  const columns = useMemo<ColumnDef<Role>[]>(
+  const columns = useMemo<ColumnDef<User>[]>(
     () => [
       {
         id: "select",
         header: () => {
           const allSelected =
-            state.selectedRows.size === roles.length && roles.length > 0;
+            state.selectedRows.size === users.length && users.length > 0;
 
           return (
             <Checkbox
               checked={allSelected}
               onCheckedChange={() => {
                 const allSelected =
-                  state.selectedRows.size === roles.length && roles.length > 0;
+                  state.selectedRows.size === users.length && users.length > 0;
                 if (allSelected) {
                   dispatch({ type: "DESELECT_ALL_ROWS" });
                 } else {
@@ -243,36 +247,97 @@ export default function RoleTable() {
         cell: ({ row }) => page * limit + row.index + 1,
       },
       {
-        accessorKey: "roleName",
+        accessorKey: "name",
+        header: ({ column }) => (
+          <div className="text-left">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="px-0"
+            >
+              Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="flex flex-row items-center">
+            <Avatar>
+              <AvatarImage
+                src={row?.original?.avatar || "https://github.com/shadcn.png"}
+                alt={row?.original?.name}
+              />
+              <AvatarFallback>CN</AvatarFallback>
+              <AvatarBadge className="bg-green-600 dark:bg-green-800" />
+            </Avatar>
+            <span className="ml-2 text-left">
+              <span className="font-medium block">{row?.original?.name}</span>
+              <span>{row?.original?.email}</span>
+            </span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "phoneNo",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="px-0"
           >
-            Role Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            Phone No <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("roleName")}</div>
+          <div className="font-medium">{row.getValue("phoneNo") ?? "N/A"}</div>
         ),
       },
       {
-        accessorKey: "deletable",
-        header: () => <div className="text-center">Deletable</div>,
+        accessorKey: "role.id",
+        header: () => <div className="text-center">Role</div>,
         cell: ({ row }) => (
-          <div className="text-center text-sm text-muted-foreground">
-            {row.getValue("deletable") ? (
-              <Badge>
-                <BadgeCheck data-icon="inline-start" />
-                Yes
+          <div className="font-medium">
+            {row?.original?.role?.roleName ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.getValue("status") ? (
+              <Badge variant="default">
+                <CircleCheckBig />
+                Active
               </Badge>
             ) : (
               <Badge variant="destructive">
-                <CircleX data-icon="inline-start" />
-                No
+                <CircleX />
+                Inactive
               </Badge>
             )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "creator.id",
+        header: () => <div className="text-center">Created By</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.creator?.name ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: () => <div className="text-center">Created At</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.createdAt
+              ? new Date(row?.original?.createdAt).toLocaleDateString()
+              : "N/A"}
           </div>
         ),
       },
@@ -289,17 +354,16 @@ export default function RoleTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuItem asChild>
-                    <Link href={`/admin/roles/${row.getValue("id")}/view`}>
-                      <Eye />
-                      View
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={`/admin/roles/${row.getValue("id")}/edit`}>
-                      <SquarePen />
-                      Edit
-                    </Link>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      dispatch({
+                        type: "TOGGLE_UPDATE_MODAL",
+                        payload: row.getValue("id"),
+                      })
+                    }
+                  >
+                    <SquarePen />
+                    Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
@@ -310,8 +374,8 @@ export default function RoleTable() {
                       })
                     }
                   >
-                    <Trash />
-                    Delete
+                    <Ban />
+                    Inactivate
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -320,14 +384,14 @@ export default function RoleTable() {
         },
       },
     ],
-    [page, limit, roles.length, state.selectedRows],
+    [page, limit, users.length, state.selectedRows],
   );
 
   /**
    * define react table by it's hook
    */
   const table = useReactTable({
-    data: roles,
+    data: users,
     columns,
     state: { sorting },
     manualPagination: true,
@@ -345,10 +409,10 @@ export default function RoleTable() {
   });
 
   /**
-   * When user create a new role then close the modal and add the new item to the table
+   * When user create a new user then close the modal and add the new item to the table
    * @param data
    */
-  const onSuccess = (data: Role) => {
+  const onSuccess = (data: User) => {
     if (page === 0) {
       dispatch({
         type: "REFRESH",
@@ -365,6 +429,13 @@ export default function RoleTable() {
       payload: totalCount + 1,
     });
     dispatch({ type: "TOGGLE_MODAL" });
+  };
+
+  const onUpdateSuccess = (data: User) => {
+    dispatch({
+      type: "UPDATE_SUCCESS",
+      payload: data,
+    });
   };
 
   /**
@@ -384,7 +455,7 @@ export default function RoleTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && !roles?.length)
+  if (!isLoading && !isError && !users?.length)
     content = (
       <TableAlert
         message="No data found!"
@@ -393,7 +464,7 @@ export default function RoleTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && roles?.length)
+  if (!isLoading && !isError && users?.length)
     content = table.getRowModel().rows.map((row) => (
       <tr key={row.id} className="border-t hover:bg-muted/40 transition">
         {row.getVisibleCells().map((cell) => (
@@ -410,14 +481,14 @@ export default function RoleTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <UserKey className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <Users className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
-                <h2 className="text-xl font-semibold">Roles</h2>
-                <h3 className="text-gray-500">See and manage your roles</h3>
+                <h2 className="text-xl font-semibold">Users</h2>
+                <h3 className="text-gray-500">See and manage your users</h3>
               </div>
             </div>
             <ButtonGroup>
-              <CreateRole
+              <CreateUser
                 open={open}
                 onSuccess={onSuccess}
                 toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
@@ -434,45 +505,7 @@ export default function RoleTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            <Field>
-              <FieldLabel htmlFor="search">Search</FieldLabel>
-              <Input
-                id="search"
-                type="text"
-                placeholder="Type role name..."
-                onChange={(e) =>
-                  dispatch({ type: "SET_SEARCH", payload: e.target.value })
-                }
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Is Deletable?</FieldLabel>
-              <Select
-                value={deletable === null ? "all" : String(deletable)}
-                onValueChange={(val) => {
-                  if (val === "all") {
-                    dispatch({ type: "SET_DELETABLE", payload: null });
-                  } else {
-                    dispatch({
-                      type: "SET_DELETABLE",
-                      payload: val === "true",
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Fulter by deletable" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Is Deletable</SelectLabel>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="true">Yes</SelectItem>
-                    <SelectItem value="false">No</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
+            {/* add filter here */}
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
@@ -548,21 +581,31 @@ export default function RoleTable() {
           </div>
         </CardContent>
       </Card>
+      {selectedId && showUpdateModal && (
+        <UpdateUserModal
+          id={selectedId as number}
+          open={showUpdateModal}
+          toggleModal={() =>
+            dispatch({ type: "TOGGLE_UPDATE_MODAL", payload: null })
+          }
+          onSuccess={onUpdateSuccess}
+        />
+      )}
       <DeleteModal
         open={bulkDeleteOpen}
         loading={bulkDeleteLoader}
         onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
         action={bulkDelete}
-        title="Delete all roles!"
-        description="Are you sure you want to delete all these roles?"
+        title="Delete all users!"
+        description="Are you sure you want to delete all these users?"
       />
       <DeleteModal
         open={deleteOpen}
         loading={deleteLoading}
         onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
-        action={deleteRole}
-        title="Delete Role!"
-        description="Are you sure you want to delete this role?"
+        action={deleteUser}
+        title="Delete User!"
+        description="Are you sure you want to delete this user?"
       />
     </div>
   );

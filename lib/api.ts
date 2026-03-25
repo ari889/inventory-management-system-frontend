@@ -2,6 +2,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 
+/**
+ * Fetch data from API with authentication
+ * @param url
+ * @param options
+ * @returns Promise<any>
+ */
 export const fetchData = async (url: string, options: RequestInit = {}) => {
   const session = await getServerSession(authOptions);
 
@@ -31,5 +37,5 @@ export const fetchData = async (url: string, options: RequestInit = {}) => {
     data = { message: text, success: response.ok };
   }
 
-  return data;
+  return { ...data, status: response?.status };
 };

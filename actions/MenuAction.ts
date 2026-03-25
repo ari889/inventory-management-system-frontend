@@ -28,23 +28,28 @@ export const getMenus = async ({
     let url = `menus?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
     if (deletable !== null) url += `&deletable=${deletable}`;
-    const data = await fetchData(url);
+    const response = await fetchData(url);
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: error || "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -55,26 +60,31 @@ export const getMenus = async ({
  */
 export const createMenu = async (formData: CreateMenuSchemaType) => {
   try {
-    const data = await fetchData("menus", {
+    const response = await fetchData("menus", {
       method: "POST",
       body: JSON.stringify(formData),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -85,25 +95,30 @@ export const createMenu = async (formData: CreateMenuSchemaType) => {
  */
 export const deleteMenuById = async (id: number) => {
   try {
-    const data = await fetchData(`menus/${id}`, {
+    const response = await fetchData(`menus/${id}`, {
       method: "DELETE",
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -114,23 +129,28 @@ export const deleteMenuById = async (id: number) => {
  */
 export const getMenuById = async (id: number) => {
   try {
-    const data = await fetchData(`menus/${id}`);
+    const response = await fetchData(`menus/${id}`);
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -147,21 +167,26 @@ export const updateMenu = async (id: number, data: CreateMenuSchemaType) => {
       body: JSON.stringify(data),
     });
 
-    if (!response.success) throw new Error(response.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
     return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -172,25 +197,31 @@ export const updateMenu = async (id: number, data: CreateMenuSchemaType) => {
  */
 export const bulkDeleteMenu = async (ids: number[]) => {
   try {
-    const data = await fetchData(`menus/bulk`, {
+    const response = await fetchData(`menus/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
     revalidatePath("/admin/menus");
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };

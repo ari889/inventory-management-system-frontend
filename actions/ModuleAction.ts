@@ -10,22 +10,28 @@ import { revalidatePath, revalidateTag } from "next/cache";
  */
 export const getModules = async () => {
   try {
-    const data = await fetchData("modules/role", {
+    const response = await fetchData("modules/role", {
       next: { revalidate: 3600, tags: ["modules"] },
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }
@@ -37,20 +43,26 @@ export const getModules = async () => {
  */
 export const getModulesWithPermission = async () => {
   try {
-    const data = await fetchData("modules/permissions");
+    const response = await fetchData("modules/permissions");
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }
@@ -63,20 +75,26 @@ export const getModulesWithPermission = async () => {
  */
 export const getModuleByMenuId = async (menuId: number) => {
   try {
-    const data = await fetchData(`modules/menu/${menuId}`);
+    const response = await fetchData(`modules/menu/${menuId}`);
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }
@@ -92,24 +110,31 @@ export const createModule = async (
   menuId: number,
 ) => {
   try {
-    const data = await fetchData(`modules/${menuId}`, {
+    const response = await fetchData(`modules/${menuId}`, {
       method: "POST",
       body: JSON.stringify(module),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }
@@ -123,23 +148,30 @@ export const createModule = async (
  */
 export const deleteModule = async (menuId: number, id: number) => {
   try {
-    const data = await fetchData(`modules/${id}`, {
+    const response = await fetchData(`modules/${id}`, {
       method: "DELETE",
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }
@@ -152,19 +184,26 @@ export const deleteModule = async (menuId: number, id: number) => {
  */
 export const getModule = async (id: number) => {
   try {
-    const data = await fetchData(`modules/${id}`);
+    const response = await fetchData(`modules/${id}`);
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
-    return data;
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }
@@ -182,24 +221,31 @@ export const updateModule = async (
   formData: CreateModuleSchemaType,
 ) => {
   try {
-    const data = await fetchData(`modules/${id}`, {
+    const response = await fetchData(`modules/${id}`, {
       method: "PATCH",
       body: JSON.stringify(formData),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }
@@ -216,24 +262,31 @@ export const updateModuleRecorder = async (
   formData: Module[],
 ) => {
   try {
-    const data = await fetchData(`modules/recorder`, {
+    const response = await fetchData(`modules/recorder`, {
       method: "PATCH",
       body: JSON.stringify(formData),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
     revalidateTag("modules", "max");
     revalidatePath(`/admin/menus/${menuId}`);
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
     }
     return {
       success: false,
+      status: 500,
       message: "Something went wrong",
     };
   }

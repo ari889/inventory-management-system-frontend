@@ -13,24 +13,29 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   MoreHorizontal,
   ArrowUpDown,
-  Trash2,
-  Users,
-  CircleCheckBig,
+  Menu as MenuIcon,
+  BadgeCheck,
   CircleX,
-  Ban,
+  Trash,
   SquarePen,
+  ListCheck,
+  Trash2,
 } from "lucide-react";
+import { Menu } from "@/@types/menu.types";
+import { bulkDeleteMenu, deleteMenuById, getMenus } from "@/actions/MenuAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -44,30 +49,20 @@ import {
 import { debounce } from "lodash";
 import TableLoading from "@/components/common/TableLoading";
 import TableAlert from "@/components/common/TableAlert";
-import DeleteModal from "../../../../components/common/DeleteModal";
+import { Input } from "@/components/ui/input";
+import CreateMenu from "./CreateMenu";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import UpdateMenu from "./UpdateMenu";
+import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { userReducer } from "@/reducers/userReducer";
-import { initialUserState } from "@/reducerStates/userState";
-import {
-  bulkDeleteUsers,
-  deleteUserById,
-  getUsers,
-} from "@/actions/UserAction";
-import { User } from "@/@types/user.types";
-import { Badge } from "@/components/ui/badge";
-import {
-  Avatar,
-  AvatarBadge,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
-import CreateUser from "./CreateUser";
-import UpdateUserModal from "./UpdateUserModal";
+import { menuReducer } from "@/reducers/menuReducer";
+import { initialMenuState } from "@/reducerStates/menuState";
+import DeleteModal from "@/components/common/DeleteModal";
 
-export default function UserTable() {
-  const [state, dispatch] = useReducer(userReducer, initialUserState);
+export default function MenuTable() {
+  const [state, dispatch] = useReducer(menuReducer, initialMenuState);
 
   const {
     open,
@@ -75,17 +70,19 @@ export default function UserTable() {
     sorting,
     isError,
     error,
-    users,
+    menus,
     totalCount,
     page,
     limit,
+    search,
     deleteOpen,
     selectedId,
     deleteLoading,
+    showUpdateModal,
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
-    showUpdateModal,
+    deletable,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -93,7 +90,7 @@ export default function UserTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchUsersDebounced = useCallback(
+  const fetchMenusDebounced = useCallback(
     debounce(async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
@@ -101,14 +98,16 @@ export default function UserTable() {
         const order = sorting[0]?.id ?? "id";
         const direction =
           sorting.length === 0 ? "desc" : sorting[0].desc ? "desc" : "asc";
-        const data = await getUsers({
+        const data = await getMenus({
           page,
           limit,
           order,
           direction,
+          search,
+          deletable,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
-        dispatch({ type: "SET_USERS", payload: data.data.items });
+        dispatch({ type: "SET_MENUS", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
         if (error instanceof Error) {
@@ -120,34 +119,34 @@ export default function UserTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, search, sorting, deletable],
   );
 
   /**
    * call to server action
    */
   useEffect(() => {
-    fetchUsersDebounced(page, limit);
+    fetchMenusDebounced(page, limit);
 
     return () => {
-      fetchUsersDebounced.cancel();
+      fetchMenusDebounced.cancel();
     };
-  }, [page, limit, fetchUsersDebounced]);
+  }, [page, limit, search, fetchMenusDebounced]);
 
   /**
-   * delete user by id
+   * delete meny by id
    */
-  const deleteUser = useCallback(async () => {
+  const deleteMenu = useCallback(async () => {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
-      const data = await deleteUserById(selectedId!);
+      const data = await deleteMenuById(selectedId!);
       if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });
-      if (users.length === 1 && page > 1)
+      if (menus.length === 1 && page > 1)
         dispatch({ type: "SET_PAGE", payload: page - 1 });
-      fetchUsersDebounced(page, limit);
+      fetchMenusDebounced(page, limit);
       dispatch({ type: "CLOSE_DELETE_MODAL" });
     } catch (error) {
       if (error instanceof Error) {
@@ -162,20 +161,20 @@ export default function UserTable() {
     } finally {
       dispatch({ type: "SET_DELETE_LOADING", payload: false });
     }
-  }, [selectedId, page, limit, fetchUsersDebounced, users.length]);
+  }, [selectedId, page, limit, fetchMenusDebounced, menus.length]);
 
   /**
-   * bulk delete users
+   * bulk delete menus
    */
   const bulkDelete = async () => {
     dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
     try {
-      const response = await bulkDeleteUsers(Array.from(selectedRows));
+      const response = await bulkDeleteMenu(Array.from(selectedRows));
       if (!response.success) throw new Error(response.message);
       dispatch({ type: "DESELECT_ALL_ROWS" });
       dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
       dispatch({ type: "SET_PAGE", payload: 0 });
-      fetchUsersDebounced(0, limit);
+      fetchMenusDebounced(0, limit);
       toast.success(response.message, {
         position: "top-right",
       });
@@ -197,20 +196,20 @@ export default function UserTable() {
   /**
    * react table column
    */
-  const columns = useMemo<ColumnDef<User>[]>(
+  const columns = useMemo<ColumnDef<Menu>[]>(
     () => [
       {
         id: "select",
         header: () => {
           const allSelected =
-            state.selectedRows.size === users.length && users.length > 0;
+            state.selectedRows.size === menus.length && menus.length > 0;
 
           return (
             <Checkbox
               checked={allSelected}
               onCheckedChange={() => {
                 const allSelected =
-                  state.selectedRows.size === users.length && users.length > 0;
+                  state.selectedRows.size === menus.length && menus.length > 0;
                 if (allSelected) {
                   dispatch({ type: "DESELECT_ALL_ROWS" });
                 } else {
@@ -247,97 +246,36 @@ export default function UserTable() {
         cell: ({ row }) => page * limit + row.index + 1,
       },
       {
-        accessorKey: "name",
-        header: ({ column }) => (
-          <div className="text-left">
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="px-0"
-            >
-              Name <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="flex flex-row items-center">
-            <Avatar>
-              <AvatarImage
-                src={row?.original?.avatar || "https://github.com/shadcn.png"}
-                alt={row?.original?.name}
-              />
-              <AvatarFallback>CN</AvatarFallback>
-              <AvatarBadge className="bg-green-600 dark:bg-green-800" />
-            </Avatar>
-            <span className="ml-2 text-left">
-              <span className="font-medium block">{row?.original?.name}</span>
-              <span>{row?.original?.email}</span>
-            </span>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "phoneNo",
+        accessorKey: "menuName",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="px-0"
           >
-            Phone No <ArrowUpDown className="ml-2 h-4 w-4" />
+            Menu Name <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("phoneNo") ?? "N/A"}</div>
+          <div className="font-medium">{row.getValue("menuName")}</div>
         ),
       },
       {
-        accessorKey: "role.id",
-        header: () => <div className="text-center">Role</div>,
+        accessorKey: "deletable",
+        header: () => <div className="text-center">Deletable</div>,
         cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.role?.roleName ?? "N/A"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: () => <div className="text-center">Status</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.getValue("status") ? (
-              <Badge variant="default">
-                <CircleCheckBig />
-                Active
+          <div className="text-center text-sm text-muted-foreground">
+            {row.getValue("deletable") ? (
+              <Badge>
+                <BadgeCheck data-icon="inline-start" />
+                Yes
               </Badge>
             ) : (
               <Badge variant="destructive">
-                <CircleX />
-                Inactive
+                <CircleX data-icon="inline-start" />
+                No
               </Badge>
             )}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "creator.id",
-        header: () => <div className="text-center">Created By</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.creator?.name ?? "N/A"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "createdAt",
-        header: () => <div className="text-center">Created At</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.createdAt
-              ? new Date(row?.original?.createdAt).toLocaleDateString()
-              : "N/A"}
           </div>
         ),
       },
@@ -354,6 +292,13 @@ export default function UserTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
+                  <DropdownMenuItem asChild>
+                    <Link href={`/admin/menus/${row.getValue("id")}`}>
+                      <ListCheck />
+                      Menu Builder
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() =>
                       dispatch({
@@ -374,8 +319,8 @@ export default function UserTable() {
                       })
                     }
                   >
-                    <Ban />
-                    Inactivate
+                    <Trash />
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -384,14 +329,14 @@ export default function UserTable() {
         },
       },
     ],
-    [page, limit, users.length, state.selectedRows],
+    [page, limit, menus.length, state.selectedRows],
   );
 
   /**
    * define react table by it's hook
    */
   const table = useReactTable({
-    data: users,
+    data: menus,
     columns,
     state: { sorting },
     manualPagination: true,
@@ -409,10 +354,10 @@ export default function UserTable() {
   });
 
   /**
-   * When user create a new user then close the modal and add the new item to the table
+   * When user create a new menu then close the modal and add the new item to the table
    * @param data
    */
-  const onSuccess = (data: User) => {
+  const onSuccess = (data: Menu) => {
     if (page === 0) {
       dispatch({
         type: "REFRESH",
@@ -431,7 +376,7 @@ export default function UserTable() {
     dispatch({ type: "TOGGLE_MODAL" });
   };
 
-  const onUpdateSuccess = (data: User) => {
+  const onUpdateSuccess = (data: Menu) => {
     dispatch({
       type: "UPDATE_SUCCESS",
       payload: data,
@@ -455,7 +400,7 @@ export default function UserTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && !users?.length)
+  if (!isLoading && !isError && !menus?.length)
     content = (
       <TableAlert
         message="No data found!"
@@ -464,7 +409,7 @@ export default function UserTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && users?.length)
+  if (!isLoading && !isError && menus?.length)
     content = table.getRowModel().rows.map((row) => (
       <tr key={row.id} className="border-t hover:bg-muted/40 transition">
         {row.getVisibleCells().map((cell) => (
@@ -481,14 +426,14 @@ export default function UserTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <Users className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <MenuIcon className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
-                <h2 className="text-xl font-semibold">Users</h2>
-                <h3 className="text-gray-500">See and manage your users</h3>
+                <h2 className="text-xl font-semibold">Menus</h2>
+                <h3 className="text-gray-500">See and manage your menus</h3>
               </div>
             </div>
             <ButtonGroup>
-              <CreateUser
+              <CreateMenu
                 open={open}
                 onSuccess={onSuccess}
                 toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
@@ -505,7 +450,45 @@ export default function UserTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <Field>
+              <FieldLabel htmlFor="search">Search</FieldLabel>
+              <Input
+                id="search"
+                type="text"
+                placeholder="Type menu name..."
+                onChange={(e) =>
+                  dispatch({ type: "SET_SEARCH", payload: e.target.value })
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Is Deletable?</FieldLabel>
+              <Select
+                value={deletable === null ? "all" : String(deletable)}
+                onValueChange={(val) => {
+                  if (val === "all") {
+                    dispatch({ type: "SET_DELETABLE", payload: null });
+                  } else {
+                    dispatch({
+                      type: "SET_DELETABLE",
+                      payload: val === "true",
+                    });
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Fulter by deletable" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Is Deletable</SelectLabel>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
@@ -582,7 +565,7 @@ export default function UserTable() {
         </CardContent>
       </Card>
       {selectedId && showUpdateModal && (
-        <UpdateUserModal
+        <UpdateMenu
           id={selectedId as number}
           open={showUpdateModal}
           toggleModal={() =>
@@ -596,16 +579,16 @@ export default function UserTable() {
         loading={bulkDeleteLoader}
         onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
         action={bulkDelete}
-        title="Delete all users!"
-        description="Are you sure you want to delete all these users?"
+        title="Delete all menus!"
+        description="Are you sure you want to delete all these menus?"
       />
       <DeleteModal
         open={deleteOpen}
         loading={deleteLoading}
         onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
-        action={deleteUser}
-        title="Delete User!"
-        description="Are you sure you want to delete this user?"
+        action={deleteMenu}
+        title="Delete Menu!"
+        description="Are you sure you want to delete this menu?"
       />
     </div>
   );

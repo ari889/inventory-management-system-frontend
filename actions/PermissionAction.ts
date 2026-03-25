@@ -36,23 +36,28 @@ export const getPermissions = async ({
     if (slug) url += `&slug=${slug}`;
 
     if (deletable !== null) url += `&deletable=${deletable}`;
-    const data = await fetchData(url);
+    const response = await fetchData(url);
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: error || "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -63,23 +68,28 @@ export const getPermissions = async ({
  */
 export const getPermissionById = async (id: number) => {
   try {
-    const data = await fetchData(`permissions/${id}`);
+    const response = await fetchData(`permissions/${id}`);
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -90,25 +100,30 @@ export const getPermissionById = async (id: number) => {
  */
 export const deletePermissionById = async (id: number) => {
   try {
-    const data = await fetchData(`permissions/${id}`, {
+    const response = await fetchData(`permissions/${id}`, {
       method: "DELETE",
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -119,26 +134,31 @@ export const deletePermissionById = async (id: number) => {
  */
 export const createPermission = async (formData: PermissionSchemaType) => {
   try {
-    const data = await fetchData(`permissions`, {
+    const response = await fetchData(`permissions`, {
       method: "POST",
       body: JSON.stringify(formData),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -153,26 +173,31 @@ export const updatePermission = async (
   formData: PermissionItemSchemaType,
 ) => {
   try {
-    const data = await fetchData(`permissions/${id}`, {
+    const response = await fetchData(`permissions/${id}`, {
       method: "PATCH",
       body: JSON.stringify(formData),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong",
-      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
 
@@ -183,25 +208,63 @@ export const updatePermission = async (
  */
 export const bulkDeletePermission = async (ids: number[]) => {
   try {
-    const data = await fetchData(`permissions/bulk`, {
+    const response = await fetchData(`permissions/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
     revalidatePath("/admin/permission");
-    return data;
+    return response;
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
         message: error.message || "Something went wrong",
       };
-    } else {
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
+ * check Permission by slug
+ * @param slug
+ * @returns Boolean
+ */
+export const checkPermission = async (slug: string) => {
+  try {
+    const response = await fetchData(`permissions/check-slug/${slug}`);
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
       return {
         success: false,
-        message: "Something went wrong",
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
       };
     }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
   }
 };
