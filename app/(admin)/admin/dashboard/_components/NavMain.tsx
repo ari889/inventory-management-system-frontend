@@ -21,7 +21,6 @@ import { Module } from "@/@types/module.types";
 import DynamicIcon from "@/components/common/DynamicIcon";
 
 export function NavMain({ items }: { items: Module[] }) {
-  console.log({ items });
   return (
     <SidebarGroup>
       {items.map((item) =>
