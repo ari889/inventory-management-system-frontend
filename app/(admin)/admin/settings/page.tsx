@@ -1,13 +1,22 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings } from "lucide-react";
 import SettingsForm from "./_components/SettingsForm";
+import { getSettings } from "@/actions/SettingsAction";
+import { handleResponse } from "@/utils/handle-response";
+import { Setting } from "@/@types/settings.types";
+export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Settings | Inventory Management System",
-  description: "Manage your account settings",
+export const generateMetadata = async () => {
+  const { data } = handleResponse<Setting[]>(await getSettings());
+  return {
+    title: `Settings | ${data.find((s) => s.name === "title")?.value || "Inventory Management System"}`,
+    description: "Manage your account settings",
+  };
 };
 
-const SettingsPage = () => {
+const SettingsPage = async () => {
+  const { data } = handleResponse<Setting[]>(await getSettings());
+
   return (
     <div className="p-6">
       <Card className="rounded-2xl shadow-sm">
@@ -21,7 +30,7 @@ const SettingsPage = () => {
               </div>
             </div>
           </div>
-          <SettingsForm />
+          <SettingsForm settings={data} />
         </CardContent>
       </Card>
     </div>

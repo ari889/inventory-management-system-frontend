@@ -1,4 +1,6 @@
 "use client";
+import { Setting } from "@/@types/settings.types";
+import { updateSettings } from "@/actions/SettingsAction";
 import CurrencyAutocomplete from "@/components/common/autocompletes/CurrencyAutocomplete";
 import CurrencyCodeAutocomplete from "@/components/common/autocompletes/CurrencyCodeAutocomplete";
 import DateFormatAutocomplete from "@/components/common/autocompletes/DateFormatAutocomplete";
@@ -16,12 +18,14 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { settingsSchema, SettingsSchemaType } from "@/schemas/settings.schema";
+import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
-const SettingsForm = () => {
+const SettingsForm = ({ settings }: { settings: Setting[] }) => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const {
@@ -31,21 +35,66 @@ const SettingsForm = () => {
   } = useForm<SettingsSchemaType>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      title: "",
-      address: null,
-      currencyCode: "",
-      logo: undefined,
-      favicon: undefined,
-      currencySymbol: "",
-      currencyPosition: "postfix",
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      dateFormat: "MM/DD/YYYY",
-      invoicePrefix: "INV-",
-      invoiceNumber: 1,
+      title: settings.find((s) => s.name === "title")?.value || "",
+      address: settings.find((s) => s.name === "address")?.value || null,
+      currency_code:
+        settings.find((s) => s.name === "currency_code")?.value || "",
+      currency_symbol:
+        settings.find((s) => s.name === "currency_symbol")?.value || "",
+      currency_position:
+        (settings.find((s) => s.name === "currency_position")?.value as
+          | "prefix"
+          | "postfix") || "postfix",
+      timezone:
+        settings.find((s) => s.name === "timezone")?.value ||
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+      date_format:
+        settings.find((s) => s.name === "date_format")?.value || "MM/DD/YYYY",
+      invoice_suffix:
+        settings.find((s) => s.name === "invoice_suffix")?.value || "INV-",
+      invoice_number: parseInt(
+        settings.find((s) => s.name === "invoice_number")?.value || "1",
+      ),
+
+      // ✅ Populate from server URL — FileUploader will show the image preview
+      logo: settings.find((s) => s.name === "logo")?.value || undefined,
+      favicon: settings.find((s) => s.name === "favicon")?.value || undefined,
     },
   });
 
-  const onSubmit = (data: SettingsSchemaType) => console.log(data);
+  const onSubmit: SubmitHandler<SettingsSchemaType> = (data) =>
+    startTransition(async () => {
+      try {
+        const body = new FormData();
+        body.append("title", data.title);
+        body.append("address", data.address ?? "");
+        body.append("currency_code", data.currency_code);
+        body.append("currency_symbol", data.currency_symbol);
+        body.append("currency_position", data.currency_position);
+        body.append("timezone", data.timezone);
+        body.append("date_format", data.date_format);
+        body.append("invoice_suffix", data.invoice_suffix);
+        body.append("invoice_number", String(data.invoice_number));
+
+        if (data.logo instanceof File) {
+          body.append("logo", data.logo, data.logo.name);
+        }
+        if (data.favicon instanceof File) {
+          body.append("favicon", data.favicon, data.favicon.name);
+        }
+
+        const response = await updateSettings(body);
+
+        if (!response.success && response?.errors)
+          setApiErrors(response.errors, setFormError);
+        else if (!response.success)
+          throw new Error(response?.message || "Failed to update settings");
+        else toast.success("Settings updated successfully");
+      } catch (error) {
+        if (error instanceof Error) setError(error.message);
+        else setError("Something went wrong");
+      }
+    });
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {error && (
@@ -101,19 +150,19 @@ const SettingsForm = () => {
         </div>
         <CurrencyCodeAutocomplete
           control={control}
-          name="currencyCode"
+          name="currency_code"
           label="Currency Code"
           disabled={isPending}
         />
         <CurrencyAutocomplete
           control={control}
-          name="currencySymbol"
+          name="currency_symbol"
           label="Currency Symbol"
           disabled={isPending}
         />
         <CustomSelect
           control={control}
-          name="currencyPosition"
+          name="currency_position"
           label="Currency Position"
           disabled={isPending}
           data={[
@@ -130,20 +179,20 @@ const SettingsForm = () => {
 
         <DateFormatAutocomplete
           control={control}
-          name="dateFormat"
+          name="date_format"
           label="Date Format"
           disabled={isPending}
         />
         <FormInput
           control={control}
-          name="invoicePrefix"
-          label="Invoice Prefix"
-          placeholder="Enter a valid invoice prefix"
+          name="invoice_suffix"
+          label="Invoice Suffix"
+          placeholder="Enter a valid invoice suffix"
           disabled={isPending}
         />
         <FormInput
           control={control}
-          name="invoiceNumber"
+          name="invoice_number"
           label="Invoice Number"
           placeholder="Enter a valid invoice number"
           disabled={isPending}

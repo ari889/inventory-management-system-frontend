@@ -1,12 +1,11 @@
+import { BaseType } from "./common.types";
 import { Module } from "./module.types";
 import { InitialStateType } from "./reducer.types";
 
-export interface Menu {
+export interface Menu extends BaseType {
   id: number;
   menuName: string;
   deletable: boolean;
-  createdAt: Date;
-  updatedAt: Date;
   modules: Module[];
 }
 

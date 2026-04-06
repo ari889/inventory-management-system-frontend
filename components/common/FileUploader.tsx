@@ -18,12 +18,33 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
+// ─── Safe File check — avoids SSR "instanceof is not callable" ───────────────
+const isFile = (val: unknown): val is File => {
+  if (typeof window === "undefined") return false;
+  const FileConstructor = (window as unknown as { File?: typeof File }).File;
+  if (typeof FileConstructor === "undefined") return false;
+  return val instanceof FileConstructor;
+};
+
+const isUrlString = (val: unknown): val is string =>
+  typeof val === "string" && val.length > 0;
+
+// ─── Prefix relative paths with API_URL ──────────────────────────────────────
+const resolveUrl = (val: string): string => {
+  // Already an absolute URL — return as-is
+  if (val.startsWith("http://") || val.startsWith("https://")) return val;
+  // Relative path like /uploads/logos/abc.png — prefix with API base URL
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "";
+  console.log(`${base}${val}`);
+  return `${base}${val}`;
+};
+
 // ─── MIME → Accept map ────────────────────────────────────────────────────────
 const buildAccept = (types: string[]): Accept =>
   types.reduce<Accept>((acc, t) => ({ ...acc, [t]: [] }), {});
 
 // ─── Lucide icon picker ───────────────────────────────────────────────────────
-const FileIcon = ({
+const FileTypeIcon = ({
   mime,
   className,
 }: {
@@ -44,9 +65,24 @@ const FileIcon = ({
   return <File className={cls} />;
 };
 
-// ─── Inner dropzone — hooks live here, not inside a render prop ───────────────
+// ─── Derive a displayable image src ──────────────────────────────────────────
+const getImageSrc = (value: File | string): string | null => {
+  if (isUrlString(value)) return resolveUrl(value); // server path → full URL
+  if (isFile(value) && value.type.startsWith("image/"))
+    return URL.createObjectURL(value); // local blob
+  return null;
+};
+
+// ─── Derive display name ──────────────────────────────────────────────────────
+const getDisplayName = (value: File | string): string => {
+  if (isUrlString(value)) return value.split("/").pop() ?? value;
+  if (isFile(value)) return value.name;
+  return "Unknown file";
+};
+
+// ─── Inner dropzone ───────────────────────────────────────────────────────────
 type DropzoneInnerProps = {
-  value: File | undefined;
+  value: File | string | undefined;
   onChange: (file: File | undefined) => void;
   acceptTypes: string[];
   placeholder: string;
@@ -85,7 +121,9 @@ function DropzoneInner({
     onChange(undefined);
   };
 
-  const isImage = value?.type.startsWith("image/");
+  const hasValue = isFile(value) || isUrlString(value);
+  const imageSrc = hasValue ? getImageSrc(value as File | string) : null;
+  const displayName = hasValue ? getDisplayName(value as File | string) : null;
 
   return (
     <>
@@ -95,56 +133,54 @@ function DropzoneInner({
           "relative flex min-h-[160px] w-full cursor-pointer flex-col items-center justify-center",
           "rounded-lg border-2 border-dashed transition-all duration-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-
-          // idle
           !disabled &&
             !isDragActive &&
             !isDragReject &&
             !invalid &&
             "border-border bg-muted/30 hover:border-primary/60 hover:bg-muted/60",
-
-          // drag valid
           isDragActive &&
             !isDragReject &&
             "border-primary bg-primary/5 scale-[1.01]",
-
-          // drag rejected type
           isDragReject && "border-destructive bg-destructive/5",
-
-          // validation error
           invalid && !isDragActive && "border-destructive bg-destructive/5",
-
-          // disabled
           disabled && "cursor-not-allowed border-muted bg-muted/20 opacity-60",
         )}
       >
         <input {...getInputProps()} />
 
-        {value ? (
-          /* ── File selected ── */
+        {hasValue ? (
           <div className="flex w-full flex-col items-center gap-3 px-6 py-4">
-            {isImage ? (
+            {imageSrc ? (
               <div className="relative w-full max-h-[180px] overflow-hidden rounded-md">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={URL.createObjectURL(value)}
-                  alt={value.name}
+                  src={imageSrc}
+                  alt={displayName ?? "preview"}
                   className="mx-auto max-h-[180px] w-auto object-contain rounded-md"
                 />
               </div>
             ) : (
-              <FileIcon mime={value.type} className="text-muted-foreground" />
+              <FileTypeIcon
+                mime={isFile(value) ? value.type : ""}
+                className="text-muted-foreground"
+              />
             )}
 
             <div className="flex w-full items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">
-                  {value.name}
+                  {displayName}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {(value.size / 1024).toFixed(1)} KB &middot;{" "}
-                  {value.type || "unknown type"}
-                </p>
+                {isFile(value) ? (
+                  <p className="text-xs text-muted-foreground">
+                    {(value.size / 1024).toFixed(1)} KB &middot;{" "}
+                    {value.type || "unknown type"}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Current file · click to replace
+                  </p>
+                )}
               </div>
 
               {!disabled && (
@@ -164,7 +200,6 @@ function DropzoneInner({
             </div>
           </div>
         ) : (
-          /* ── Empty drop zone ── */
           <div className="flex flex-col items-center gap-2 px-6 py-8 text-center">
             <UploadCloud
               className={cn(
@@ -175,7 +210,6 @@ function DropzoneInner({
                 disabled && "text-muted-foreground/50",
               )}
             />
-
             <p
               className={cn(
                 "text-sm font-medium",
@@ -194,7 +228,6 @@ function DropzoneInner({
                   ? "Drop it here!"
                   : placeholder}
             </p>
-
             <p
               className={cn(
                 "text-xs",
@@ -216,7 +249,7 @@ function DropzoneInner({
   );
 }
 
-// ─── Public component — only Controller lives here ────────────────────────────
+// ─── Public component ─────────────────────────────────────────────────────────
 type Props<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
@@ -241,7 +274,6 @@ export default function FileUploader<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
           {label && <FieldLabel>{label}</FieldLabel>}
-
           <DropzoneInner
             value={field.value}
             onChange={field.onChange}

@@ -8,6 +8,9 @@ import {
 import { FieldDescription } from "@/components/ui/field";
 import Link from "next/link";
 import Login from "./_components/Login";
+import { getSettings } from "@/actions/SettingsAction";
+import { Setting } from "@/@types/settings.types";
+import { handleResponse } from "@/utils/handle-response";
 
 export const metadata = {
   title: "Login - IMS",
@@ -19,6 +22,7 @@ const LoginPage = async ({
 }: {
   searchParams: Promise<{ callbackUrl?: string }>;
 }) => {
+  const { data } = handleResponse<Setting[]>(await getSettings());
   const params = await searchParams;
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
@@ -27,7 +31,10 @@ const LoginPage = async ({
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="text-xl">Welcome back</CardTitle>
-              <CardDescription>Inventory Management System</CardDescription>
+              <CardDescription>
+                {data?.find((s) => s.name === "title")?.value ||
+                  "Inventory Management System"}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Login callbackUrl={params?.callbackUrl || "/admin/dashboard"} />

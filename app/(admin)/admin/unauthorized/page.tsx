@@ -1,3 +1,5 @@
+import { Setting } from "@/@types/settings.types";
+import { getSettings } from "@/actions/SettingsAction";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -7,12 +9,16 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { handleResponse } from "@/utils/handle-response";
 import { ArrowUpRightIcon, Ban } from "lucide-react";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Unauthorized | Inventory Management System",
-  description: "You do not have permission to access this page.",
+export const generateMetadata = async () => {
+  const { data } = handleResponse<Setting[]>(await getSettings());
+  return {
+    title: `Unauthorized | ${data.find((s) => s.name === "title")?.value || "Inventory Management System"}`,
+    description: "You do not have permission to access this page.",
+  };
 };
 
 const UnauthorizedPage = () => {

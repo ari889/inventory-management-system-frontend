@@ -2,25 +2,22 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 
-/**
- * Fetch data from API with authentication
- * @param url
- * @param options
- * @returns Promise<any>
- */
 export const fetchData = async (url: string, options: RequestInit = {}) => {
   const session = await getServerSession(authOptions);
 
-  const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string>),
-  };
+  const isFormData = options.body instanceof FormData;
 
-  if (options.body && !headers["Content-Type"]) {
-    headers["Content-Type"] = "application/json";
+  const headers: Record<string, string> = {};
+
+  if (!isFormData) {
+    if (options.body && typeof options.body === "string") {
+      headers["Content-Type"] = "application/json";
+    }
+    Object.assign(headers, options.headers);
   }
 
-  if (session?.accessToken && !headers["Authorization"]) {
-    headers["Authorization"] = `Bearer ${session?.accessToken}`;
+  if (session?.accessToken) {
+    headers["Authorization"] = `Bearer ${session.accessToken}`;
   }
 
   const response = await fetch(`${process.env.API_URL}/api/admin/v1/${url}`, {
@@ -37,5 +34,5 @@ export const fetchData = async (url: string, options: RequestInit = {}) => {
     data = { message: text, success: response.ok };
   }
 
-  return { ...data, status: response?.status };
+  return { ...data, status: response.status };
 };

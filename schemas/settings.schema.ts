@@ -1,5 +1,7 @@
 import z from "zod";
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
 export const settingsSchema = z.object({
   title: z
     .string()
@@ -8,7 +10,7 @@ export const settingsSchema = z.object({
       message: "Title must contain only letters and spaces!",
     }),
   address: z.string().nullable(),
-  currencyCode: z
+  currency_code: z
     .string()
     .min(1, { message: "Currency code is required!" })
     .refine(
@@ -22,35 +24,42 @@ export const settingsSchema = z.object({
       },
       { message: "Must be a valid ISO 4217 currency code (e.g. USD, EUR)!" },
     ),
-  logo: z
-    .instanceof(File, { message: "Select a valid logo for your site!" })
-    .refine((file) => /\.(jpg|jpeg|gif|png)$/i.test(file.name), {
-      message: "Logo must be a .jpg, .jpeg, .gif, or .png file!",
-    })
-    .refine(
-      (file) => ["image/jpeg", "image/gif", "image/png"].includes(file.type),
-      { message: "Logo must be a valid image file!" },
-    ),
-  favicon: z
-    .instanceof(File, { message: "Select a valid favicon for your site!" })
-    .refine((file) => /\.(jpg|jpeg|gif|ico|png)$/i.test(file.name), {
-      message: "Favicon must be a .jpg, .jpeg, .gif, .ico, or .png file!",
-    })
-    .refine(
-      (file) =>
-        [
-          "image/jpeg",
-          "image/gif",
-          "image/png",
-          "image/x-icon",
-          "image/vnd.microsoft.icon",
-        ].includes(file.type),
-      { message: "Favicon must be a valid image file!" },
-    ),
-  currencySymbol: z
+  logo: z.union([
+    z.string().min(1, { message: "Logo is required!" }),
+    z
+      .instanceof(File, { message: "Logo is required!" })
+      .refine((f) => f.size <= MAX_FILE_SIZE, {
+        message: "Logo must be less than 2MB!",
+      })
+      .refine(
+        (f) => ["image/jpeg", "image/png", "image/gif"].includes(f.type),
+        { message: "Logo must be a .jpg, .jpeg, .gif, or .png file!" },
+      ),
+  ]),
+
+  favicon: z.union([
+    z.string().min(1, { message: "Favicon is required!" }),
+    z
+      .instanceof(File, { message: "Favicon is required!" })
+      .refine((f) => f.size <= MAX_FILE_SIZE, {
+        message: "Favicon must be less than 2MB!",
+      })
+      .refine(
+        (f) =>
+          [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/x-icon",
+            "image/vnd.microsoft.icon",
+          ].includes(f.type),
+        { message: "Favicon must be a .jpg, .jpeg, .gif, .ico, or .png file!" },
+      ),
+  ]),
+  currency_symbol: z
     .string()
     .min(1, { message: "Currency symbol is required!" }),
-  currencyPosition: z.enum(["prefix", "postfix"] as const, {
+  currency_position: z.enum(["prefix", "postfix"] as const, {
     message: "Currency position must be 'prefix' or 'postfix'!",
   }),
   timezone: z
@@ -67,7 +76,7 @@ export const settingsSchema = z.object({
       },
       { message: "Must be a valid IANA timezone (e.g. America/New_York)!" },
     ),
-  dateFormat: z
+  date_format: z
     .string()
     .min(1, { message: "Date format is required!" })
     .refine(
@@ -88,14 +97,14 @@ export const settingsSchema = z.object({
       },
       { message: "Must be a valid date format (e.g. MM/DD/YYYY, YYYY-MM-DD)!" },
     ),
-  invoicePrefix: z
+  invoice_suffix: z
     .string()
-    .min(1, { message: "Invoice prefix is required!" })
+    .min(1, { message: "Invoice suffix is required!" })
     .regex(/^[A-Z-]+$/, {
       message:
-        "Invoice prefix must contain only uppercase letters (A-Z) and hyphens (-)!",
+        "Invoice suffix must contain only uppercase letters (A-Z) and hyphens (-)!",
     }),
-  invoiceNumber: z
+  invoice_number: z
     .number({ message: "Invoice number must be a number!" })
     .int({ message: "Invoice number must be an integer!" })
     .min(1, { message: "Invoice number must be greater than 0!" })

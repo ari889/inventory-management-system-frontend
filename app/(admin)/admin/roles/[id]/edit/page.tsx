@@ -17,20 +17,22 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { handleResponse } from "@/utils/handle-response";
 import { Role } from "@/@types/role.types";
 import { Module } from "@/@types/module.types";
+import { getSettings } from "@/actions/SettingsAction";
+import { Setting } from "@/@types/settings.types";
 
-export async function generateMetadata({
+export const generateMetadata = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
-}): Promise<Metadata> {
+}): Promise<Metadata> => {
+  const { data } = handleResponse<Setting[]>(await getSettings());
   const { id } = await params;
-  const role = await getRoleById(Number(id));
-  if (!role?.success) throw new Error(role?.message);
+  const role = handleResponse<Role>(await getRoleById(Number(id)));
   return {
-    title: `Edit ${role?.data?.roleName} | Inventory Management System`,
+    title: `Edit ${role?.data?.roleName} | ${data.find((s) => s.name === "title")?.value || "Inventory Management System"}`,
     description: "Edit and manage role",
   };
-}
+};
 
 const EditRolePage = async ({
   params,

@@ -1,15 +1,14 @@
+import { BaseType } from "./common.types";
 import { Module } from "./module.types";
 import { InitialStateType } from "./reducer.types";
 
-export interface Permission {
+export interface Permission extends BaseType {
   id: number;
   moduleId: number;
   module: Module;
   name: string;
   slug: string;
   deletable: boolean;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface InititalPermissionState extends InitialStateType {
