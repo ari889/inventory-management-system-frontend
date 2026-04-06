@@ -12,9 +12,12 @@ import { getSettings } from "@/actions/SettingsAction";
 import { Setting } from "@/@types/settings.types";
 import { handleResponse } from "@/utils/handle-response";
 
-export const metadata = {
-  title: "Login - IMS",
-  description: "IMS - Login admin",
+export const generateMetadata = async () => {
+  const { data } = handleResponse<Setting[]>(await getSettings());
+  return {
+    title: `Login | ${data.find((s) => s.name === "title")?.value || "Inventory Management System"}`,
+    description: "Login to your account",
+  };
 };
 
 const LoginPage = async ({

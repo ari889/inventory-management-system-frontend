@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import { Toaster } from "@/components/ui/sonner";
