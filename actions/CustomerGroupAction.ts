@@ -1,15 +1,15 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { WarehouseSchemaType } from "@/schemas/warehouse.schema";
+import { CustomerGroupSchemaType } from "@/schemas/customer-group.schema";
 import { revalidatePath } from "next/cache";
 
 /**
- * Get warehouses from server
+ * Get customer groups from server
  * @param param0
- * @returns Warehouse
+ * @returns CustomerGroup
  */
-export const getWarehouses = async ({
+export const getCustomerGroups = async ({
   page = 0,
   limit = 10,
   order = "id",
@@ -21,7 +21,7 @@ export const getWarehouses = async ({
   direction: "asc" | "desc";
 }) => {
   try {
-    const url = `warehouses?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    const url = `customer-groups?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
@@ -48,13 +48,15 @@ export const getWarehouses = async ({
 };
 
 /**
- * Create new warehouse
+ * Create new Customer Groups
  * @param formData
- * @returns Warehouse
+ * @returns CustomerGroup
  */
-export const createWarehouse = async (formData: WarehouseSchemaType) => {
+export const createCustomerGroup = async (
+  formData: CustomerGroupSchemaType,
+) => {
   try {
-    const response = await fetchData("warehouses", {
+    const response = await fetchData("customer-groups", {
       method: "POST",
       body: JSON.stringify(formData),
     });
@@ -83,13 +85,13 @@ export const createWarehouse = async (formData: WarehouseSchemaType) => {
 };
 
 /**
- * Delete warehouse by id
+ * Delete customer group by id
  * @param id
- * @returns Warehouse
+ * @returns CustomerGroup
  */
-export const deleteWarehouseById = async (id: number) => {
+export const deleteCustomerGroupById = async (id: number) => {
   try {
-    const response = await fetchData(`warehouses/${id}`, {
+    const response = await fetchData(`customer-groups/${id}`, {
       method: "DELETE",
     });
 
@@ -117,13 +119,13 @@ export const deleteWarehouseById = async (id: number) => {
 };
 
 /**
- * Get warehouse by id
+ * Get customer group by id
  * @param id
- * @returns Warehouse
+ * @returns CustomerGroup
  */
-export const getWarehouseById = async (id: number) => {
+export const getCustomerGroupById = async (id: number) => {
   try {
-    const response = await fetchData(`warehouses/${id}`);
+    const response = await fetchData(`customer-groups/${id}`);
 
     if (!response?.success && !response?.errors) {
       const error = new Error(response.message) as Error & { status?: number };
@@ -149,17 +151,17 @@ export const getWarehouseById = async (id: number) => {
 };
 
 /**
- * Update warehouse schema
+ * Update Customer Group schema
  * @param id
  * @param data
- * @returns Warehouse
+ * @returns CustomerGroup
  */
-export const updateWarehouse = async (
+export const updateCustomerGroup = async (
   id: number,
-  data: WarehouseSchemaType,
+  data: CustomerGroupSchemaType,
 ) => {
   try {
-    const response = await fetchData(`warehouses/${id}`, {
+    const response = await fetchData(`customer-groups/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
@@ -188,13 +190,13 @@ export const updateWarehouse = async (
 };
 
 /**
- * Bulk delete warehouses
+ * Bulk delete customer groups
  * @param ids
- * @returns Warehouses
+ * @returns CustomerGroups
  */
-export const bulkDeleteWarehouses = async (ids: number[]) => {
+export const bulkDeleteCustomerGroups = async (ids: number[]) => {
   try {
-    const response = await fetchData(`warehouses/bulk`, {
+    const response = await fetchData(`customer-groups/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
@@ -205,7 +207,7 @@ export const bulkDeleteWarehouses = async (ids: number[]) => {
       throw error;
     }
 
-    revalidatePath("/admin/warehouses");
+    revalidatePath("/admin/customer-groups");
     return response;
   } catch (error) {
     if (error instanceof Error) {
