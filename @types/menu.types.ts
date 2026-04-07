@@ -3,7 +3,6 @@ import { Module } from "./module.types";
 import { InitialStateType } from "./reducer.types";
 
 export interface Menu extends BaseType {
-  id: number;
   menuName: string;
   deletable: boolean;
   modules: Module[];

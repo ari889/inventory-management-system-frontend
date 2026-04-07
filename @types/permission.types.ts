@@ -3,7 +3,6 @@ import { Module } from "./module.types";
 import { InitialStateType } from "./reducer.types";
 
 export interface Permission extends BaseType {
-  id: number;
   moduleId: number;
   module: Module;
   name: string;

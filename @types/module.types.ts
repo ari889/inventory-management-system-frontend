@@ -3,7 +3,6 @@ import { BaseType, Deletable } from "./common.types";
 import { Permission } from "./permission.types";
 
 export interface Module extends BaseType, Deletable {
-  id: number;
   menuId: number;
   type: boolean; // true = Divider, False = Module
   moduleName: string | null;
@@ -18,9 +17,6 @@ export interface Module extends BaseType, Deletable {
   permissions: Permission[];
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-/** Internal tree node — wraps ModuleType with a live `order` counter */
 export interface MenuModule {
   id: number;
   order: number;

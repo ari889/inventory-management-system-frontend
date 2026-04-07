@@ -4,19 +4,16 @@ import { Permission } from "./permission.types";
 import { InitialStateType } from "./reducer.types";
 
 export interface ModuleRole extends BaseType {
-  id: number;
   module: Module;
   roleId: number;
 }
 
 export interface PermissionRole extends BaseType {
-  id: number;
   permission: Permission;
   roleId: number;
 }
 
 export interface Role extends BaseType {
-  id: number;
   roleName: string;
   deletable: boolean;
   moduleRole: ModuleRole[];

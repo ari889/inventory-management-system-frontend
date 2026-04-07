@@ -3,7 +3,6 @@ import { InitialStateType } from "./reducer.types";
 import { User } from "./user.types";
 
 export interface CustomerGroup extends BaseType {
-  id: number;
   groupName: string;
   percentage: number;
   status: boolean;

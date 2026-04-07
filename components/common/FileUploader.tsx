@@ -35,7 +35,6 @@ const resolveUrl = (val: string): string => {
   if (val.startsWith("http://") || val.startsWith("https://")) return val;
   // Relative path like /uploads/logos/abc.png — prefix with API base URL
   const base = process.env.NEXT_PUBLIC_API_URL ?? "";
-  console.log(`${base}${val}`);
   return `${base}${val}`;
 };
 

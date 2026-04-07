@@ -1,9 +1,8 @@
-import { BaseType } from "./common.types";
+import { Author, BaseType } from "./common.types";
 import { InitialStateType } from "./reducer.types";
 import { Role } from "./role.types";
 
-export interface User extends BaseType {
-  id: number;
+export interface User extends BaseType, Author {
   name: string;
   email: string;
   phoneNo?: string;
@@ -14,8 +13,6 @@ export interface User extends BaseType {
   avatar?: string;
   gender: boolean; // true = Male, False = Female
   status: boolean; // true = Active, False = Inactive
-  creator: User;
-  updater: User | null;
 }
 
 export interface InitialUserState extends InitialStateType {
