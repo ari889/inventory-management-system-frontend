@@ -2,6 +2,13 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 
+/**
+ * Fetch data from the API with authentication. This function automatically includes the access token from the user's session in the Authorization header and handles both JSON and non-JSON responses gracefully. It returns a consistent response structure containing the response data, success status, and HTTP status code, along with error handling to manage failures effectively.
+ * @param url
+ * @param options
+ * @returns an object containing the response data, success status, and HTTP status code. The function handles both JSON and non-JSON responses, and it includes error handling to return a consistent response structure in case of failures.
+ * @description This function is a utility for making authenticated API requests to the backend. It automatically includes the access token from the user's session in the Authorization header and handles both JSON and non-JSON responses gracefully.
+ */
 export const fetchData = async (url: string, options: RequestInit = {}) => {
   const session = await getServerSession(authOptions);
 
@@ -16,7 +23,7 @@ export const fetchData = async (url: string, options: RequestInit = {}) => {
     Object.assign(headers, options.headers);
   }
 
-  if (session?.accessToken) {
+  if (session?.accessToken && headers["Authorization"] === undefined) {
     headers["Authorization"] = `Bearer ${session.accessToken}`;
   }
 

@@ -1,7 +1,6 @@
 "use client";
-import { User } from "@/@types/user.types";
-import { createUser } from "@/actions/UserAction";
-import RoleAutocomplete from "@/components/common/autocompletes/RoleAutocomplete";
+import { Warehouse } from "@/@types/warehouse.types";
+import { createWarehouse } from "@/actions/WarehouseAction";
 import CustomSelect from "@/components/common/CustomSelect";
 import FormInput from "@/components/common/FormInput";
 import {
@@ -13,7 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { createUserSchema, CreateUserSchemaType } from "@/schemas/user.schema";
+import {
+  warehouseSchema,
+  WarehouseSchemaType,
+} from "@/schemas/warehouse.schema";
 import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
@@ -21,39 +23,40 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const CreateUserForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
+const CreateWarehouseForm = ({
+  onSuccess,
+}: {
+  onSuccess: (data: Warehouse) => void;
+}) => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const {
     control,
     handleSubmit,
     setError: setFormError,
-  } = useForm<CreateUserSchemaType>({
-    resolver: zodResolver(createUserSchema),
+  } = useForm<WarehouseSchemaType>({
+    resolver: zodResolver(warehouseSchema),
     defaultValues: {
       name: "",
-      email: "",
-      phoneNo: "",
-      password: "",
-      roleId: undefined,
-      avatar: "",
-      gender: true,
+      email: null,
+      phone: null,
+      address: null,
       status: true,
     },
   });
 
-  const onSubmit = (data: CreateUserSchemaType) =>
+  const onSubmit = (data: WarehouseSchemaType) =>
     startTransition(async () => {
       try {
-        const response = await createUser(data);
+        const response = await createWarehouse(data);
 
         if (!response.success && response?.errors)
           setApiErrors(response.errors, setFormError);
         else if (!response.success)
-          throw new Error(response?.message || "Failed to create user");
+          throw new Error(response?.message || "Failed to create warehouse");
         else {
           onSuccess(response?.data);
-          toast.success("User created successfully");
+          toast.success("Warehouse created successfully");
         }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
@@ -75,70 +78,54 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
           </AlertAction>
         </Alert>
       )}
-      <FieldGroup className="grid grid-cols-2">
+      <FieldGroup>
         <FormInput
           control={control}
           name="name"
-          label="User Name"
-          placeholder="Enter a valid user name"
+          label="Warehouse Name"
+          placeholder="Enter a valid warehouse name"
           disabled={isPending}
         />
         <FormInput
           control={control}
           name="email"
-          label="User Email"
-          placeholder="Enter a valid user email"
+          label="Warehouse Email"
+          placeholder="Enter a valid warehouse email"
           disabled={isPending}
         />
         <FormInput
           control={control}
-          name="phoneNo"
+          name="phone"
           label="Phone Number"
           placeholder="Enter a valid phone number"
           disabled={isPending}
         />
         <FormInput
           control={control}
-          name="password"
-          type="password"
-          label="Password"
-          placeholder="Enter a valid password"
+          name="address"
+          label="Address"
+          placeholder="Enter the warehouse address"
           disabled={isPending}
         />
-        <RoleAutocomplete control={control} name="roleId" label="Role" />
         <CustomSelect
           control={control}
-          name="gender"
-          label="Gender"
+          name="status"
+          label="Status"
           disabled={isPending}
           data={[
-            { value: true, label: "Male" },
-            { value: false, label: "Female" },
+            { value: true, label: "Active" },
+            { value: false, label: "Inactive" },
           ]}
         />
-        <div className="col-span-2">
-          <CustomSelect
-            control={control}
-            name="status"
-            label="Status"
-            disabled={isPending}
-            data={[
-              { value: true, label: "Active" },
-              { value: false, label: "Inactive" },
-            ]}
-          />
-        </div>
-        <div className="col-span-2">
-          <Field>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? <Spinner data-icon="inline-start" /> : ""}
-              Create New
-            </Button>
-          </Field>
-        </div>
+        <Field>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? <Spinner data-icon="inline-start" /> : ""}
+            Create New
+          </Button>
+        </Field>
       </FieldGroup>
     </form>
   );
 };
 
-export default CreateUserForm;
+export default CreateWarehouseForm;

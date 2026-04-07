@@ -12,6 +12,7 @@ import {
 import { handleResponse } from "@/utils/handle-response";
 import { ArrowUpRightIcon, Ban } from "lucide-react";
 import Link from "next/link";
+export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
   const { data } = handleResponse<Setting[]>(await getSettings());

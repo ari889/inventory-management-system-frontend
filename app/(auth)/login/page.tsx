@@ -11,6 +11,7 @@ import Login from "./_components/Login";
 import { getSettings } from "@/actions/SettingsAction";
 import { Setting } from "@/@types/settings.types";
 import { handleResponse } from "@/utils/handle-response";
+export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
   const { data } = handleResponse<Setting[]>(await getSettings());

@@ -1,6 +1,8 @@
 "use client";
 import { User } from "@/@types/user.types";
-import { createUser } from "@/actions/UserAction";
+import { Warehouse } from "@/@types/warehouse.types";
+import { updateUser } from "@/actions/UserAction";
+import { updateWarehouse } from "@/actions/WarehouseAction";
 import RoleAutocomplete from "@/components/common/autocompletes/RoleAutocomplete";
 import CustomSelect from "@/components/common/CustomSelect";
 import FormInput from "@/components/common/FormInput";
@@ -13,7 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { createUserSchema, CreateUserSchemaType } from "@/schemas/user.schema";
+import {
+  warehouseSchema,
+  WarehouseSchemaType,
+} from "@/schemas/warehouse.schema";
 import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
@@ -21,39 +26,42 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const CreateUserForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
+const UpdateWarehouseForm = ({
+  data,
+  onSuccess,
+}: {
+  data: Warehouse;
+  onSuccess: (data: Warehouse) => void;
+}) => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const {
     control,
     handleSubmit,
     setError: setFormError,
-  } = useForm<CreateUserSchemaType>({
-    resolver: zodResolver(createUserSchema),
+  } = useForm<WarehouseSchemaType>({
     defaultValues: {
-      name: "",
-      email: "",
-      phoneNo: "",
-      password: "",
-      roleId: undefined,
-      avatar: "",
-      gender: true,
-      status: true,
+      name: data?.name || "",
+      email: data?.email || null,
+      phone: data?.phone || null,
+      address: data?.address || null,
+      status: data?.status || true,
     },
+    resolver: zodResolver(warehouseSchema),
   });
 
-  const onSubmit = (data: CreateUserSchemaType) =>
+  const onSubmit = (formData: WarehouseSchemaType) =>
     startTransition(async () => {
       try {
-        const response = await createUser(data);
+        const response = await updateWarehouse(data.id, formData);
 
         if (!response.success && response?.errors)
           setApiErrors(response.errors, setFormError);
         else if (!response.success)
-          throw new Error(response?.message || "Failed to create user");
+          throw new Error(response?.message || "Failed to update warehouse");
         else {
           onSuccess(response?.data);
-          toast.success("User created successfully");
+          toast.success("Warehouse updated successfully");
         }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
@@ -75,64 +83,50 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
           </AlertAction>
         </Alert>
       )}
-      <FieldGroup className="grid grid-cols-2">
+      <FieldGroup>
         <FormInput
           control={control}
           name="name"
-          label="User Name"
-          placeholder="Enter a valid user name"
+          label="Warehouse Name"
+          placeholder="Enter a valid warehouse name"
           disabled={isPending}
         />
         <FormInput
           control={control}
           name="email"
-          label="User Email"
-          placeholder="Enter a valid user email"
+          label="Warehouse Email"
+          placeholder="Enter a valid warehouse email"
           disabled={isPending}
         />
         <FormInput
           control={control}
-          name="phoneNo"
+          name="phone"
           label="Phone Number"
           placeholder="Enter a valid phone number"
           disabled={isPending}
         />
         <FormInput
           control={control}
-          name="password"
-          type="password"
-          label="Password"
-          placeholder="Enter a valid password"
+          name="address"
+          label="Address"
+          placeholder="Enter a valid address"
           disabled={isPending}
         />
-        <RoleAutocomplete control={control} name="roleId" label="Role" />
         <CustomSelect
           control={control}
-          name="gender"
-          label="Gender"
+          name="status"
+          label="Status"
           disabled={isPending}
           data={[
-            { value: true, label: "Male" },
-            { value: false, label: "Female" },
+            { value: true, label: "Active" },
+            { value: false, label: "Inactive" },
           ]}
         />
-        <div className="col-span-2">
-          <CustomSelect
-            control={control}
-            name="status"
-            label="Status"
-            disabled={isPending}
-            data={[
-              { value: true, label: "Active" },
-              { value: false, label: "Inactive" },
-            ]}
-          />
-        </div>
         <div className="col-span-2">
           <Field>
             <Button type="submit" disabled={isPending}>
               {isPending ? <Spinner data-icon="inline-start" /> : ""}
-              Create New
+              Update
             </Button>
           </Field>
         </div>
@@ -141,4 +135,4 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
   );
 };
 
-export default CreateUserForm;
+export default UpdateWarehouseForm;
