@@ -1,41 +1,27 @@
 "use server";
+
 import { fetchData } from "@/lib/api";
-import {
-  PermissionItemSchemaType,
-  PermissionSchemaType,
-} from "@/schemas/permission.schema";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { TaxSchemaType } from "@/schemas/tax.schema";
+import { revalidatePath } from "next/cache";
 
 /**
- * Get Permission from server
+ * Get taxes from server
  * @param param0
- * @returns Permission
+ * @returns Tax
  */
-export const getPermissions = async ({
+export const getTaxes = async ({
   page = 0,
   limit = 10,
   order = "id",
   direction = "desc",
-  name = "",
-  slug = "",
-  deletable = null,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
-  name: string;
-  slug: string;
-  deletable: boolean | null;
 }) => {
   try {
-    let url = `permissions?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
-
-    if (name) url += `&name=${name}`;
-
-    if (slug) url += `&slug=${slug}`;
-
-    if (deletable !== null) url += `&deletable=${deletable}`;
+    const url = `taxes?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
@@ -62,79 +48,13 @@ export const getPermissions = async ({
 };
 
 /**
- * Permission
- * @param id
- * @returns Permission
- */
-export const getPermissionById = async (id: number) => {
-  try {
-    const response = await fetchData(`permissions/${id}`);
-
-    if (!response?.success && !response?.errors) {
-      const error = new Error(response.message) as Error & { status?: number };
-      error.status = response.status;
-      throw error;
-    }
-
-    return response;
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        status: (error as Error & { status?: number }).status ?? 500,
-        message: error.message || "Something went wrong",
-      };
-    }
-    return {
-      success: false,
-      status: 500,
-      message: "Something went wrong",
-    };
-  }
-};
-
-/**
- * Delete Permission by id
- * @param id
- * @returns Permission
- */
-export const deletePermissionById = async (id: number) => {
-  try {
-    const response = await fetchData(`permissions/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!response?.success && !response?.errors) {
-      const error = new Error(response.message) as Error & { status?: number };
-      error.status = response.status;
-      throw error;
-    }
-
-    return response;
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        status: (error as Error & { status?: number }).status ?? 500,
-        message: error.message || "Something went wrong",
-      };
-    }
-    return {
-      success: false,
-      status: 500,
-      message: "Something went wrong",
-    };
-  }
-};
-
-/**
- * Create permissions
+ * Create new Taxes
  * @param formData
- * @returns Permission
+ * @returns Tax
  */
-export const createPermission = async (formData: PermissionSchemaType) => {
+export const createTax = async (formData: TaxSchemaType) => {
   try {
-    const response = await fetchData(`permissions`, {
+    const response = await fetchData("taxes", {
       method: "POST",
       body: JSON.stringify(formData),
     });
@@ -145,8 +65,6 @@ export const createPermission = async (formData: PermissionSchemaType) => {
       throw error;
     }
 
-    revalidatePath("/admin/permissions");
-    revalidateTag("modules", "max");
     return response;
   } catch (error) {
     if (error instanceof Error) {
@@ -165,19 +83,14 @@ export const createPermission = async (formData: PermissionSchemaType) => {
 };
 
 /**
- * Update Permission by id
+ * Delete tax by id
  * @param id
- * @param formData
- * @returns Permission
+ * @returns Tax
  */
-export const updatePermission = async (
-  id: number,
-  formData: PermissionItemSchemaType,
-) => {
+export const deleteTaxById = async (id: number) => {
   try {
-    const response = await fetchData(`permissions/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(formData),
+    const response = await fetchData(`taxes/${id}`, {
+      method: "DELETE",
     });
 
     if (!response?.success && !response?.errors) {
@@ -204,13 +117,81 @@ export const updatePermission = async (
 };
 
 /**
- * Permission
- * @param ids
- * @returns Permissions
+ * Get tax by id
+ * @param id
+ * @returns Tax
  */
-export const bulkDeletePermission = async (ids: number[]) => {
+export const getTaxById = async (id: number) => {
   try {
-    const response = await fetchData(`permissions/bulk`, {
+    const response = await fetchData(`taxes/${id}`);
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
+ * Update Tax schema
+ * @param id
+ * @param data
+ * @returns Tax
+ */
+export const updateTax = async (id: number, data: TaxSchemaType) => {
+  try {
+    const response = await fetchData(`taxes/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
+ * Bulk delete taxes
+ * @param ids
+ * @returns Taxes
+ */
+export const bulkDeleteTaxes = async (ids: number[]) => {
+  try {
+    const response = await fetchData(`taxes/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
@@ -221,39 +202,7 @@ export const bulkDeletePermission = async (ids: number[]) => {
       throw error;
     }
 
-    revalidatePath("/admin/permission");
-    return response;
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        status: (error as Error & { status?: number }).status ?? 500,
-        message: error.message || "Something went wrong",
-      };
-    }
-    return {
-      success: false,
-      status: 500,
-      message: "Something went wrong",
-    };
-  }
-};
-
-/**
- * check Permission by slug
- * @param slug
- * @returns Boolean
- */
-export const checkPermission = async (slug: string) => {
-  try {
-    const response = await fetchData(`permissions/check-slug/${slug}`);
-
-    if (!response?.success && !response?.errors) {
-      const error = new Error(response.message) as Error & { status?: number };
-      error.status = response.status;
-      throw error;
-    }
-
+    revalidatePath("/admin/taxes");
     return response;
   } catch (error) {
     if (error instanceof Error) {
