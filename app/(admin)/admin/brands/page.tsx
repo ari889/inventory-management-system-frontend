@@ -14,7 +14,7 @@ export const generateMetadata = async () => {
 };
 
 const BrandPage = async () => {
-  handleResponse(await checkPermission("menu-access"));
+  handleResponse(await checkPermission("brand-access"));
   return <BrandTable />;
 };
 

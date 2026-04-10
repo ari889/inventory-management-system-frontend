@@ -1,30 +1,26 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { CustomerGroupSchemaType } from "@/schemas/customer-group.schema";
-import { revalidatePath } from "next/cache";
+import { CustomerSchemaType } from "@/schemas/customer.schema";
 
 /**
- * Get customer groups from server
+ * Get customers from server
  * @param param0
- * @returns CustomerGroup
+ * @returns Customer
  */
-export const getCustomerGroups = async ({
+export const getCustomers = async ({
   page = 0,
   limit = 10,
   order = "id",
   direction = "desc",
-  search = "",
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
-  search?: string;
 }) => {
   try {
-    let url = `customer-groups?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
-    if (search) url += `&search=${search}`;
+    const url = `customers?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
@@ -51,17 +47,15 @@ export const getCustomerGroups = async ({
 };
 
 /**
- * Create new Customer Groups
- * @param formData
- * @returns CustomerGroup
+ * Create new customer
+ * @param customerSchemaType
+ * @returns Customer
  */
-export const createCustomerGroup = async (
-  formData: CustomerGroupSchemaType,
-) => {
+export const createCustomer = async (body: CustomerSchemaType) => {
   try {
-    const response = await fetchData("customer-groups", {
+    const response = await fetchData("customers", {
       method: "POST",
-      body: JSON.stringify(formData),
+      body: JSON.stringify(body),
     });
 
     if (!response?.success && !response?.errors) {
@@ -88,13 +82,13 @@ export const createCustomerGroup = async (
 };
 
 /**
- * Delete customer group by id
+ * Delete customer by id
  * @param id
- * @returns CustomerGroup
+ * @returns Customer
  */
-export const deleteCustomerGroupById = async (id: number) => {
+export const deleteCustomerById = async (id: number) => {
   try {
-    const response = await fetchData(`customer-groups/${id}`, {
+    const response = await fetchData(`customers/${id}`, {
       method: "DELETE",
     });
 
@@ -122,13 +116,13 @@ export const deleteCustomerGroupById = async (id: number) => {
 };
 
 /**
- * Get customer group by id
+ * Get customer by id
  * @param id
- * @returns CustomerGroup
+ * @returns Customer
  */
-export const getCustomerGroupById = async (id: number) => {
+export const getCustomerById = async (id: number) => {
   try {
-    const response = await fetchData(`customer-groups/${id}`);
+    const response = await fetchData(`customers/${id}`);
 
     if (!response?.success && !response?.errors) {
       const error = new Error(response.message) as Error & { status?: number };
@@ -154,19 +148,16 @@ export const getCustomerGroupById = async (id: number) => {
 };
 
 /**
- * Update Customer Group schema
+ * Update customer
  * @param id
  * @param data
- * @returns CustomerGroup
+ * @returns Customer
  */
-export const updateCustomerGroup = async (
-  id: number,
-  data: CustomerGroupSchemaType,
-) => {
+export const updateCustomer = async (id: number, body: CustomerSchemaType) => {
   try {
-    const response = await fetchData(`customer-groups/${id}`, {
+    const response = await fetchData(`customers/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
 
     if (!response?.success && !response?.errors) {
@@ -193,13 +184,13 @@ export const updateCustomerGroup = async (
 };
 
 /**
- * Bulk delete customer groups
+ * Bulk delete customers
  * @param ids
- * @returns CustomerGroups
+ * @returns { success: boolean, data: {count: 4}, message: string }
  */
-export const bulkDeleteCustomerGroups = async (ids: number[]) => {
+export const bulkDeleteCustomers = async (ids: number[]) => {
   try {
-    const response = await fetchData(`customer-groups/bulk`, {
+    const response = await fetchData(`customers/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
@@ -210,7 +201,6 @@ export const bulkDeleteCustomerGroups = async (ids: number[]) => {
       throw error;
     }
 
-    revalidatePath("/admin/customer-groups");
     return response;
   } catch (error) {
     if (error instanceof Error) {

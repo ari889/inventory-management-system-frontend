@@ -14,7 +14,7 @@ export const generateMetadata = async () => {
 };
 
 const UnitsPage = async () => {
-  handleResponse(await checkPermission("menu-access"));
+  handleResponse(await checkPermission("unit-access"));
   return <UnitTable />;
 };
 

@@ -14,7 +14,7 @@ export const generateMetadata = async () => {
 };
 
 const TaxesPage = async () => {
-  handleResponse(await checkPermission("menu-access"));
+  handleResponse(await checkPermission("tax-access"));
   return <TaxTable />;
 };
 

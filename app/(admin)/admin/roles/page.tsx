@@ -14,7 +14,7 @@ export const generateMetadata = async () => {
 };
 
 const RolesPage = async () => {
-  handleResponse(await checkPermission("menu-access"));
+  handleResponse(await checkPermission("role-access"));
   return <RoleTable />;
 };
 

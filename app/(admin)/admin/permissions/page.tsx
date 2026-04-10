@@ -14,7 +14,7 @@ export const generateMetadata = async () => {
 };
 
 const PermissionPage = async () => {
-  handleResponse(await checkPermission("menu-access"));
+  handleResponse(await checkPermission("permission-access"));
   return <PermissionTable />;
 };
 

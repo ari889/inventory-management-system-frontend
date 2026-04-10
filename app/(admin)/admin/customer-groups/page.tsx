@@ -14,7 +14,7 @@ export const generateMetadata = async () => {
 };
 
 const CustomerGroupPage = async () => {
-  handleResponse(await checkPermission("menu-access"));
+  handleResponse(await checkPermission("customer-group-access"));
   return <CustomerGroupTable />;
 };
 
