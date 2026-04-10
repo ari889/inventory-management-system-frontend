@@ -1,14 +1,14 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { revalidatePath } from "next/cache";
+import { SupplierSchemaType } from "@/schemas/supplier.schema";
 
 /**
- * Get brands from server
+ * Get suppliers from server
  * @param param0
- * @returns Brand
+ * @returns Supplier
  */
-export const getBrands = async ({
+export const getSuppliers = async ({
   page = 0,
   limit = 10,
   order = "id",
@@ -20,7 +20,7 @@ export const getBrands = async ({
   direction: "asc" | "desc";
 }) => {
   try {
-    const url = `brands?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    const url = `suppliers?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
@@ -47,15 +47,15 @@ export const getBrands = async ({
 };
 
 /**
- * Create new brand
- * @param formData
- * @returns Brand
+ * Create new supplier
+ * @param SupplierSchemaType
+ * @returns Supplier
  */
-export const createBrand = async (body: FormData) => {
+export const createSupplier = async (body: SupplierSchemaType) => {
   try {
-    const response = await fetchData("brands", {
+    const response = await fetchData("suppliers", {
       method: "POST",
-      body,
+      body: JSON.stringify(body),
     });
 
     if (!response?.success && !response?.errors) {
@@ -82,13 +82,13 @@ export const createBrand = async (body: FormData) => {
 };
 
 /**
- * Delete brand by id
+ * Delete supplier by id
  * @param id
- * @returns Brand
+ * @returns Supplier
  */
-export const deleteBrandById = async (id: number) => {
+export const deleteSupplierById = async (id: number) => {
   try {
-    const response = await fetchData(`brands/${id}`, {
+    const response = await fetchData(`suppliers/${id}`, {
       method: "DELETE",
     });
 
@@ -116,13 +116,13 @@ export const deleteBrandById = async (id: number) => {
 };
 
 /**
- * Get brand by id
+ * Get supplier by id
  * @param id
- * @returns Brand
+ * @returns Supplier
  */
-export const getBrandById = async (id: number) => {
+export const getSupplierById = async (id: number) => {
   try {
-    const response = await fetchData(`brands/${id}`);
+    const response = await fetchData(`suppliers/${id}`);
 
     if (!response?.success && !response?.errors) {
       const error = new Error(response.message) as Error & { status?: number };
@@ -148,16 +148,16 @@ export const getBrandById = async (id: number) => {
 };
 
 /**
- * Update Brand schema
+ * Update supplier
  * @param id
  * @param data
- * @returns Brand
+ * @returns Supplier
  */
-export const updateBrand = async (id: number, body: FormData) => {
+export const updateSupplier = async (id: number, body: SupplierSchemaType) => {
   try {
-    const response = await fetchData(`brands/${id}`, {
+    const response = await fetchData(`suppliers/${id}`, {
       method: "PATCH",
-      body,
+      body: JSON.stringify(body),
     });
 
     if (!response?.success && !response?.errors) {
@@ -184,13 +184,13 @@ export const updateBrand = async (id: number, body: FormData) => {
 };
 
 /**
- * Bulk delete brands
+ * Bulk delete suppliers
  * @param ids
- * @returns Brands
+ * @returns { success: boolean, data: {count: 4}, message: string }
  */
-export const bulkDeleteBrands = async (ids: number[]) => {
+export const bulkDeleteSuppliers = async (ids: number[]) => {
   try {
-    const response = await fetchData(`brands/bulk`, {
+    const response = await fetchData(`suppliers/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
@@ -201,7 +201,6 @@ export const bulkDeleteBrands = async (ids: number[]) => {
       throw error;
     }
 
-    revalidatePath("/admin/brands");
     return response;
   } catch (error) {
     if (error instanceof Error) {
