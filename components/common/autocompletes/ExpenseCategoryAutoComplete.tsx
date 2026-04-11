@@ -20,24 +20,25 @@ import { useEffect, useReducer, useRef, useCallback, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import debounce from "lodash/debounce";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
-import { Unit } from "@/@types/unit.types";
-import { getUnits } from "@/actions/UnitAction";
+
+import { ExpenseCategory } from "@/@types/expense-category.types";
+import { getExpenseCategories } from "@/actions/ExpenseCategoryAction";
 
 /**
- * A reusable autocomplete component for selecting a Unit. Fetches options from the server with support for searching and infinite scrolling.
+ * A reusable autocomplete component for selecting a expense category. Fetches options from the server with support for searching and infinite scrolling.
  */
 type Props<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
   label?: string;
-  defaultUnit?: Pick<Unit, "id" | "unitName"> | null;
+  defaultExpenseCategory?: Pick<ExpenseCategory, "id" | "name"> | null;
 };
 
 /**
- * State management for the UnitAutocomplete component using useReducer. Handles loading states, error handling, and pagination for fetching Units.
+ * State management for the ExpenseCategoryAutocomplete component using useReducer. Handles loading states, error handling, and pagination for fetching expense categories.
  */
 type State = {
-  units: Unit[];
+  expenseCategories: ExpenseCategory[];
   loading: boolean;
   searching: boolean;
   loadingMore: boolean;
@@ -48,26 +49,31 @@ type State = {
 };
 
 /**
- * Actions for the reducer to manage the state of UnitAutocomplete, including fetching units, handling search input, and managing the open state of the popover.
+ * Actions for the reducer to manage the state of ExpenseCategoryAutocomplete, including fetching expense categories, handling search input, and managing the open state of the popover.
  */
 type Action =
   | { type: "FETCH_START"; payload: { replace: boolean; initial: boolean } }
   | {
       type: "FETCH_SUCCESS";
-      payload: { items: Unit[]; total: number; page: number; replace: boolean };
+      payload: {
+        items: ExpenseCategory[];
+        total: number;
+        page: number;
+        replace: boolean;
+      };
     }
   | { type: "FETCH_ERROR"; payload: string | null }
   | { type: "SET_OPEN"; payload: boolean }
   | { type: "SET_SEARCH"; payload: string };
 
 /**
- * Reducer function to manage the state of the UnitAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
+ * Reducer function to manage the state of the ExpenseCategoryAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
  * @param state - The current state of the component.
  * @param action - The action to be processed to update the state.
  * @returns The updated state based on the action type.
  */
 const initialState: State = {
-  units: [],
+  expenseCategories: [],
   loading: true,
   searching: false,
   loadingMore: false,
@@ -78,7 +84,7 @@ const initialState: State = {
 };
 
 /**
- * Reducer function to manage the state of the UnitAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
+ * Reducer function to manage the state of the ExpenseCategoryAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
  * @param state - The current state of the component.
  * @param action - The action to be processed to update the state.
  * @returns The updated state based on the action type.
@@ -94,7 +100,9 @@ function reducer(state: State, action: Action): State {
       const { items, total, page, replace } = action.payload;
       return {
         ...state,
-        units: replace ? items : [...state.units, ...items],
+        expenseCategories: replace
+          ? items
+          : [...state.expenseCategories, ...items],
         hasMore: (page + 1) * 10 < total,
         error: null,
         loading: false,
@@ -123,29 +131,29 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export default function UnitAutocomplete<T extends FieldValues>({
+export default function ExpenseCategoryAutocomplete<T extends FieldValues>({
   control,
   name,
-  label = "Select Unit",
-  defaultUnit = null,
+  label = "Select Expensse Category",
+  defaultExpenseCategory = null,
 }: Props<T>) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [selectedUnit, setSelectedUnit] = useState<Pick<
-    Unit,
-    "id" | "unitName"
-  > | null>(defaultUnit);
+  const [selectedExpenseCategory, setSelectedExpenseCategory] = useState<Pick<
+    ExpenseCategory,
+    "id" | "name"
+  > | null>(defaultExpenseCategory);
   const listRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(0);
   const searchRef = useRef("");
   const initialLoadRef = useRef(true);
 
   /**
-   * Fetch units from the server with support for pagination and searching. Dispatches actions to update the state based on the fetch status (loading, success, error) and whether it's an initial load, a search, or loading more items.
+   * Fetch expense categories from the server with support for pagination and searching. Dispatches actions to update the state based on the fetch status (loading, success, error) and whether it's an initial load, a search, or loading more items.
    * @param nextPage
    * @param nextSearch
    * @param replace
    */
-  const fetchUnits = async (
+  const fetchExpenseCategories = async (
     nextPage: number,
     nextSearch: string,
     replace: boolean,
@@ -156,7 +164,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
         payload: { replace, initial: initialLoadRef.current },
       });
 
-      const response = await getUnits({
+      const response = await getExpenseCategories({
         page: nextPage,
         limit: 10,
         order: "id",
@@ -166,7 +174,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
 
       if (!response.success) throw new Error(response.message);
 
-      const items: Unit[] = response.data.items;
+      const items: ExpenseCategory[] = response.data.items;
       const total: number = response.data.totalItems;
 
       dispatch({
@@ -185,29 +193,30 @@ export default function UnitAutocomplete<T extends FieldValues>({
   };
 
   /**
-   * Initial fetch of units when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
+   * Initial fetch of expense categories when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
    */
   useEffect(() => {
-    fetchUnits(0, "", true);
+    fetchExpenseCategories(0, "", true);
   }, []);
 
   /**
-   * Set the default selected unit when the component mounts or when the defaultUnit prop changes. This ensures that if an initial unit is provided from the parent component, it will be displayed as the selected option in the autocomplete.
+   * Set the default selected expense category when the component mounts or when the defaultExpenseCategory prop changes. This ensures that if an initial value is provided from the parent component, it will be displayed as the selected option in the autocomplete.
    */
   useEffect(() => {
-    if (defaultUnit) setSelectedUnit(defaultUnit);
-  }, [defaultUnit?.id]);
+    if (defaultExpenseCategory)
+      setSelectedExpenseCategory(defaultExpenseCategory);
+  }, [defaultExpenseCategory?.id]);
 
   const debouncedFetch = useCallback(
     debounce((query: string) => {
       pageRef.current = 0;
-      fetchUnits(0, query, true);
+      fetchExpenseCategories(0, query, true);
     }, 400),
     [],
   );
 
   /**
-   * Handle search input changes by updating the search state and triggering a debounced fetch to retrieve units matching the search query. This allows users to find specific units quickly without overwhelming the server with requests on every keystroke.
+   * Handle search input changes by updating the search state and triggering a debounced fetch to retrieve expense categories matching the search query. This allows users to find specific expense categories quickly without overwhelming the server with requests on every keystroke.
    * @param query
    */
   const handleSearch = (query: string) => {
@@ -217,7 +226,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
   };
 
   /**
-   * Handle scroll events on the dropdown list to implement infinite scrolling. When the user scrolls near the bottom of the list, it triggers a fetch for the next page of units if there are more items to load and if a fetch is not already in progress.
+   * Handle scroll events on the dropdown list to implement infinite scrolling. When the user scrolls near the bottom of the list, it triggers a fetch for the next page of expense categories if there are more items to load and if a fetch is not already in progress.
    */
   const handleScroll = useCallback(() => {
     const el = listRef.current;
@@ -226,7 +235,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
     if (nearBottom) {
       const nextPage = pageRef.current + 1;
       pageRef.current = nextPage;
-      fetchUnits(nextPage, searchRef.current, false);
+      fetchExpenseCategories(nextPage, searchRef.current, false);
     }
   }, [state.loadingMore, state.hasMore]);
 
@@ -236,8 +245,8 @@ export default function UnitAutocomplete<T extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => {
         const selectedLabel =
-          selectedUnit?.unitName ??
-          state.units.find((r) => r.id === field.value)?.unitName;
+          selectedExpenseCategory?.name ??
+          state.expenseCategories.find((r) => r.id === field.value)?.name;
 
         return (
           <Field data-invalid={fieldState.invalid}>
@@ -250,7 +259,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
                 className="w-full justify-start font-normal"
               >
                 <Spinner className="mr-2" />
-                Loading units...
+                Loading expense categories...
               </Button>
             ) : (
               <Popover
@@ -271,7 +280,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
                     <span
                       className={cn(!selectedLabel && "text-muted-foreground")}
                     >
-                      {selectedLabel ?? "Select unit"}
+                      {selectedLabel ?? "Select expense category..."}
                     </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                   </Button>
@@ -280,7 +289,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
                 <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
                   <Command shouldFilter={false}>
                     <CommandInput
-                      placeholder="Search units..."
+                      placeholder="Search expense categories..."
                       value={state.search}
                       onValueChange={handleSearch}
                     />
@@ -291,16 +300,20 @@ export default function UnitAutocomplete<T extends FieldValues>({
                         </div>
                       ) : (
                         <>
-                          <CommandEmpty>No units found.</CommandEmpty>
-                          {state.units.map((unit) => (
+                          <CommandEmpty>
+                            No expense categories found.
+                          </CommandEmpty>
+                          {state.expenseCategories.map((expenseCategory) => (
                             <CommandItem
-                              key={unit.id}
-                              value={String(unit.id)}
+                              key={expenseCategory.id}
+                              value={String(expenseCategory.id)}
                               onSelect={(val) => {
                                 const num = Number(val);
                                 const picked =
-                                  state.units.find((u) => u.id === num) ?? null;
-                                setSelectedUnit(
+                                  state.expenseCategories.find(
+                                    (u) => u.id === num,
+                                  ) ?? null;
+                                setSelectedExpenseCategory(
                                   num === field.value ? null : picked,
                                 );
                                 field.onChange(
@@ -315,12 +328,12 @@ export default function UnitAutocomplete<T extends FieldValues>({
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  field.value === unit.id
+                                  field.value === expenseCategory.id
                                     ? "opacity-100"
                                     : "opacity-0",
                                 )}
                               />
-                              {unit.unitName}
+                              {expenseCategory.name}
                             </CommandItem>
                           ))}
                           {state.loadingMore && (

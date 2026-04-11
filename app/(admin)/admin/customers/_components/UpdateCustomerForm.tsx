@@ -34,7 +34,6 @@ const UpdateCustomerForm = ({
     control,
     handleSubmit,
     setError: setFormError,
-    watch,
   } = useForm<CustomerSchemaType>({
     defaultValues: {
       customerGroupId: data?.customerGroup?.id || undefined,
@@ -52,8 +51,6 @@ const UpdateCustomerForm = ({
     },
     resolver: zodResolver(customerSchema),
   });
-
-  console.log(watch());
 
   const onSubmit = (payload: CustomerSchemaType) =>
     startTransition(async () => {

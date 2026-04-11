@@ -34,7 +34,6 @@ const UpdateUserForm = ({
     control,
     handleSubmit,
     setError: setFormError,
-    watch,
   } = useForm<UpdateUserSchemaType>({
     defaultValues: {
       name: data?.name,

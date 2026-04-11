@@ -1,15 +1,14 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { WarehouseSchemaType } from "@/schemas/warehouse.schema";
-import { revalidatePath } from "next/cache";
+import { ExpenseCategorySchemaType } from "@/schemas/expense-category.schema";
 
 /**
- * Get warehouses from server
+ * Get expense categories from server
  * @param param0
- * @returns Warehouse
+ * @returns ExpenseCategory[]
  */
-export const getWarehouses = async ({
+export const getExpenseCategories = async ({
   page = 0,
   limit = 10,
   order = "id",
@@ -23,7 +22,7 @@ export const getWarehouses = async ({
   search?: string;
 }) => {
   try {
-    let url = `warehouses?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `expense-categories?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
     const response = await fetchData(url);
 
@@ -51,15 +50,17 @@ export const getWarehouses = async ({
 };
 
 /**
- * Create new warehouse
- * @param formData
- * @returns Warehouse
+ * Create new expense categories
+ * @param ExpenseCategorySchemaType
+ * @returns ExpenseCategory
  */
-export const createWarehouse = async (formData: WarehouseSchemaType) => {
+export const createExpenseCategory = async (
+  body: ExpenseCategorySchemaType,
+) => {
   try {
-    const response = await fetchData("warehouses", {
+    const response = await fetchData("expense-categories", {
       method: "POST",
-      body: JSON.stringify(formData),
+      body: JSON.stringify(body),
     });
 
     if (!response?.success && !response?.errors) {
@@ -86,13 +87,13 @@ export const createWarehouse = async (formData: WarehouseSchemaType) => {
 };
 
 /**
- * Delete warehouse by id
+ * Delete expense category by id
  * @param id
- * @returns Warehouse
+ * @returns ExpenseCategory
  */
-export const deleteWarehouseById = async (id: number) => {
+export const deleteExpenseCategoryById = async (id: number) => {
   try {
-    const response = await fetchData(`warehouses/${id}`, {
+    const response = await fetchData(`expense-categories/${id}`, {
       method: "DELETE",
     });
 
@@ -120,13 +121,13 @@ export const deleteWarehouseById = async (id: number) => {
 };
 
 /**
- * Get warehouse by id
+ * Get expense category by id
  * @param id
- * @returns Warehouse
+ * @returns ExpenseCategory
  */
-export const getWarehouseById = async (id: number) => {
+export const getExpenseCategoryById = async (id: number) => {
   try {
-    const response = await fetchData(`warehouses/${id}`);
+    const response = await fetchData(`expense-categories/${id}`);
 
     if (!response?.success && !response?.errors) {
       const error = new Error(response.message) as Error & { status?: number };
@@ -152,19 +153,19 @@ export const getWarehouseById = async (id: number) => {
 };
 
 /**
- * Update warehouse schema
+ * Update expense category
  * @param id
  * @param data
- * @returns Warehouse
+ * @returns ExpenseCategory
  */
-export const updateWarehouse = async (
+export const updateExpenseCategory = async (
   id: number,
-  data: WarehouseSchemaType,
+  body: ExpenseCategorySchemaType,
 ) => {
   try {
-    const response = await fetchData(`warehouses/${id}`, {
+    const response = await fetchData(`expense-categories/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
 
     if (!response?.success && !response?.errors) {
@@ -191,13 +192,13 @@ export const updateWarehouse = async (
 };
 
 /**
- * Bulk delete warehouses
+ * Bulk delete expense categories
  * @param ids
- * @returns Warehouses
+ * @returns { success: boolean, data: {count: 4}, message: string }
  */
-export const bulkDeleteWarehouses = async (ids: number[]) => {
+export const bulkDeleteExpenseCategories = async (ids: number[]) => {
   try {
-    const response = await fetchData(`warehouses/bulk`, {
+    const response = await fetchData(`expense-categories/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
@@ -208,7 +209,6 @@ export const bulkDeleteWarehouses = async (ids: number[]) => {
       throw error;
     }
 
-    revalidatePath("/admin/warehouses");
     return response;
   } catch (error) {
     if (error instanceof Error) {
