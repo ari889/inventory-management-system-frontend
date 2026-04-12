@@ -22,22 +22,24 @@ import debounce from "lodash/debounce";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 import { Account } from "@/@types/account.types";
 import { getAccounts } from "@/actions/AccountAction";
+import { Department } from "@/@types/department.types";
+import { getDepartments } from "@/actions/DepartmentAction";
 
 /**
- * A reusable autocomplete component for selecting a account. Fetches options from the server with support for searching and infinite scrolling.
+ * A reusable autocomplete component for selecting a department. Fetches options from the server with support for searching and infinite scrolling.
  */
 type Props<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
   label?: string;
-  defaultAccount?: Pick<Account, "id" | "name"> | null;
+  defaultDepartment?: Pick<Department, "id" | "name"> | null;
 };
 
 /**
- * State management for the AccountAutocomplete component using useReducer. Handles loading states, error handling, and pagination for fetching accounts.
+ * State management for the DepartmentAutocomplete component using useReducer. Handles loading states, error handling, and pagination for fetching departments.
  */
 type State = {
-  accounts: Account[];
+  departments: Department[];
   loading: boolean;
   searching: boolean;
   loadingMore: boolean;
@@ -48,14 +50,14 @@ type State = {
 };
 
 /**
- * Actions for the reducer to manage the state of AccountAutocomplete, including fetching accounts, handling search input, and managing the open state of the popover.
+ * Actions for the reducer to manage the state of DepartmentAutocomplete, including fetching departments, handling search input, and managing the open state of the popover.
  */
 type Action =
   | { type: "FETCH_START"; payload: { replace: boolean; initial: boolean } }
   | {
       type: "FETCH_SUCCESS";
       payload: {
-        items: Account[];
+        items: Department[];
         total: number;
         page: number;
         replace: boolean;
@@ -66,13 +68,13 @@ type Action =
   | { type: "SET_SEARCH"; payload: string };
 
 /**
- * Reducer function to manage the state of the AccountAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
+ * Reducer function to manage the state of the DepartmentAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
  * @param state - The current state of the component.
  * @param action - The action to be processed to update the state.
  * @returns The updated state based on the action type.
  */
 const initialState: State = {
-  accounts: [],
+  departments: [],
   loading: true,
   searching: false,
   loadingMore: false,
@@ -83,7 +85,7 @@ const initialState: State = {
 };
 
 /**
- * Reducer function to manage the state of the AccountAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
+ * Reducer function to manage the state of the DepartmentAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
  * @param state - The current state of the component.
  * @param action - The action to be processed to update the state.
  * @returns The updated state based on the action type.
@@ -99,7 +101,7 @@ function reducer(state: State, action: Action): State {
       const { items, total, page, replace } = action.payload;
       return {
         ...state,
-        accounts: replace ? items : [...state.accounts, ...items],
+        departments: replace ? items : [...state.departments, ...items],
         hasMore: (page + 1) * 10 < total,
         error: null,
         loading: false,
@@ -128,29 +130,29 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export default function AccountAutocomplete<T extends FieldValues>({
+export default function DepartmentAutocomplete<T extends FieldValues>({
   control,
   name,
-  label = "Select account",
-  defaultAccount = null,
+  label = "Select department",
+  defaultDepartment = null,
 }: Props<T>) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [selectedAccount, setSelectedAccount] = useState<Pick<
-    Account,
+  const [selectedDepartment, setSelectedDepartment] = useState<Pick<
+    Department,
     "id" | "name"
-  > | null>(defaultAccount);
+  > | null>(defaultDepartment);
   const listRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(0);
   const searchRef = useRef("");
   const initialLoadRef = useRef(true);
 
   /**
-   * Fetch accounts from the server with support for pagination and searching. Dispatches actions to update the state based on the fetch status (loading, success, error) and whether it's an initial load, a search, or loading more items.
+   * Fetch departments from the server with support for pagination and searching. Dispatches actions to update the state based on the fetch status (loading, success, error) and whether it's an initial load, a search, or loading more items.
    * @param nextPage
    * @param nextSearch
    * @param replace
    */
-  const fetchAccounts = async (
+  const fetchDepartments = async (
     nextPage: number,
     nextSearch: string,
     replace: boolean,
@@ -161,7 +163,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
         payload: { replace, initial: initialLoadRef.current },
       });
 
-      const response = await getAccounts({
+      const response = await getDepartments({
         page: nextPage,
         limit: 10,
         order: "id",
@@ -171,7 +173,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
 
       if (!response.success) throw new Error(response.message);
 
-      const items: Account[] = response.data.items;
+      const items: Department[] = response.data.items;
       const total: number = response.data.totalItems;
 
       dispatch({
@@ -190,23 +192,23 @@ export default function AccountAutocomplete<T extends FieldValues>({
   };
 
   /**
-   * Initial fetch of accounts when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
+   * Initial fetch of departments when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
    */
   useEffect(() => {
-    fetchAccounts(0, "", true);
+    fetchDepartments(0, "", true);
   }, []);
 
   /**
-   * Set the default selected account when the component mounts or when the defaultAccount prop changes. This ensures that if an initial account is provided from the parent component, it will be displayed as the selected option in the autocomplete.
+   * Set the default selected department when the component mounts or when the defaultDepartment prop changes. This ensures that if an initial department is provided from the parent component, it will be displayed as the selected option in the autocomplete.
    */
   useEffect(() => {
-    if (defaultAccount) setSelectedAccount(defaultAccount);
-  }, [defaultAccount?.id]);
+    if (defaultDepartment) setSelectedDepartment(defaultDepartment);
+  }, [defaultDepartment?.id]);
 
   const debouncedFetch = useCallback(
     debounce((query: string) => {
       pageRef.current = 0;
-      fetchAccounts(0, query, true);
+      fetchDepartments(0, query, true);
     }, 400),
     [],
   );
@@ -231,7 +233,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
     if (nearBottom) {
       const nextPage = pageRef.current + 1;
       pageRef.current = nextPage;
-      fetchAccounts(nextPage, searchRef.current, false);
+      fetchDepartments(nextPage, searchRef.current, false);
     }
   }, [state.loadingMore, state.hasMore]);
 
@@ -241,8 +243,8 @@ export default function AccountAutocomplete<T extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => {
         const selectedLabel =
-          selectedAccount?.name ??
-          state.accounts.find((r) => r.id === field.value)?.name;
+          selectedDepartment?.name ??
+          state.departments.find((r) => r.id === field.value)?.name;
 
         return (
           <Field data-invalid={fieldState.invalid}>
@@ -255,7 +257,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
                 className="w-full justify-start font-normal"
               >
                 <Spinner className="mr-2" />
-                Loading accounts...
+                Loading departments...
               </Button>
             ) : (
               <Popover
@@ -276,7 +278,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
                     <span
                       className={cn(!selectedLabel && "text-muted-foreground")}
                     >
-                      {selectedLabel ?? "Select a account..."}
+                      {selectedLabel ?? "Select a department..."}
                     </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                   </Button>
@@ -285,7 +287,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
                 <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
                   <Command shouldFilter={false}>
                     <CommandInput
-                      placeholder="Search Accounts..."
+                      placeholder="Search departments..."
                       value={state.search}
                       onValueChange={handleSearch}
                     />
@@ -296,17 +298,17 @@ export default function AccountAutocomplete<T extends FieldValues>({
                         </div>
                       ) : (
                         <>
-                          <CommandEmpty>No accounts found.</CommandEmpty>
-                          {state.accounts.map((account) => (
+                          <CommandEmpty>No departments found.</CommandEmpty>
+                          {state.departments.map((department) => (
                             <CommandItem
-                              key={account.id}
-                              value={String(account.id)}
+                              key={department.id}
+                              value={String(department.id)}
                               onSelect={(val) => {
                                 const num = Number(val);
                                 const picked =
-                                  state.accounts.find((u) => u.id === num) ??
+                                  state.departments.find((u) => u.id === num) ??
                                   null;
-                                setSelectedAccount(
+                                setSelectedDepartment(
                                   num === field.value ? null : picked,
                                 );
                                 field.onChange(
@@ -321,12 +323,12 @@ export default function AccountAutocomplete<T extends FieldValues>({
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  field.value === account.id
+                                  field.value === department.id
                                     ? "opacity-100"
                                     : "opacity-0",
                                 )}
                               />
-                              {account.name}
+                              {department.name}
                             </CommandItem>
                           ))}
                           {state.loadingMore && (

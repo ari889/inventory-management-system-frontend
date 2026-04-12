@@ -3,19 +3,19 @@ import { handleResponse } from "@/utils/handle-response";
 import { checkPermission } from "@/actions/PermissionAction";
 import { getSettings } from "@/actions/SettingsAction";
 import { Setting } from "@/@types/settings.types";
-import DepartmentTable from "./_components/DepartmentTable";
+import EmployeeTable from "./_components/EmployeeTable";
 
 export const generateMetadata = async () => {
   const { data } = handleResponse<Setting[]>(await getSettings());
   return {
-    title: `Department | ${data.find((s) => s.name === "title")?.value || "Inventory Management System"}`,
-    description: "Create and manage department",
+    title: `Employee | ${data.find((s) => s.name === "title")?.value || "Inventory Management System"}`,
+    description: "Create and manage employees",
   };
 };
 
-const DepartmentePage = async () => {
-  handleResponse(await checkPermission("department-access"));
-  return <DepartmentTable />;
+const EmployeePage = async () => {
+  handleResponse(await checkPermission("employee-access"));
+  return <EmployeeTable />;
 };
 
-export default DepartmentePage;
+export default EmployeePage;
