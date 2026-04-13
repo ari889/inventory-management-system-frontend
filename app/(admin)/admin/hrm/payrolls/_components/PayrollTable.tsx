@@ -249,7 +249,7 @@ export default function PayrollTable() {
       },
       {
         accessorKey: "account.id",
-        header: () => <div className="text-center">Employee</div>,
+        header: () => <div className="text-center">Account</div>,
         cell: ({ row }) => (
           <div className="font-medium">
             {row?.original?.account?.name ?? "N/A"}
