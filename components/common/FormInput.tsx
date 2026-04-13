@@ -9,7 +9,7 @@ interface FormInputProps<
   control: Control<T>;
   name: Path<T>;
   label?: string;
-  decimalScale?: number; // 👈 number of decimal places
+  decimalScale?: number;
 }
 
 const FormInput = <T extends FieldValues>({
@@ -34,24 +34,26 @@ const FormInput = <T extends FieldValues>({
             type={props.type}
             step={props.type === "number" ? (props.step ?? "any") : undefined}
             onChange={(e) => {
-              if (props.type === "number") {
-                const value = e.target.value;
+              const value = e.target.value;
 
+              if (props.type === "number") {
                 if (value === "") {
                   field.onChange("");
                   return;
                 }
 
-                let num = Number(value);
+                if (decimalScale !== undefined) {
+                  const regex = new RegExp(
+                    `^\\d*(\\.\\d{0,${decimalScale}})?$`,
+                  );
 
-                if (!isNaN(num) && decimalScale !== undefined) {
-                  num = Number(num.toFixed(decimalScale));
+                  if (!regex.test(value)) return;
                 }
 
-                field.onChange(num);
-              } else {
-                field.onChange(e.target.value);
+                field.onChange(value);
+                return;
               }
+              field.onChange(value);
             }}
             value={field.value ?? ""}
             {...props}
