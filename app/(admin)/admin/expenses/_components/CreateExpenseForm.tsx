@@ -41,7 +41,7 @@ const CreateExpenseForm = ({
       expenseCategoryId: undefined,
       warehouseId: undefined,
       accountId: undefined,
-      amount: 0,
+      amount: "",
       note: "",
       status: true,
     },
@@ -104,7 +104,7 @@ const CreateExpenseForm = ({
           disabled={isPending}
           type="number"
           min={0}
-          step="0.10"
+          step="0.01"
           decimalScale={2}
         />
         <FormTextarea

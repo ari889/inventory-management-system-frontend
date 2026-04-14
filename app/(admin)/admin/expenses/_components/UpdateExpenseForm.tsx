@@ -42,7 +42,7 @@ const UpdateExpenseForm = ({
       expenseCategoryId: data?.expenseCategory?.id || undefined,
       warehouseId: data?.warehouse?.id || undefined,
       accountId: data?.account?.id || undefined,
-      amount: data?.amount || 0,
+      amount: data?.amount || "",
       note: data?.note || "",
       status: data?.status || false,
     },
@@ -132,7 +132,7 @@ const UpdateExpenseForm = ({
           disabled={isPending}
           type="number"
           min={0}
-          step="0.10"
+          step="0.01"
           decimalScale={2}
         />
         <FormTextarea

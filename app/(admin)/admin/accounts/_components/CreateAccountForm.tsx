@@ -37,7 +37,7 @@ const CreateAccountForm = ({
     defaultValues: {
       accountNo: "",
       name: "",
-      initialBalance: 0,
+      initialBalance: "",
       note: "",
       status: true,
     },
@@ -94,12 +94,12 @@ const CreateAccountForm = ({
         <FormInput
           control={control}
           name="initialBalance"
-          label="Initial Balance"
-          placeholder="Enter a valid initial balance"
+          label="Current Balance"
+          placeholder="Eg: 1000.00"
           disabled={isPending}
           type="number"
           min={0}
-          step="0.10"
+          step="0.01"
           decimalScale={2}
         />
         <FormTextarea

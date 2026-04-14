@@ -38,7 +38,7 @@ const UpdateAccountForm = ({
     defaultValues: {
       accountNo: data?.accountNo || "",
       name: data?.name || "",
-      initialBalance: Number(data?.initialBalance) || 0,
+      initialBalance: data?.initialBalance || "",
       note: data?.note || "",
       status: data?.status || true,
     },
@@ -102,6 +102,17 @@ const UpdateAccountForm = ({
           type="number"
           min={0}
           step="0.10"
+          decimalScale={2}
+        />
+        <FormInput
+          control={control}
+          name="initialBalance"
+          label="Current Balance"
+          placeholder="Eg: 1000.00"
+          disabled={isPending}
+          type="number"
+          min={0}
+          step="0.01"
           decimalScale={2}
         />
         <FormTextarea

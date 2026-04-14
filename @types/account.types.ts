@@ -4,7 +4,7 @@ import { InitialStateType } from "./reducer.types";
 export interface Account extends BaseType, Author {
   accountNo: string;
   name: string;
-  initialBalance: number;
+  initialBalance: string;
   note: string;
   status: boolean;
 }

@@ -8,7 +8,7 @@ export interface Expense extends BaseType, Author {
   expenseCategory: ExpenseCategory;
   warehouse: Warehouse;
   account: Account;
-  amount: number;
+  amount: string;
   note: string;
   status: boolean;
 }
