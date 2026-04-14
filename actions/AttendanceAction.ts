@@ -1,14 +1,13 @@
 "use server";
-
+import { AttendanceSchemaType } from "./../schemas/attendance.schema";
 import { fetchData } from "@/lib/api";
-import { PayrollSchemaType } from "@/schemas/payroll.schema";
 
 /**
- * Get payroll from server
+ * Get Attendance from server
  * @param param0
- * @returns Payroll
+ * @returns Attendance[]
  */
-export const getPayrolls = async ({
+export const getAttendances = async ({
   page = 0,
   limit = 10,
   order = "id",
@@ -20,7 +19,7 @@ export const getPayrolls = async ({
   direction: "asc" | "desc";
 }) => {
   try {
-    const url = `payrolls?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    const url = `attendances?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
@@ -47,13 +46,13 @@ export const getPayrolls = async ({
 };
 
 /**
- * Create new payroll
- * @param formData
- * @returns Payroll
+ * Create new attendance
+ * @param AttendanceSchemaType
+ * @returns Attendance
  */
-export const createPayroll = async (body: PayrollSchemaType) => {
+export const createAttendance = async (body: AttendanceSchemaType) => {
   try {
-    const response = await fetchData("payrolls", {
+    const response = await fetchData("attendances", {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -82,13 +81,13 @@ export const createPayroll = async (body: PayrollSchemaType) => {
 };
 
 /**
- * Delete payroll by id
+ * Delete attendance by id
  * @param id
- * @returns Payroll
+ * @returns Attendance
  */
-export const deletePayrollById = async (id: number) => {
+export const deleteAttendanceById = async (id: number) => {
   try {
-    const response = await fetchData(`payrolls/${id}`, {
+    const response = await fetchData(`attendances/${id}`, {
       method: "DELETE",
     });
 
@@ -116,13 +115,13 @@ export const deletePayrollById = async (id: number) => {
 };
 
 /**
- * Get payroll by id
+ * Get attendance by id
  * @param id
- * @returns Payroll
+ * @returns Attendance
  */
-export const getPayrollById = async (id: number) => {
+export const getAttendanceById = async (id: number) => {
   try {
-    const response = await fetchData(`payrolls/${id}`);
+    const response = await fetchData(`attendances/${id}`);
 
     if (!response?.success && !response?.errors) {
       const error = new Error(response.message) as Error & { status?: number };
@@ -148,14 +147,17 @@ export const getPayrollById = async (id: number) => {
 };
 
 /**
- * Update payroll schema
+ * Update attendance
  * @param id
  * @param data
- * @returns Payroll
+ * @returns Attendance
  */
-export const updatePayroll = async (id: number, body: PayrollSchemaType) => {
+export const updateAttendance = async (
+  id: number,
+  body: AttendanceSchemaType,
+) => {
   try {
-    const response = await fetchData(`payrolls/${id}`, {
+    const response = await fetchData(`attendances/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
     });
@@ -184,13 +186,13 @@ export const updatePayroll = async (id: number, body: PayrollSchemaType) => {
 };
 
 /**
- * Bulk delete payrolls
+ * Bulk delete attendances
  * @param ids
- * @returns Payroll
+ * @returns { success: boolean, data: {count: 4}, message: string }
  */
-export const bulkDeletePayrolls = async (ids: number[]) => {
+export const bulkDeleteAttendances = async (ids: number[]) => {
   try {
-    const response = await fetchData(`payrolls/bulk`, {
+    const response = await fetchData(`attendances/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
