@@ -1,6 +1,6 @@
 "use client";
 import { Brand } from "@/@types/brand.types";
-import { createBrand } from "@/actions/BrandAcrion";
+import { createBrand } from "@/actions/BrandAction";
 import CustomSelect from "@/components/common/CustomSelect";
 import FileUploader from "@/components/common/FileUploader";
 import FormInput from "@/components/common/FormInput";

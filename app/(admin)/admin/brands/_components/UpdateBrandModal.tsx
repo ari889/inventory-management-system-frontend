@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useEffectEvent, useState } from "react";
 import { createPortal } from "react-dom";
 import { Brand } from "@/@types/brand.types";
-import { getBrandById } from "@/actions/BrandAcrion";
+import { getBrandById } from "@/actions/BrandAction";
 import UpdateBrandLoader from "./UpdateBrandLoader";
 import UpdateBrandForm from "./UpdateBrandForm";
 

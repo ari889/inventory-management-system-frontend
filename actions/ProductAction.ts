@@ -1,27 +1,28 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { TaxSchemaType } from "@/schemas/tax.schema";
-import { revalidatePath } from "next/cache";
 
 /**
- * Get taxes from server
+ * Get products from server
  * @param param0
- * @returns Tax
+ * @returns Product
  */
-export const getTaxes = async ({
+export const getProducts = async ({
   page = 0,
   limit = 10,
   order = "id",
   direction = "desc",
+  search = "",
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
+  search?: string;
 }) => {
   try {
-    const url = `taxes?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `products?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (search) url += `&search=${search}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
@@ -48,15 +49,15 @@ export const getTaxes = async ({
 };
 
 /**
- * Create new Taxes
+ * Create new product
  * @param formData
- * @returns Tax
+ * @returns Product
  */
-export const createTax = async (formData: TaxSchemaType) => {
+export const createProduct = async (body: FormData) => {
   try {
-    const response = await fetchData("taxes", {
+    const response = await fetchData("products", {
       method: "POST",
-      body: JSON.stringify(formData),
+      body,
     });
 
     if (!response?.success && !response?.errors) {
@@ -83,13 +84,13 @@ export const createTax = async (formData: TaxSchemaType) => {
 };
 
 /**
- * Delete tax by id
+ * Delete product by id
  * @param id
- * @returns Tax
+ * @returns Product
  */
-export const deleteTaxById = async (id: number) => {
+export const deleteProductById = async (id: number) => {
   try {
-    const response = await fetchData(`taxes/${id}`, {
+    const response = await fetchData(`products/${id}`, {
       method: "DELETE",
     });
 
@@ -117,13 +118,13 @@ export const deleteTaxById = async (id: number) => {
 };
 
 /**
- * Get tax by id
+ * Get product by id
  * @param id
- * @returns Tax
+ * @returns Product
  */
-export const getTaxById = async (id: number) => {
+export const getProductById = async (id: number) => {
   try {
-    const response = await fetchData(`taxes/${id}`);
+    const response = await fetchData(`products/${id}`);
 
     if (!response?.success && !response?.errors) {
       const error = new Error(response.message) as Error & { status?: number };
@@ -149,16 +150,16 @@ export const getTaxById = async (id: number) => {
 };
 
 /**
- * Update Tax schema
+ * Update Product schema
  * @param id
  * @param data
- * @returns Tax
+ * @returns Product
  */
-export const updateTax = async (id: number, data: TaxSchemaType) => {
+export const updateProduct = async (id: number, body: FormData) => {
   try {
-    const response = await fetchData(`taxes/${id}`, {
+    const response = await fetchData(`products/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body,
     });
 
     if (!response?.success && !response?.errors) {
@@ -185,13 +186,13 @@ export const updateTax = async (id: number, data: TaxSchemaType) => {
 };
 
 /**
- * Bulk delete taxes
+ * Bulk delete products
  * @param ids
- * @returns Taxes
+ * @returns Products
  */
-export const bulkDeleteTaxes = async (ids: number[]) => {
+export const bulkDeleteProducts = async (ids: number[]) => {
   try {
-    const response = await fetchData(`taxes/bulk`, {
+    const response = await fetchData(`products/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
@@ -202,7 +203,6 @@ export const bulkDeleteTaxes = async (ids: number[]) => {
       throw error;
     }
 
-    revalidatePath("/admin/taxes");
     return response;
   } catch (error) {
     if (error instanceof Error) {

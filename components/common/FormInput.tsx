@@ -46,13 +46,16 @@ const FormInput = <T extends FieldValues>({
                   const regex = new RegExp(
                     `^\\d*(\\.\\d{0,${decimalScale}})?$`,
                   );
-
                   if (!regex.test(value)) return;
+
+                  field.onChange(value);
+                  return;
                 }
 
-                field.onChange(value);
+                field.onChange(Number(value));
                 return;
               }
+
               field.onChange(value);
             }}
             value={field.value ?? ""}

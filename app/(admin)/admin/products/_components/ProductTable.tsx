@@ -49,25 +49,33 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
 import DeleteModal from "@/components/common/DeleteModal";
-import { brandReducer } from "@/reducers/brandReducer";
-import { initialBrandState } from "@/reducerStates/brandState";
+import { productReducer } from "@/reducers/productReducer";
+import { initialProductState } from "@/reducerStates/productState";
 import {
-  bulkDeleteBrands,
-  deleteBrandById,
-  getBrands,
-} from "@/actions/BrandAction";
-import { Brand } from "@/@types/brand.types";
-import CreateBrand from "./CreateBrand";
-import UpdateBrandModal from "./UpdateBrandModal";
+  bulkDeleteProducts,
+  deleteProductById,
+  getProducts,
+} from "@/actions/ProductAction";
+import { Product } from "@/@types/product.types";
+import CreateProduct from "./CreateProduct";
+import UpdateProductModal from "./UpdateProductModal";
 import {
   Avatar,
   AvatarBadge,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-export default function BrandTable() {
-  const [state, dispatch] = useReducer(brandReducer, initialBrandState);
+export default function ProductTable() {
+  const [state, dispatch] = useReducer(productReducer, initialProductState);
 
   const {
     open,
@@ -75,7 +83,7 @@ export default function BrandTable() {
     sorting,
     isError,
     error,
-    brands,
+    products,
     totalCount,
     page,
     limit,
@@ -93,7 +101,7 @@ export default function BrandTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchBrandsDebounced = useCallback(
+  const fetchProductsDebounced = useCallback(
     debounce(async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
@@ -101,14 +109,14 @@ export default function BrandTable() {
         const order = sorting[0]?.id ?? "id";
         const direction =
           sorting.length === 0 ? "desc" : sorting[0].desc ? "desc" : "asc";
-        const data = await getBrands({
+        const data = await getProducts({
           page,
           limit,
           order,
           direction,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
-        dispatch({ type: "SET_BRANDS", payload: data.data.items });
+        dispatch({ type: "SET_PRODUCTS", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
         if (error instanceof Error) {
@@ -127,27 +135,27 @@ export default function BrandTable() {
    * call to server action
    */
   useEffect(() => {
-    fetchBrandsDebounced(page, limit);
+    fetchProductsDebounced(page, limit);
 
     return () => {
-      fetchBrandsDebounced.cancel();
+      fetchProductsDebounced.cancel();
     };
-  }, [page, limit, fetchBrandsDebounced]);
+  }, [page, limit, fetchProductsDebounced]);
 
   /**
-   * delete brand by id
+   * delete product by id
    */
-  const deleteBrand = useCallback(async () => {
+  const deleteProduct = useCallback(async () => {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
-      const data = await deleteBrandById(selectedId!);
+      const data = await deleteProductById(selectedId!);
       if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });
-      if (brands.length === 1 && page > 1)
+      if (products.length === 1 && page > 1)
         dispatch({ type: "SET_PAGE", payload: page - 1 });
-      fetchBrandsDebounced(page, limit);
+      fetchProductsDebounced(page, limit);
       dispatch({ type: "CLOSE_DELETE_MODAL" });
     } catch (error) {
       if (error instanceof Error) {
@@ -162,20 +170,20 @@ export default function BrandTable() {
     } finally {
       dispatch({ type: "SET_DELETE_LOADING", payload: false });
     }
-  }, [selectedId, page, limit, fetchBrandsDebounced, brands.length]);
+  }, [selectedId, page, limit, fetchProductsDebounced, products.length]);
 
   /**
-   * bulk delete brands
+   * bulk delete products
    */
   const bulkDelete = async () => {
     dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
     try {
-      const response = await bulkDeleteBrands(Array.from(selectedRows));
+      const response = await bulkDeleteProducts(Array.from(selectedRows));
       if (!response.success) throw new Error(response.message);
       dispatch({ type: "DESELECT_ALL_ROWS" });
       dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
       dispatch({ type: "SET_PAGE", payload: 0 });
-      fetchBrandsDebounced(0, limit);
+      fetchProductsDebounced(0, limit);
       toast.success(response.message, {
         position: "top-right",
       });
@@ -197,21 +205,21 @@ export default function BrandTable() {
   /**
    * react table column
    */
-  const columns = useMemo<ColumnDef<Brand>[]>(
+  const columns = useMemo<ColumnDef<Product>[]>(
     () => [
       {
         id: "select",
         header: () => {
           const allSelected =
-            state.selectedRows.size === brands.length && brands.length > 0;
+            state.selectedRows.size === products.length && products.length > 0;
 
           return (
             <Checkbox
               checked={allSelected}
               onCheckedChange={() => {
                 const allSelected =
-                  state.selectedRows.size === brands.length &&
-                  brands.length > 0;
+                  state.selectedRows.size === products.length &&
+                  products.length > 0;
                 if (allSelected) {
                   dispatch({ type: "DESELECT_ALL_ROWS" });
                 } else {
@@ -248,7 +256,7 @@ export default function BrandTable() {
         cell: ({ row }) => page * limit + row.index + 1,
       },
       {
-        accessorKey: "title",
+        accessorKey: "name",
         header: ({ column }) => (
           <div className="text-left">
             <Button
@@ -258,7 +266,7 @@ export default function BrandTable() {
               }
               className="px-0"
             >
-              Brand Name <ArrowUpDown className="ml-2 h-4 w-4" />
+              Product Name <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           </div>
         ),
@@ -270,26 +278,17 @@ export default function BrandTable() {
                   `${process.env.NEXT_PUBLIC_API_URL}${row?.original?.image}` ||
                   "https://github.com/shadcn.png"
                 }
-                alt={row?.original?.title}
+                alt={row?.original?.name}
               />
-              <AvatarFallback>{row?.original?.title?.charAt(0)}</AvatarFallback>
+              <AvatarFallback>{row?.original?.name?.charAt(0)}</AvatarFallback>
               <AvatarBadge className="bg-green-600 dark:bg-green-800" />
             </Avatar>
             <span className="ml-2 text-left">
-              <span className="font-medium block">{row?.original?.title}</span>
-              <span>
+              <span className="font-medium block">{row?.original?.name}</span>
+              <span className="flex flex-row items-center space-x-2">
+                <span>By</span>
                 <div className="font-medium">
-                  {row?.original?.status ? (
-                    <Badge variant="default">
-                      <CircleCheckBig />
-                      Active
-                    </Badge>
-                  ) : (
-                    <Badge variant="destructive">
-                      <CircleX />
-                      Inactive
-                    </Badge>
-                  )}
+                  {row?.original?.creator?.name ?? "N/A"}
                 </div>
               </span>
             </span>
@@ -297,11 +296,200 @@ export default function BrandTable() {
         ),
       },
       {
-        accessorKey: "creator.id",
-        header: () => <div className="text-center">Created By</div>,
+        accessorKey: "code",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Code <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("code") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "barcodeSymbology",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Barcode Symbology <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <div className="font-medium">
-            {row?.original?.creator?.name ?? "N/A"}
+            {row.getValue("barcodeSymbology") ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "brand.id",
+        header: () => <div className="text-center">Brand</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.brand?.title ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "category.id",
+        header: () => <div className="text-center">Category</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.category?.name ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "unit.id",
+        header: () => <div className="text-center">Unit</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.unit?.unitName ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "purchaseUnit.id",
+        header: () => <div className="text-center">Purchase Unit</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.purchaseUnit?.unitName ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "saleUnit.id",
+        header: () => <div className="text-center">Sale Unit</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.saleUnit?.unitName ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "cost",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Cost <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("cost") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "price",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Price <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("price") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "qty",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Quantity <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("qty") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "alertQty",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Alert Quantity <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("alertQty") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "tax.id",
+        header: () => <div className="text-center">Tax</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">{row?.original?.tax?.name ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "taxMethod",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Tax Method <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.getValue("taxMethod") ? (
+              <Badge variant="default">
+                <CircleCheckBig />
+                Exclusive
+              </Badge>
+            ) : (
+              <Badge variant="destructive">
+                <CircleX />
+                Inclusive
+              </Badge>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Status <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.getValue("status") ? (
+              <Badge variant="default">
+                <CircleCheckBig />
+                Active
+              </Badge>
+            ) : (
+              <Badge variant="destructive">
+                <CircleX />
+                Inactive
+              </Badge>
+            )}
           </div>
         ),
       },
@@ -359,14 +547,14 @@ export default function BrandTable() {
         },
       },
     ],
-    [page, limit, brands.length, state.selectedRows],
+    [page, limit, products.length, state.selectedRows],
   );
 
   /**
    * define react table by it's hook
    */
   const table = useReactTable({
-    data: brands,
+    data: products,
     columns,
     state: { sorting },
     manualPagination: true,
@@ -384,10 +572,10 @@ export default function BrandTable() {
   });
 
   /**
-   * When brand create a new brand then close the modal and add the new item to the table
+   * When product create a new product then close the modal and add the new item to the table
    * @param data
    */
-  const onSuccess = (data: Brand) => {
+  const onSuccess = (data: Product) => {
     if (page === 0) {
       dispatch({
         type: "REFRESH",
@@ -406,7 +594,7 @@ export default function BrandTable() {
     dispatch({ type: "TOGGLE_MODAL" });
   };
 
-  const onUpdateSuccess = (data: Brand) => {
+  const onUpdateSuccess = (data: Product) => {
     dispatch({
       type: "UPDATE_SUCCESS",
       payload: data,
@@ -430,7 +618,7 @@ export default function BrandTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && !brands?.length)
+  if (!isLoading && !isError && !products?.length)
     content = (
       <TableAlert
         message="No data found!"
@@ -439,31 +627,31 @@ export default function BrandTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && brands?.length)
+  if (!isLoading && !isError && products?.length)
     content = table.getRowModel().rows.map((row) => (
-      <tr key={row.id} className="border-t hover:bg-muted/40 transition">
+      <TableRow key={row.id}>
         {row.getVisibleCells().map((cell) => (
-          <td key={cell.id} className="px-4 py-3 text-center">
+          <TableCell key={cell.id}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </td>
+          </TableCell>
         ))}
-      </tr>
+      </TableRow>
     ));
 
   return (
-    <div className="p-6">
-      <Card className="rounded-2xl shadow-sm">
-        <CardContent>
+    <div className="p-6 w-full min-w-0 overflow-x-hidden">
+      <Card className="rounded-2xl shadow-sm w-full min-w-0 overflow-hidden">
+        <CardContent className="min-w-0">
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
               <Users className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
-                <h2 className="text-xl font-semibold">Brands</h2>
-                <h3 className="text-gray-500">See and manage your brands</h3>
+                <h2 className="text-xl font-semibold">Products</h2>
+                <h3 className="text-gray-500">See and manage your products</h3>
               </div>
             </div>
             <ButtonGroup>
-              <CreateBrand
+              <CreateProduct
                 open={open}
                 onSuccess={onSuccess}
                 toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
@@ -482,29 +670,26 @@ export default function BrandTable() {
           <div className="grid grid-cols-2 gap-4 mb-3">
             {/* add filter here */}
           </div>
-          <div className="rounded-xl border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
+          <div className="w-full overflow-x-auto rounded-xl border">
+            <Table className="min-w-[1400px]">
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
+                  <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-4 py-3 font-medium text-center"
-                      >
+                      <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
                               header.getContext(),
                             )}
-                      </th>
+                      </TableHead>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </thead>
-              <tbody>{content}</tbody>
-            </table>
+              </TableHeader>
+              <TableBody>{content}</TableBody>
+            </Table>
           </div>
 
           <div className="flex flex-row items-center justify-end gap-4 mt-3">
@@ -557,7 +742,7 @@ export default function BrandTable() {
         </CardContent>
       </Card>
       {selectedId && showUpdateModal && (
-        <UpdateBrandModal
+        <UpdateProductModal
           id={selectedId as number}
           open={showUpdateModal}
           toggleModal={() =>
@@ -571,16 +756,16 @@ export default function BrandTable() {
         loading={bulkDeleteLoader}
         onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
         action={bulkDelete}
-        title="Delete all brands!"
-        description="Are you sure you want to delete all these brands?"
+        title="Delete all products!"
+        description="Are you sure you want to delete all these products?"
       />
       <DeleteModal
         open={deleteOpen}
         loading={deleteLoading}
         onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
-        action={deleteBrand}
-        title="Delete Brand!"
-        description="Are you sure you want to delete this brand?"
+        action={deleteProduct}
+        title="Delete Product!"
+        description="Are you sure you want to delete this product?"
       />
     </div>
   );

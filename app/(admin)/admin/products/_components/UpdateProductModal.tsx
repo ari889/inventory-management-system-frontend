@@ -10,12 +10,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useEffectEvent, useState } from "react";
 import { createPortal } from "react-dom";
-import { getTaxById } from "@/actions/TaxAction";
-import UpdateTaxLoader from "./UpdateTaxLoader";
-import { Tax } from "@/@types/tax.types";
-import UpdateTaxForm from "./UpdateTaxForm";
+import { Product } from "@/@types/product.types";
+import { getProductById } from "@/actions/ProductAction";
+import UpdateProductLoader from "./UpdateProductLoader";
+import UpdateProductForm from "./UpdateProductForm";
 
-const UpdateTaxModal = ({
+const UpdateProductModal = ({
   id,
   open,
   toggleModal,
@@ -24,16 +24,16 @@ const UpdateTaxModal = ({
   id: number;
   open: boolean;
   toggleModal: () => void;
-  onSuccess: (data: Tax) => void;
+  onSuccess: (data: Product) => void;
 }) => {
-  const [data, setData] = useState<Tax>();
+  const [data, setData] = useState<Product>();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchTax = useEffectEvent(async () => {
+  const fetchProduct = useEffectEvent(async () => {
     setLoading(true);
     try {
-      const data = await getTaxById(id);
+      const data = await getProductById(id);
       if (!data?.success) throw new Error(data?.message);
       setData(data?.data);
       setLoading(false);
@@ -49,7 +49,7 @@ const UpdateTaxModal = ({
     let mounted = true;
 
     if (mounted) {
-      fetchTax();
+      fetchProduct();
     }
 
     return () => {
@@ -62,13 +62,15 @@ const UpdateTaxModal = ({
    */
   let content = null;
 
-  if (loading) content = <UpdateTaxLoader />;
+  if (loading) content = <UpdateProductLoader />;
   else if (!loading && error)
     content = (
       <CustomAlert heading="Error!" message={error} variant="destructive" />
     );
   else if (!loading && !error && data)
-    content = <UpdateTaxForm data={data as Tax} onSuccess={onSuccess} />;
+    content = (
+      <UpdateProductForm data={data as Product} onSuccess={onSuccess} />
+    );
 
   return open
     ? createPortal(
@@ -79,18 +81,20 @@ const UpdateTaxModal = ({
                 {loading ? (
                   <Skeleton className="h-5 w-1/2" />
                 ) : (
-                  `Edit "${data?.name}" Tax`
+                  `Edit "${data?.name}" Product`
                 )}
               </DialogTitle>
               <DialogDescription>
                 {loading ? (
                   <Skeleton className="h-5 w-full block" as="span" />
                 ) : (
-                  "Edit and manage the tax details from here."
+                  "Edit and manage the product details from here."
                 )}
               </DialogDescription>
             </DialogHeader>
-            {content}
+            <div className="-mx-4 no-scrollbar max-h-[50vh] overflow-y-auto px-4">
+              {content}
+            </div>
           </DialogContent>
         </Dialog>,
         document.body,
@@ -98,4 +102,4 @@ const UpdateTaxModal = ({
     : null;
 };
 
-export default UpdateTaxModal;
+export default UpdateProductModal;

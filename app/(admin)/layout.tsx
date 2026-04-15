@@ -19,7 +19,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="min-w-0 overflow-x-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -42,7 +42,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             </Breadcrumb>
           </div>
         </header>
-        <div className="p-4">{children}</div>
+        <div className="p-4 min-w-0">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

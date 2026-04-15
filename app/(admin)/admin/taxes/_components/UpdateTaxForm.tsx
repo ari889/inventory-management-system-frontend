@@ -1,6 +1,6 @@
 "use client";
 import { Tax } from "@/@types/tax.types";
-import { updateTax } from "@/actions/TaxActions";
+import { updateTax } from "@/actions/TaxAction";
 import CustomSelect from "@/components/common/CustomSelect";
 import FormInput from "@/components/common/FormInput";
 import {

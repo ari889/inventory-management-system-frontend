@@ -49,7 +49,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import DeleteModal from "@/components/common/DeleteModal";
 import { taxReducer } from "@/reducers/taxReducer";
 import { initialTaxState } from "@/reducerStates/taxState";
-import { bulkDeleteTaxes, deleteTaxById, getTaxes } from "@/actions/TaxActions";
+import { bulkDeleteTaxes, deleteTaxById, getTaxes } from "@/actions/TaxAction";
 import { Tax } from "@/@types/tax.types";
 import CreateTax from "./CreateTax";
 import UpdateTaxModal from "./UpdateTaxModal";
