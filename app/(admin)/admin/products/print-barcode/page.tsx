@@ -4,7 +4,7 @@ import { checkPermission } from "@/actions/PermissionAction";
 import { getSettings } from "@/actions/SettingsAction";
 import { Setting } from "@/@types/settings.types";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShoppingCart } from "lucide-react";
+import { Barcode } from "lucide-react";
 import PrintBarcodeForm from "./_components/PrintBarcodeForm";
 
 export const generateMetadata = async () => {
@@ -24,7 +24,7 @@ const ProductBarcodePage = async () => {
         <CardContent className="min-w-0">
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <ShoppingCart className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <Barcode className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
                 <h2 className="text-xl font-semibold">Product Barcodes</h2>
                 <h3 className="text-gray-500">
