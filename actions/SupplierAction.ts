@@ -13,14 +13,17 @@ export const getSuppliers = async ({
   limit = 10,
   order = "id",
   direction = "desc",
+  search = "",
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
+  search?: string;
 }) => {
   try {
-    const url = `suppliers?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `suppliers?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (search) url += `&search=${search}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

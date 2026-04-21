@@ -17,8 +17,8 @@ export const unitSchema = z.object({
   operator: z
     .string()
     .min(1, { message: "Enter a valid operator!" })
-    .regex(/^[*/+-]+$/, {
-      message: "Operator can contain only *, /, +, -",
+    .regex(/^[*/]+$/, {
+      message: "Operator can contain only *, /",
     }),
   operationValue: z
     .number({

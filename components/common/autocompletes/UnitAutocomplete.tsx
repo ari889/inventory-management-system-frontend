@@ -31,6 +31,7 @@ type Props<T extends FieldValues> = {
   name: Path<T>;
   label?: string;
   defaultUnit?: Pick<Unit, "id" | "unitName"> | null;
+  onSelectUnit?: (tax: Unit | null) => void;
 };
 
 /**
@@ -128,6 +129,7 @@ export default function UnitAutocomplete<T extends FieldValues>({
   name,
   label = "Select Unit",
   defaultUnit = null,
+  onSelectUnit,
 }: Props<T>) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [selectedUnit, setSelectedUnit] = useState<Pick<
@@ -195,8 +197,8 @@ export default function UnitAutocomplete<T extends FieldValues>({
    * Set the default selected unit when the component mounts or when the defaultUnit prop changes. This ensures that if an initial unit is provided from the parent component, it will be displayed as the selected option in the autocomplete.
    */
   useEffect(() => {
-    if (defaultUnit) setSelectedUnit(defaultUnit);
-  }, [defaultUnit?.id]);
+    setSelectedUnit(defaultUnit ?? null);
+  }, [defaultUnit?.id, defaultUnit?.unitName]);
 
   const debouncedFetch = useCallback(
     debounce((query: string) => {
@@ -300,16 +302,14 @@ export default function UnitAutocomplete<T extends FieldValues>({
                                 const num = Number(val);
                                 const picked =
                                   state.units.find((u) => u.id === num) ?? null;
-                                setSelectedUnit(
-                                  num === field.value ? null : picked,
-                                );
-                                field.onChange(
-                                  num === field.value ? null : num,
-                                );
-                                dispatch({
-                                  type: "SET_OPEN",
-                                  payload: false,
-                                });
+                                const next =
+                                  num === field.value ? null : picked;
+
+                                setSelectedUnit(next);
+                                field.onChange(next?.id ?? null);
+                                onSelectUnit?.(next); // ← fire with full Unit object
+
+                                dispatch({ type: "SET_OPEN", payload: false });
                               }}
                             >
                               <Check

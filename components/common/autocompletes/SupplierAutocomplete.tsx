@@ -20,25 +20,24 @@ import { useEffect, useReducer, useRef, useCallback, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import debounce from "lodash/debounce";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
-import { Tax } from "@/@types/tax.types";
-import { getTaxes } from "@/actions/TaxAction";
+import { Supplier } from "@/@types/supplier.types";
+import { getSuppliers } from "@/actions/SupplierAction";
 
 /**
- * A reusable autocomplete component for selecting a tax. Fetches options from the server with support for searching and infinite scrolling.
+ * A reusable autocomplete component for selecting a supplier. Fetches options from the server with support for searching and infinite scrolling.
  */
 type Props<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
   label?: string;
-  defaultTax?: Pick<Tax, "id" | "name"> | null;
-  onSelectTax?: (tax: Tax | null) => void;
+  defaultSupplier?: Pick<Supplier, "id" | "name"> | null;
 };
 
 /**
- * State management for the TaxAutocomplete component using useReducer. Handles loading states, error handling, and pagination for fetching taxs.
+ * State management for the SupplierAutocomplete component using useReducer. Handles loading states, error handling, and pagination for fetching suppliers.
  */
 type State = {
-  taxs: Tax[];
+  suppliers: Supplier[];
   loading: boolean;
   searching: boolean;
   loadingMore: boolean;
@@ -49,14 +48,14 @@ type State = {
 };
 
 /**
- * Actions for the reducer to manage the state of TaxAutocomplete, including fetching taxs, handling search input, and managing the open state of the popover.
+ * Actions for the reducer to manage the state of SupplierAutocomplete, including fetching suppliers, handling search input, and managing the open state of the popover.
  */
 type Action =
   | { type: "FETCH_START"; payload: { replace: boolean; initial: boolean } }
   | {
       type: "FETCH_SUCCESS";
       payload: {
-        items: Tax[];
+        items: Supplier[];
         total: number;
         page: number;
         replace: boolean;
@@ -67,13 +66,13 @@ type Action =
   | { type: "SET_SEARCH"; payload: string };
 
 /**
- * Reducer function to manage the state of the TaxAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
+ * Reducer function to manage the state of the SupplierAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
  * @param state - The current state of the component.
  * @param action - The action to be processed to update the state.
  * @returns The updated state based on the action type.
  */
 const initialState: State = {
-  taxs: [],
+  suppliers: [],
   loading: true,
   searching: false,
   loadingMore: false,
@@ -84,7 +83,7 @@ const initialState: State = {
 };
 
 /**
- * Reducer function to manage the state of the TaxAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
+ * Reducer function to manage the state of the SupplierAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
  * @param state - The current state of the component.
  * @param action - The action to be processed to update the state.
  * @returns The updated state based on the action type.
@@ -100,7 +99,7 @@ function reducer(state: State, action: Action): State {
       const { items, total, page, replace } = action.payload;
       return {
         ...state,
-        taxs: replace ? items : [...state.taxs, ...items],
+        suppliers: replace ? items : [...state.suppliers, ...items],
         hasMore: (page + 1) * 10 < total,
         error: null,
         loading: false,
@@ -129,30 +128,29 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export default function TaxAutocomplete<T extends FieldValues>({
+export default function SupplierAutocomplete<T extends FieldValues>({
   control,
   name,
-  label = "Select tax",
-  defaultTax = null,
-  onSelectTax,
+  label = "Select supplier",
+  defaultSupplier = null,
 }: Props<T>) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [selectedTax, setSelectedTax] = useState<Pick<
-    Tax,
+  const [selectedSupplier, setSelectedSupplier] = useState<Pick<
+    Supplier,
     "id" | "name"
-  > | null>(defaultTax);
+  > | null>(defaultSupplier);
   const listRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(0);
   const searchRef = useRef("");
   const initialLoadRef = useRef(true);
 
   /**
-   * Fetch taxs from the server with support for pagination and searching. Dispatches actions to update the state based on the fetch status (loading, success, error) and whether it's an initial load, a search, or loading more items.
+   * Fetch suppliers from the server with support for pagination and searching. Dispatches actions to update the state based on the fetch status (loading, success, error) and whether it's an initial load, a search, or loading more items.
    * @param nextPage
    * @param nextSearch
    * @param replace
    */
-  const fetchTaxs = async (
+  const fetchSuppliers = async (
     nextPage: number,
     nextSearch: string,
     replace: boolean,
@@ -163,7 +161,7 @@ export default function TaxAutocomplete<T extends FieldValues>({
         payload: { replace, initial: initialLoadRef.current },
       });
 
-      const response = await getTaxes({
+      const response = await getSuppliers({
         page: nextPage,
         limit: 10,
         order: "id",
@@ -173,7 +171,7 @@ export default function TaxAutocomplete<T extends FieldValues>({
 
       if (!response.success) throw new Error(response.message);
 
-      const items: Tax[] = response.data.items;
+      const items: Supplier[] = response.data.items;
       const total: number = response.data.totalItems;
 
       dispatch({
@@ -192,23 +190,23 @@ export default function TaxAutocomplete<T extends FieldValues>({
   };
 
   /**
-   * Initial fetch of taxs when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
+   * Initial fetch of suppliers when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
    */
   useEffect(() => {
-    fetchTaxs(0, "", true);
+    fetchSuppliers(0, "", true);
   }, []);
 
   /**
-   * Set the default selected tax when the component mounts or when the defaultTax prop changes. This ensures that if an initial tax is provided from the parent component, it will be displayed as the selected option in the autocomplete.
+   * Set the default selected supplier when the component mounts or when the defaultSupplier prop changes. This ensures that if an initial supplier is provided from the parent component, it will be displayed as the selected option in the autocomplete.
    */
   useEffect(() => {
-    setSelectedTax(defaultTax ?? null);
-  }, [defaultTax?.id, defaultTax?.name]);
+    if (defaultSupplier) setSelectedSupplier(defaultSupplier);
+  }, [defaultSupplier?.id]);
 
   const debouncedFetch = useCallback(
     debounce((query: string) => {
       pageRef.current = 0;
-      fetchTaxs(0, query, true);
+      fetchSuppliers(0, query, true);
     }, 400),
     [],
   );
@@ -233,7 +231,7 @@ export default function TaxAutocomplete<T extends FieldValues>({
     if (nearBottom) {
       const nextPage = pageRef.current + 1;
       pageRef.current = nextPage;
-      fetchTaxs(nextPage, searchRef.current, false);
+      fetchSuppliers(nextPage, searchRef.current, false);
     }
   }, [state.loadingMore, state.hasMore]);
 
@@ -243,8 +241,8 @@ export default function TaxAutocomplete<T extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => {
         const selectedLabel =
-          selectedTax?.name ??
-          state.taxs.find((r) => r.id === field.value)?.name;
+          selectedSupplier?.name ??
+          state.suppliers.find((r) => r.id === field.value)?.name;
 
         return (
           <Field data-invalid={fieldState.invalid}>
@@ -257,7 +255,7 @@ export default function TaxAutocomplete<T extends FieldValues>({
                 className="w-full justify-start font-normal"
               >
                 <Spinner className="mr-2" />
-                Loading taxs...
+                Loading suppliers...
               </Button>
             ) : (
               <Popover
@@ -278,7 +276,7 @@ export default function TaxAutocomplete<T extends FieldValues>({
                     <span
                       className={cn(!selectedLabel && "text-muted-foreground")}
                     >
-                      {selectedLabel ?? "Select a tax..."}
+                      {selectedLabel ?? "Select a supplier..."}
                     </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                   </Button>
@@ -287,7 +285,7 @@ export default function TaxAutocomplete<T extends FieldValues>({
                 <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
                   <Command shouldFilter={false}>
                     <CommandInput
-                      placeholder="Search Taxs..."
+                      placeholder="Search Suppliers..."
                       value={state.search}
                       onValueChange={handleSearch}
                     />
@@ -298,57 +296,37 @@ export default function TaxAutocomplete<T extends FieldValues>({
                         </div>
                       ) : (
                         <>
-                          <CommandEmpty>No taxs found.</CommandEmpty>
-
-                          <CommandItem
-                            value="0"
-                            onSelect={() => {
-                              setSelectedTax(null);
-                              field.onChange(null);
-                              onSelectTax?.(null);
-                              dispatch({ type: "SET_OPEN", payload: false });
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                field.value === null ||
-                                  field.value === undefined
-                                  ? "opacity-100"
-                                  : "opacity-0",
-                              )}
-                            />
-                            <span className="text-muted-foreground">
-                              No Tax
-                            </span>
-                          </CommandItem>
-                          {state.taxs.map((tax) => (
+                          <CommandEmpty>No suppliers found.</CommandEmpty>
+                          {state.suppliers.map((supplier) => (
                             <CommandItem
-                              key={tax.id}
-                              value={String(tax.id)}
+                              key={supplier.id}
+                              value={String(supplier.id)}
                               onSelect={(val) => {
                                 const num = Number(val);
                                 const picked =
-                                  state.taxs.find((u) => u.id === num) ?? null;
-                                const next =
-                                  num === field.value ? null : picked;
-
-                                setSelectedTax(next);
-                                field.onChange(next?.id ?? null);
-                                onSelectTax?.(next); // ← fire with full Tax object
-
-                                dispatch({ type: "SET_OPEN", payload: false });
+                                  state.suppliers.find((u) => u.id === num) ??
+                                  null;
+                                setSelectedSupplier(
+                                  num === field.value ? null : picked,
+                                );
+                                field.onChange(
+                                  num === field.value ? null : num,
+                                );
+                                dispatch({
+                                  type: "SET_OPEN",
+                                  payload: false,
+                                });
                               }}
                             >
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  field.value === tax.id
+                                  field.value === supplier.id
                                     ? "opacity-100"
                                     : "opacity-0",
                                 )}
                               />
-                              {tax.name}
+                              {supplier.name}
                             </CommandItem>
                           ))}
                           {state.loadingMore && (

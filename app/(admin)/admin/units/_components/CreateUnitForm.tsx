@@ -97,7 +97,7 @@ const CreateUnitForm = ({ onSuccess }: { onSuccess: (data: Unit) => void }) => {
           control={control}
           name="operator"
           label="Unit Operator"
-          placeholder="Eg: +, -, *, /"
+          placeholder="Eg: *, /"
           disabled={isPending}
         />
         <FormInput

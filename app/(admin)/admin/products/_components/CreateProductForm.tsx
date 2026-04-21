@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
-import { InputGroup } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { productSchema, ProductSchemaType } from "@/schemas/product.schema";
 import { setApiErrors } from "@/utils/setFormErrors";

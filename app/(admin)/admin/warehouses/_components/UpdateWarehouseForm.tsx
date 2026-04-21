@@ -45,7 +45,7 @@ const UpdateWarehouseForm = ({
       email: data?.email || null,
       phone: data?.phone || null,
       address: data?.address || null,
-      status: data?.status || true,
+      status: data?.status || false,
     },
     resolver: zodResolver(warehouseSchema),
   });

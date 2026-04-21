@@ -3,7 +3,7 @@ import { InitialStateType } from "./reducer.types";
 
 export interface Tax extends BaseType, Author {
   name: string;
-  rate: number;
+  rate: string;
   status: boolean;
 }
 

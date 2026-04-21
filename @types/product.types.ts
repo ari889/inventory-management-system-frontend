@@ -15,19 +15,19 @@ export interface Product extends BaseType, Author {
   brand?: Brand | null;
 
   categoryId: number;
-  category?: ProductCategory;
+  category: ProductCategory;
 
   unitId: number;
-  unit?: Unit;
+  unit: Unit;
 
   purchaseUnitId: number;
-  purchaseUnit?: Unit;
+  purchaseUnit: Unit;
 
   saleUnitId: number;
-  saleUnit?: Unit;
+  saleUnit: Unit;
 
-  cost: number;
-  price: number;
+  cost: string;
+  price: string;
 
   qty: number | null;
   alertQty: number | null;

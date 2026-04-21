@@ -1,6 +1,6 @@
 "use client";
 import { Supplier } from "@/@types/supplier.types";
-import { updateSupplier } from "@/actions/SupplierAcrion";
+import { updateSupplier } from "@/actions/SupplierAction";
 import CustomSelect from "@/components/common/CustomSelect";
 import FormInput from "@/components/common/FormInput";
 import {

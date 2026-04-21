@@ -50,13 +50,7 @@ export function NavMain({ items }: { items: Module[] }) {
                       {item.children.map((child: Module) => (
                         <SidebarMenuSubItem key={child.id}>
                           <SidebarMenuSubButton asChild>
-                            <Link
-                              href={
-                                child?.permissions?.length > 0
-                                  ? child.url || "#"
-                                  : "/admin/access-denied"
-                              }
-                            >
+                            <Link href={child.url || "#"}>
                               {child?.iconClass && (
                                 <DynamicIcon
                                   name={child.iconClass}
@@ -75,13 +69,7 @@ export function NavMain({ items }: { items: Module[] }) {
             ) : (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton asChild>
-                  <Link
-                    href={
-                      item?.permissions?.length > 0
-                        ? item.url || "#"
-                        : "/admin/access-denied"
-                    }
-                  >
+                  <Link href={item.url || "#"}>
                     {item?.iconClass && (
                       <DynamicIcon name={item.iconClass} className="mr-2" />
                     )}

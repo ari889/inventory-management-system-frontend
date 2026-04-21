@@ -671,7 +671,7 @@ export default function ProductTable() {
             {/* add filter here */}
           </div>
           <div className="w-full overflow-x-auto rounded-xl border">
-            <Table className="min-w-[1400px]">
+            <Table className="min-w-350">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>

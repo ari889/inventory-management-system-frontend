@@ -23,7 +23,8 @@ import {
   CircleX,
   SquarePen,
   Trash,
-  Truck,
+  Users,
+  PlusCircle,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -49,19 +50,31 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
 import DeleteModal from "@/components/common/DeleteModal";
-import { supplierReducer } from "@/reducers/supplierReducer";
-import { initialSupplierState } from "@/reducerStates/supplierState";
+import { initialPurchaseState } from "@/reducerStates/purchaseState";
 import {
-  bulkDeleteSuppliers,
-  deleteSupplierById,
-  getSuppliers,
-} from "@/actions/SupplierAction";
-import { Supplier } from "@/@types/supplier.types";
-import CreateSupplier from "./CreateSupplier";
-import UpdateSupplierModal from "./UpdateSupplierModal";
+  bulkDeletePurchases,
+  deletePurchaseById,
+  getPurchases,
+} from "@/actions/PurchaseAction";
+import { Purchase } from "@/@types/purchase.types";
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import Link from "next/link";
+import { purchaseReducer } from "@/reducers/pruchaseReducer";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-export default function SupplierTable() {
-  const [state, dispatch] = useReducer(supplierReducer, initialSupplierState);
+export default function PurchaseTable() {
+  const [state, dispatch] = useReducer(purchaseReducer, initialPurchaseState);
 
   const {
     open,
@@ -69,7 +82,7 @@ export default function SupplierTable() {
     sorting,
     isError,
     error,
-    suppliers,
+    purchases,
     totalCount,
     page,
     limit,
@@ -87,7 +100,7 @@ export default function SupplierTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchSuppliersDebounced = useCallback(
+  const fetchPurchasesDebounced = useCallback(
     debounce(async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
@@ -95,14 +108,14 @@ export default function SupplierTable() {
         const order = sorting[0]?.id ?? "id";
         const direction =
           sorting.length === 0 ? "desc" : sorting[0].desc ? "desc" : "asc";
-        const data = await getSuppliers({
+        const data = await getPurchases({
           page,
           limit,
           order,
           direction,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
-        dispatch({ type: "SET_SUPPLIERS", payload: data.data.items });
+        dispatch({ type: "SET_PURCHASES", payload: data.data.items });
         dispatch({ type: "SET_COUNT", payload: data.data.totalItems });
       } catch (error) {
         if (error instanceof Error) {
@@ -121,27 +134,27 @@ export default function SupplierTable() {
    * call to server action
    */
   useEffect(() => {
-    fetchSuppliersDebounced(page, limit);
+    fetchPurchasesDebounced(page, limit);
 
     return () => {
-      fetchSuppliersDebounced.cancel();
+      fetchPurchasesDebounced.cancel();
     };
-  }, [page, limit, fetchSuppliersDebounced]);
+  }, [page, limit, fetchPurchasesDebounced]);
 
   /**
-   * delete supplier by id
+   * delete purchase by id
    */
-  const deleteSupplier = useCallback(async () => {
+  const deletePurchase = useCallback(async () => {
     dispatch({ type: "SET_DELETE_LOADING", payload: true });
     try {
-      const data = await deleteSupplierById(selectedId!);
+      const data = await deletePurchaseById(selectedId!);
       if (!data?.success && !data?.errors) throw new Error(data.message);
       toast.success(data.message, {
         position: "top-right",
       });
-      if (suppliers.length === 1 && page > 1)
+      if (purchases.length === 1 && page > 1)
         dispatch({ type: "SET_PAGE", payload: page - 1 });
-      fetchSuppliersDebounced(page, limit);
+      fetchPurchasesDebounced(page, limit);
       dispatch({ type: "CLOSE_DELETE_MODAL" });
     } catch (error) {
       if (error instanceof Error) {
@@ -156,20 +169,20 @@ export default function SupplierTable() {
     } finally {
       dispatch({ type: "SET_DELETE_LOADING", payload: false });
     }
-  }, [selectedId, page, limit, fetchSuppliersDebounced, suppliers.length]);
+  }, [selectedId, page, limit, fetchPurchasesDebounced, purchases.length]);
 
   /**
-   * bulk delete suppliers
+   * bulk delete purchases
    */
   const bulkDelete = async () => {
     dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: true });
     try {
-      const response = await bulkDeleteSuppliers(Array.from(selectedRows));
+      const response = await bulkDeletePurchases(Array.from(selectedRows));
       if (!response.success) throw new Error(response.message);
       dispatch({ type: "DESELECT_ALL_ROWS" });
       dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" });
       dispatch({ type: "SET_PAGE", payload: 0 });
-      fetchSuppliersDebounced(0, limit);
+      fetchPurchasesDebounced(0, limit);
       toast.success(response.message, {
         position: "top-right",
       });
@@ -191,22 +204,22 @@ export default function SupplierTable() {
   /**
    * react table column
    */
-  const columns = useMemo<ColumnDef<Supplier>[]>(
+  const columns = useMemo<ColumnDef<Purchase>[]>(
     () => [
       {
         id: "select",
         header: () => {
           const allSelected =
-            state.selectedRows.size === suppliers.length &&
-            suppliers.length > 0;
+            state.selectedRows.size === purchases.length &&
+            purchases.length > 0;
 
           return (
             <Checkbox
               checked={allSelected}
               onCheckedChange={() => {
                 const allSelected =
-                  state.selectedRows.size === suppliers.length &&
-                  suppliers.length > 0;
+                  state.selectedRows.size === purchases.length &&
+                  purchases.length > 0;
                 if (allSelected) {
                   dispatch({ type: "DESELECT_ALL_ROWS" });
                 } else {
@@ -243,98 +256,235 @@ export default function SupplierTable() {
         cell: ({ row }) => page * limit + row.index + 1,
       },
       {
-        accessorKey: "name",
+        accessorKey: "purchaseNo",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="px-0"
           >
-            Name <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("name") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "companyName",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Company Name <ArrowUpDown className="ml-2 h-4 w-4" />
+            Purchase No <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: ({ row }) => (
           <div className="font-medium">
-            {row.getValue("companyName") ?? "N/A"}
+            {row.getValue("purchaseNo") ?? "N/A"}
           </div>
         ),
       },
       {
-        accessorKey: "email",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Email <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("email") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "phone",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Phone <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("phone") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "country",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Country <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("country") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: () => <div className="text-center">Status</div>,
+        accessorKey: "supplier.id",
+        header: () => <div className="text-center">Supplier</div>,
         cell: ({ row }) => (
           <div className="font-medium">
-            {row?.getValue("status") ? (
-              <Badge variant="default">
-                <CircleCheckBig />
-                Active
-              </Badge>
-            ) : (
-              <Badge variant="destructive">
-                <CircleX />
-                Inactive
-              </Badge>
-            )}
+            {row?.original?.supplier?.name ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "warehouse.id",
+        header: () => <div className="text-center">warehouse</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.original?.warehouse?.name ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "item",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Item <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("item") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "totalQty",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Total Quantity <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("totalQty") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "totalDiscount",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Total Discount <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("totalDiscount") ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "totalTax",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Total Tax <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("totalTax") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "totalCost",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Total Cost <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("totalCost") ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "orderTaxRate",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Order Tax Rate <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("orderTaxRate")
+              ? `${row.getValue("orderTaxRate")}%`
+              : "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "orderTax",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Order Tax <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("orderTax") ?? "N/A"}</div>
+        ),
+      },
+      {
+        accessorKey: "orderDiscount",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Order Discount <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("orderDiscount") ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "shippingCost",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Shipping Cost <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("shippingCost") ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "grandTotal",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Grand Total <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("grandTotal") ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "paidAmount",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Paid Amount <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("paidAmount") ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "purchaseStatus",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Purchase Status <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row.getValue("purchaseStatus") ?? "N/A"}
           </div>
         ),
       },
@@ -371,16 +521,11 @@ export default function SupplierTable() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      dispatch({
-                        type: "TOGGLE_UPDATE_MODAL",
-                        payload: row.getValue("id"),
-                      })
-                    }
-                  >
-                    <SquarePen />
-                    Edit
+                  <DropdownMenuItem asChild>
+                    <Link href={`/admin/purchases/${row.getValue("id")}/edit`}>
+                      <SquarePen />
+                      Edit
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
@@ -401,14 +546,14 @@ export default function SupplierTable() {
         },
       },
     ],
-    [page, limit, suppliers.length, state.selectedRows],
+    [page, limit, purchases.length, state.selectedRows],
   );
 
   /**
    * define react table by it's hook
    */
   const table = useReactTable({
-    data: suppliers,
+    data: purchases,
     columns,
     state: { sorting },
     manualPagination: true,
@@ -424,40 +569,6 @@ export default function SupplierTable() {
     },
     getCoreRowModel: getCoreRowModel(),
   });
-
-  /**
-   * When supplier create a new supplier then close the modal and add the new item to the table
-   * @param data
-   */
-  const onSuccess = (data: Supplier) => {
-    if (page === 0) {
-      dispatch({
-        type: "REFRESH",
-        payload: data,
-      });
-    } else {
-      dispatch({
-        type: "SET_PAGE",
-        payload: 0,
-      });
-    }
-    dispatch({
-      type: "SET_COUNT",
-      payload: totalCount + 1,
-    });
-    dispatch({ type: "TOGGLE_MODAL" });
-  };
-
-  /**
-   * Trigger when supplier update
-   * @param data Supplier
-   */
-  const onUpdateSuccess = (data: Supplier) => {
-    dispatch({
-      type: "UPDATE_SUCCESS",
-      payload: data,
-    });
-  };
 
   /**
    * decide what to be rendered
@@ -476,7 +587,7 @@ export default function SupplierTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && !suppliers?.length)
+  if (!isLoading && !isError && !purchases?.length)
     content = (
       <TableAlert
         message="No data found!"
@@ -485,7 +596,7 @@ export default function SupplierTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && suppliers?.length)
+  if (!isLoading && !isError && purchases?.length)
     content = table.getRowModel().rows.map((row) => (
       <tr key={row.id} className="border-t hover:bg-muted/40 transition">
         {row.getVisibleCells().map((cell) => (
@@ -502,18 +613,19 @@ export default function SupplierTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <Truck className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <Users className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
-                <h2 className="text-xl font-semibold">Suppliers</h2>
-                <h3 className="text-gray-500">See and manage your suppliers</h3>
+                <h2 className="text-xl font-semibold">Purchases</h2>
+                <h3 className="text-gray-500">See and manage your purchases</h3>
               </div>
             </div>
             <ButtonGroup>
-              <CreateSupplier
-                open={open}
-                onSuccess={onSuccess}
-                toggleModal={() => dispatch({ type: "TOGGLE_MODAL" })}
-              />
+              <Button variant="default" asChild>
+                <Link href="/admin/purchases/add">
+                  <PlusCircle />
+                  Create New
+                </Link>
+              </Button>
               {selectedRows?.size > 0 && (
                 <Button
                   variant="destructive"
@@ -528,29 +640,26 @@ export default function SupplierTable() {
           <div className="grid grid-cols-2 gap-4 mb-3">
             {/* add filter here */}
           </div>
-          <div className="rounded-xl border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
+          <div className="w-full overflow-x-auto rounded-xl border">
+            <Table className="min-w-350">
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
+                  <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="px-4 py-3 font-medium text-center"
-                      >
+                      <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
                               header.getContext(),
                             )}
-                      </th>
+                      </TableHead>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </thead>
-              <tbody>{content}</tbody>
-            </table>
+              </TableHeader>
+              <TableBody>{content}</TableBody>
+            </Table>
           </div>
 
           <div className="flex flex-row items-center justify-end gap-4 mt-3">
@@ -602,31 +711,21 @@ export default function SupplierTable() {
           </div>
         </CardContent>
       </Card>
-      {selectedId && showUpdateModal && (
-        <UpdateSupplierModal
-          id={selectedId as number}
-          open={showUpdateModal}
-          toggleModal={() =>
-            dispatch({ type: "TOGGLE_UPDATE_MODAL", payload: null })
-          }
-          onSuccess={onUpdateSuccess}
-        />
-      )}
       <DeleteModal
         open={bulkDeleteOpen}
         loading={bulkDeleteLoader}
         onOpenChange={() => dispatch({ type: "TOGGLE_BULK_DELETE_MODAL" })}
         action={bulkDelete}
-        title="Delete all suppliers!"
-        description="Are you sure you want to delete all these suppliers?"
+        title="Delete all purchases!"
+        description="Are you sure you want to delete all these purchases?"
       />
       <DeleteModal
         open={deleteOpen}
         loading={deleteLoading}
         onOpenChange={() => dispatch({ type: "CLOSE_DELETE_MODAL" })}
-        action={deleteSupplier}
-        title="Delete Brand!"
-        description="Are you sure you want to delete this brand?"
+        action={deletePurchase}
+        title="Delete Purchase!"
+        description="Are you sure you want to delete this purchase?"
       />
     </div>
   );

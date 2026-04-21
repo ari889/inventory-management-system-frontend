@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useEffectEvent, useState } from "react";
 import { createPortal } from "react-dom";
 import { Supplier } from "@/@types/supplier.types";
-import { getSupplierById } from "@/actions/SupplierAcrion";
+import { getSupplierById } from "@/actions/SupplierAction";
 import UpdateSupplierLoader from "./UpdateSupplierLoader";
 import UpdateSupplierForm from "./UpdateSupplierForm";
 

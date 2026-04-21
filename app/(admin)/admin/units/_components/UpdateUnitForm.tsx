@@ -110,7 +110,7 @@ const UpdateUnitForm = ({
           control={control}
           name="operator"
           label="Unit Operator"
-          placeholder="Eg: +, -, *, /"
+          placeholder="Eg: *, /"
           disabled={isPending}
         />
         <FormInput
