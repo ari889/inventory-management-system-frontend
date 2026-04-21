@@ -522,7 +522,7 @@ export default function PurchaseTable() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl">
                   <DropdownMenuItem asChild>
-                    <Link href={`/admin/purchases/${row.getValue("id")}/edit`}>
+                    <Link href={`/admin/purchases/${row.getValue("id")}`}>
                       <SquarePen />
                       Edit
                     </Link>

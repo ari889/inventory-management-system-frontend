@@ -45,7 +45,7 @@ const UpdateSupplierForm = ({
       state: data?.state || "",
       postalCode: data?.postalCode || "",
       country: data?.country || "",
-      status: data?.status || true,
+      status: data?.status || false,
     },
     resolver: zodResolver(supplierSchema),
   });

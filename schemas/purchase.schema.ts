@@ -45,15 +45,24 @@ export const purchaseSchema = z.object({
 
   warehouseId: z.number({ message: "Select a warehouse!" }).int().positive(),
 
-  orderTax: z.number().int().positive().nullable(),
-  orderTaxRate: z.string("Order Tax Rate is required!"),
+  taxId: z.number().int().positive().nullable(),
+  orderTaxRate: z
+    .string({
+      message: "Order Tax Rate is required!",
+    })
+    .refine((val) => !isNaN(Number(val)), {
+      message: "Order Tax Rate must be a valid number",
+    })
+    .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
+      message: "Only 2 decimal places allowed",
+    }),
 
   orderDiscount: z
     .string({
       message: "Order Discount is required!",
     })
     .refine((val) => !isNaN(Number(val)), {
-      message: "Order Discounti must be a valid number",
+      message: "Order Discount must be a valid number",
     })
     .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
       message: "Only 2 decimal places allowed",
@@ -75,10 +84,6 @@ export const purchaseSchema = z.object({
     .nullable(),
 
   purchaseStatus: purchaseStatusEnum,
-
-  // products: z
-  //   .array(productSchema)
-  //   .min(1, { message: "Add at least one product!" }),
 
   document: z
     .union([

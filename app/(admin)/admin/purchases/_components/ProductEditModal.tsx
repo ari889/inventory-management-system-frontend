@@ -64,7 +64,7 @@ const ProductEditModal = ({
 
   const onSubmit = (data: PurchaseProductSchemaType) => {
     if (!unit) return;
-    update(product?.id, {
+    update(product?.productId, {
       ...data,
       unit,
       tax: tax ?? undefined,

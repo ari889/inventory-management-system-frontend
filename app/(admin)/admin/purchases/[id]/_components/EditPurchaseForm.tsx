@@ -38,20 +38,37 @@ import {
 import { ButtonGroup } from "@/components/ui/button-group";
 import ProductEditModal from "../../_components/ProductEditModal";
 import { setApiErrors } from "@/utils/setFormErrors";
-import { createPurchase } from "@/actions/PurchaseAction";
+import { updatePurchase } from "@/actions/PurchaseAction";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { PurchaseProductType } from "@/@types/purchase.types";
+import { Purchase, PurchaseProductType } from "@/@types/purchase.types";
 import { Input } from "@/components/ui/input";
 import { Unit } from "@/@types/unit.types";
 import { Tax } from "@/@types/tax.types";
 
-const EditPurchase = () => {
+const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
   const [editOpen, setEditOpen] = useState<boolean>(false);
-  const [products, setProducts] = useState<PurchaseProductType[]>([]);
+  const [products, setProducts] = useState<PurchaseProductType[]>(
+    purchase?.purchaseProducts?.map((p) => ({
+      id: p.id,
+      productId: p.product?.id,
+      code: p.product?.code,
+      name: p.product?.name,
+      price: p.product?.price,
+      taxId: p?.productTax?.id ?? undefined,
+      taxRate: p?.productTax?.rate ? p.productTax.rate : "0.00",
+      taxName: p?.productTax?.name,
+      unitId: p?.unit?.id,
+      unitName: p?.unit?.unitName,
+      unitCost: p.netUnitCost,
+      quantity: p.qty,
+      discount: p.discount,
+      subtotal: String(parseFloat(p.product?.price) * p.qty),
+    })) ?? [],
+  );
   const router = useRouter();
 
   const {
@@ -61,22 +78,23 @@ const EditPurchase = () => {
     setError: setFormError,
   } = useForm<PurchaseSchemaType>({
     defaultValues: {
-      warehouseId: undefined,
-      supplierId: undefined,
-      taxId: null,
-      orderTaxRate: "0.00",
-      orderDiscount: "0.00",
-      shippingCost: "0.00",
-      purchaseStatus: "PENDING",
-      document: null,
-      note: "",
+      warehouseId: purchase?.warehouse?.id ?? undefined,
+      supplierId: purchase?.supplier?.id ?? undefined,
+      taxId: purchase?.tax?.id ?? null,
+      orderTaxRate: purchase?.orderTaxRate ?? "0.00",
+      orderDiscount: purchase?.orderDiscount ?? "0.00",
+      shippingCost: purchase?.shippingCost ?? "0.00",
+      purchaseStatus: purchase?.purchaseStatus ?? "PENDING",
+      document: purchase?.document ?? null,
+      note: purchase?.note ?? "",
     },
     resolver: zodResolver(purchaseSchema),
   });
 
   const setProduct = (product: Product) => {
     setProducts((prevProducts: PurchaseProductType[]) => {
-      if (prevProducts.find((p) => p.id === product.id)) return prevProducts;
+      if (prevProducts.find((p) => p.productId === product.id))
+        return prevProducts;
       const newProduct: PurchaseProductType = {
         id: null,
         productId: product.id,
@@ -191,7 +209,7 @@ const EditPurchase = () => {
         const productsMap = products.map((p) => {
           const { taxAmount, subtotal } = calculateLineAmounts(p);
           return {
-            id: p.id,
+            id: p.id ?? null,
             productId: p.productId,
             unitId: p.unitId,
             taxId: p.taxId ?? null,
@@ -214,7 +232,7 @@ const EditPurchase = () => {
           body.append("note", data.note);
         }
 
-        const response = await createPurchase(body);
+        const response = await updatePurchase(id, body);
 
         if (!response.success && response?.errors) {
           setApiErrors(response.errors, setFormError);
@@ -333,10 +351,10 @@ const EditPurchase = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product, index) => {
+              {products.map((product) => {
                 const { taxAmount, subtotal } = calculateLineAmounts(product);
                 return (
-                  <TableRow key={`${product.productId}${index}`}>
+                  <TableRow key={product.id}>
                     <TableCell>{product.name}</TableCell>
                     <TableCell align="left">{product.code}</TableCell>
                     <TableCell align="center">
@@ -361,7 +379,7 @@ const EditPurchase = () => {
                       </Field>
                     </TableCell>
                     <TableCell align="center">
-                      {Number(product.price) * Number(product.quantity)}
+                      {Number(product.unitCost) * Number(product.quantity)}
                     </TableCell>
                     <TableCell align="center">{product?.discount}</TableCell>
                     <TableCell align="center">
@@ -434,6 +452,14 @@ const EditPurchase = () => {
           onSelectTax={(tax) => {
             setValue("orderTaxRate", tax?.rate?.toString() ?? "0.00");
           }}
+          defaultTax={
+            purchase?.tax
+              ? {
+                  id: purchase.tax.id,
+                  name: purchase.tax.name,
+                }
+              : null
+          }
         />
         <FormInput
           control={control}
