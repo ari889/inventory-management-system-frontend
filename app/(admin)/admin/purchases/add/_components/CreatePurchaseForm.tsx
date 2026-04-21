@@ -21,7 +21,15 @@ import {
   PurchaseSchemaType,
 } from "@/schemas/purchase.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircleIcon, Edit, Save, Trash } from "lucide-react";
+import {
+  AlertCircleIcon,
+  ArrowUpRightIcon,
+  Ban,
+  Edit,
+  Save,
+  ShoppingBasket,
+  Trash,
+} from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import SelectProductAutocomplete from "../../_components/SelectProductAutocomplete";
@@ -45,6 +53,14 @@ import { PurchaseProductType } from "@/@types/purchase.types";
 import { Input } from "@/components/ui/input";
 import { Unit } from "@/@types/unit.types";
 import { Tax } from "@/@types/tax.types";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 const EditPurchase = () => {
   const [error, setError] = useState<string>("");
@@ -76,7 +92,8 @@ const EditPurchase = () => {
 
   const setProduct = (product: Product) => {
     setProducts((prevProducts: PurchaseProductType[]) => {
-      if (prevProducts.find((p) => p.id === product.id)) return prevProducts;
+      if (prevProducts.find((p) => p.productId === product.id))
+        return prevProducts;
       const newProduct: PurchaseProductType = {
         id: null,
         productId: product.id,
@@ -333,72 +350,94 @@ const EditPurchase = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product, index) => {
-                const { taxAmount, subtotal } = calculateLineAmounts(product);
-                return (
-                  <TableRow key={`${product.productId}${index}`}>
-                    <TableCell>{product.name}</TableCell>
-                    <TableCell align="left">{product.code}</TableCell>
-                    <TableCell align="center">
-                      <Field>
-                        <Input
-                          id="username"
-                          placeholder="Eg: 10"
-                          type="number"
-                          className="text-center"
-                          value={product.quantity}
-                          min={1}
-                          onChange={(e) =>
-                            setProducts(
-                              products?.map((p) =>
-                                p.productId === product.productId
-                                  ? { ...p, quantity: Number(e.target.value) }
-                                  : p,
-                              ),
-                            )
-                          }
-                        />
-                      </Field>
-                    </TableCell>
-                    <TableCell align="center">
-                      {Number(product.price) * Number(product.quantity)}
-                    </TableCell>
-                    <TableCell align="center">{product?.discount}</TableCell>
-                    <TableCell align="center">
-                      {taxAmount.toFixed(2)}{" "}
-                      <span className="text-xs text-gray-500">
-                        (By: {product.taxRate}%)
-                      </span>
-                    </TableCell>
-                    <TableCell align="center">{subtotal.toFixed(2)}</TableCell>
-                    <TableCell align="center">
-                      <ButtonGroup>
-                        <Button
-                          variant="default"
-                          type="button"
-                          onClick={() => {
-                            setSelectedProduct(product?.productId);
-                            setEditOpen(true);
-                          }}
-                        >
-                          <Edit />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          type="button"
-                          onClick={() =>
-                            setProducts(
-                              products?.filter((p) => p.id !== product.id),
-                            )
-                          }
-                        >
-                          <Trash />
-                        </Button>
-                      </ButtonGroup>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {products?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9}>
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <ShoppingBasket />
+                        </EmptyMedia>
+                        <EmptyTitle>No products are added</EmptyTitle>
+                        <EmptyDescription>
+                          You have not added any products to your purchase. Go
+                          to the search bar type product name or code and select
+                          a product.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                products.map((product, index) => {
+                  const { taxAmount, subtotal } = calculateLineAmounts(product);
+                  return (
+                    <TableRow key={`${product.productId}${index}`}>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell align="left">{product.code}</TableCell>
+                      <TableCell align="center">
+                        <Field>
+                          <Input
+                            id="username"
+                            placeholder="Eg: 10"
+                            type="number"
+                            className="text-center"
+                            value={product.quantity}
+                            min={1}
+                            onChange={(e) =>
+                              setProducts(
+                                products?.map((p) =>
+                                  p.productId === product.productId
+                                    ? { ...p, quantity: Number(e.target.value) }
+                                    : p,
+                                ),
+                              )
+                            }
+                          />
+                        </Field>
+                      </TableCell>
+                      <TableCell align="center">
+                        {Number(product.price) * Number(product.quantity)}
+                      </TableCell>
+                      <TableCell align="center">{product?.discount}</TableCell>
+                      <TableCell align="center">
+                        {taxAmount.toFixed(2)}{" "}
+                        <span className="text-xs text-gray-500">
+                          (By: {product.taxRate}%)
+                        </span>
+                      </TableCell>
+                      <TableCell align="center">
+                        {subtotal.toFixed(2)}
+                      </TableCell>
+                      <TableCell align="center">
+                        <ButtonGroup>
+                          <Button
+                            variant="default"
+                            type="button"
+                            onClick={() => {
+                              setSelectedProduct(product?.productId);
+                              setEditOpen(true);
+                            }}
+                          >
+                            <Edit />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            type="button"
+                            onClick={() =>
+                              setProducts(
+                                products?.filter((p) => p.id !== product.id),
+                              )
+                            }
+                          >
+                            <Trash />
+                          </Button>
+                        </ButtonGroup>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
             <TableFooter>
               <TableRow>

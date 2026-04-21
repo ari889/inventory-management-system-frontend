@@ -19,12 +19,10 @@ import {
   MoreHorizontal,
   ArrowUpDown,
   Trash2,
-  CircleCheckBig,
-  CircleX,
   SquarePen,
   Trash,
-  Users,
   PlusCircle,
+  ShoppingCart,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -48,7 +46,6 @@ import TableAlert from "@/components/common/TableAlert";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Badge } from "@/components/ui/badge";
 import DeleteModal from "@/components/common/DeleteModal";
 import { initialPurchaseState } from "@/reducerStates/purchaseState";
 import {
@@ -57,12 +54,6 @@ import {
   getPurchases,
 } from "@/actions/PurchaseAction";
 import { Purchase } from "@/@types/purchase.types";
-import {
-  Avatar,
-  AvatarBadge,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
 import Link from "next/link";
 import { purchaseReducer } from "@/reducers/pruchaseReducer";
 import {
@@ -77,7 +68,6 @@ export default function PurchaseTable() {
   const [state, dispatch] = useReducer(purchaseReducer, initialPurchaseState);
 
   const {
-    open,
     isLoading,
     sorting,
     isError,
@@ -92,7 +82,6 @@ export default function PurchaseTable() {
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
-    showUpdateModal,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -613,7 +602,7 @@ export default function PurchaseTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <Users className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <ShoppingCart className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
                 <h2 className="text-xl font-semibold">Purchases</h2>
                 <h3 className="text-gray-500">See and manage your purchases</h3>
