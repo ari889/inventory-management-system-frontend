@@ -23,6 +23,22 @@ const purchaseCustomReducer = (
         totalCount: state.totalCount + 1,
       };
     }
+    case "TOGGLE_ADD_PAYMENT_MODAL":
+      return {
+        ...state,
+        showAddPaymentModal: !state.showAddPaymentModal,
+        purchaseIdForPayment: state.purchaseIdForPayment
+          ? null
+          : (action.payload as number),
+      };
+    case "TOGGLE_PURCHASE_PAYMENTS":
+      return {
+        ...state,
+        showPurchasePayments: !state.showPurchasePayments,
+        purchaseIdForPayment: state.purchaseIdForPayment
+          ? null
+          : (action.payload as number),
+      };
     default:
       return state;
   }

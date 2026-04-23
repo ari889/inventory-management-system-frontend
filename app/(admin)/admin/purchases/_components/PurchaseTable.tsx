@@ -23,6 +23,8 @@ import {
   Trash,
   PlusCircle,
   ShoppingCart,
+  SquarePlus,
+  Eye,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -63,6 +65,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import AddPurchasePaymentModal from "./AddPurchasePaymentModal";
+import ShowPurchasePaymentModal from "./ShowPurchasePaymentModal";
 
 export default function PurchaseTable() {
   const [state, dispatch] = useReducer(purchaseReducer, initialPurchaseState);
@@ -82,6 +86,9 @@ export default function PurchaseTable() {
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
+    showAddPaymentModal,
+    purchaseIdForPayment,
+    showPurchasePayments,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -188,6 +195,16 @@ export default function PurchaseTable() {
     } finally {
       dispatch({ type: "TOGGLE_BULK_DELETE_LOADING", payload: false });
     }
+  };
+
+  /**
+   * on payment success
+   */
+  const onSuccess = (paymentStatus: boolean, paidAmount: string) => {
+    dispatch({
+      type: "SET_PURCHASES",
+      payload: purchases.map((p) => ({ ...p, paymentStatus, paidAmount })),
+    });
   };
 
   /**
@@ -517,6 +534,28 @@ export default function PurchaseTable() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
+                    onClick={() =>
+                      dispatch({
+                        type: "TOGGLE_ADD_PAYMENT_MODAL",
+                        payload: row.getValue("id"),
+                      })
+                    }
+                  >
+                    <SquarePlus />
+                    Add Payment
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      dispatch({
+                        type: "TOGGLE_PURCHASE_PAYMENTS",
+                        payload: row.getValue("id"),
+                      })
+                    }
+                  >
+                    <Eye />
+                    Show Payments
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     className="text-destructive"
                     onClick={() =>
                       dispatch({
@@ -558,6 +597,8 @@ export default function PurchaseTable() {
     },
     getCoreRowModel: getCoreRowModel(),
   });
+
+  const selectedPurchase = purchases.find((p) => p.id === purchaseIdForPayment);
 
   /**
    * decide what to be rendered
@@ -716,6 +757,22 @@ export default function PurchaseTable() {
         title="Delete Purchase!"
         description="Are you sure you want to delete this purchase?"
       />
+      {purchaseIdForPayment && selectedPurchase ? (
+        <AddPurchasePaymentModal
+          purchase={selectedPurchase}
+          open={showAddPaymentModal}
+          toggleModal={() => dispatch({ type: "TOGGLE_ADD_PAYMENT_MODAL" })}
+          onSuccess={onSuccess}
+        />
+      ) : null}
+      {purchaseIdForPayment && selectedPurchase ? (
+        <ShowPurchasePaymentModal
+          purchase={selectedPurchase}
+          open={showPurchasePayments}
+          toggleModal={() => dispatch({ type: "TOGGLE_PURCHASE_PAYMENTS" })}
+          onDeleteSuccess={onSuccess}
+        />
+      ) : null}
     </div>
   );
 }

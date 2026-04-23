@@ -64,4 +64,7 @@ export interface InitialPurchaseState extends InitialStateType {
   purchases: Purchase[];
   open: boolean;
   showUpdateModal: boolean;
+  showAddPaymentModal: boolean;
+  purchaseIdForPayment: number | null;
+  showPurchasePayments: boolean;
 }

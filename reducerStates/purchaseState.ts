@@ -6,4 +6,7 @@ export const initialPurchaseState: InitialPurchaseState = {
   purchases: [],
   open: false,
   showUpdateModal: false,
+  showAddPaymentModal: false,
+  purchaseIdForPayment: null,
+  showPurchasePayments: false,
 };
