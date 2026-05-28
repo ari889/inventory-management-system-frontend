@@ -5,6 +5,7 @@ declare module "next-auth" {
   // Flat session: only accessToken
   interface Session {
     accessToken: unknown | string;
+    error?: string;
   }
 
   interface User {
@@ -19,5 +20,6 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     refreshToken?: string;
     expiresIn?: number;
+    error?: string;
   }
 }

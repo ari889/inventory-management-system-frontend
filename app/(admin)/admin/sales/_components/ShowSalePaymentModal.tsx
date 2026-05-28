@@ -57,7 +57,7 @@ const ShowSalePaymentModal = ({
     setLoading(true);
     try {
       const data = await getPaymentById(sale?.id, "saleId");
-      console.log(data);
+
       if (!data?.success) throw new Error(data?.message);
       setPayments(data?.data);
     } catch (error) {

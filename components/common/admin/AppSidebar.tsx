@@ -1,26 +1,28 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
+  SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./NavMain";
-import { NavUser } from "./NavUser";
 import { getModules } from "@/actions/ModuleAction";
 import { Module } from "@/@types/module.types";
 import CustomAlert from "@/components/common/CustomAlert";
+import { getUser } from "@/actions/AuthAction";
+import { NavUser } from "./NavUser";
 
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const user = await getUser();
   const menus = await getModules();
 
   let content = null;
   if (!menus.success)
     content = (
-      <div className="h-screen flex items-center justify-center m-1">
+      <div className="flex flex-1 items-center justify-center p-4">
         <CustomAlert
-          heading="Error happen!"
+          heading="Error happened!"
           message={menus.message}
           variant="destructive"
         />
@@ -31,7 +33,7 @@ export async function AppSidebar({
     (Array.isArray(menus.data) && menus.data.length === 0)
   )
     content = (
-      <div className="h-screen flex items-center justify-center m-1">
+      <div className="flex flex-1 items-center justify-center p-4">
         <CustomAlert
           heading="Contact admin!"
           message="No modules found. Please contact your administrator."
@@ -43,16 +45,12 @@ export async function AppSidebar({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      {/* <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader> */}
-      <SidebarContent>
-        {content}
-        {/* <NavProjects projects={data.projects} /> */}
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser />
-      </SidebarFooter>
+      <SidebarHeader className="border-b border-sidebar-border pb-3">
+        <NavUser user={user?.data} />
+      </SidebarHeader>
+
+      <SidebarContent className="px-2 py-3">{content}</SidebarContent>
+
       <SidebarRail />
     </Sidebar>
   );

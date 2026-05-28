@@ -49,15 +49,18 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (token.error === "RefreshAccessTokenError") {
-        return {};
+        return token;
       }
 
       return await getRefreshToken(token);
     },
 
     async session({ session, token }) {
-      if (token) {
+      if (token?.accessToken) {
         session.accessToken = token.accessToken;
+      }
+      if (token?.error) {
+        session.error = token.error;
       }
       return session;
     },

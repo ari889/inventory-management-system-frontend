@@ -253,7 +253,6 @@ const CreateSaleForm = () => {
         }
 
         const response = await createSale(body);
-        console.log({ response });
 
         if (!response.success && response?.errors) {
           setApiErrors(response.errors, setFormError);
