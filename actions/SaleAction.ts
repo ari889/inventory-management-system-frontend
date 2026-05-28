@@ -1,14 +1,14 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { CustomerSchemaType } from "@/schemas/customer.schema";
+import { revalidatePath } from "next/cache";
 
 /**
- * Get customers from server
+ * Get sales from server
  * @param param0
- * @returns Customer
+ * @returns Sale
  */
-export const getCustomers = async ({
+export const getSales = async ({
   page = 0,
   limit = 10,
   order = "id",
@@ -22,7 +22,7 @@ export const getCustomers = async ({
   search?: string;
 }) => {
   try {
-    let url = `customers?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `sales?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
     const response = await fetchData(url);
 
@@ -50,15 +50,15 @@ export const getCustomers = async ({
 };
 
 /**
- * Create new customer
- * @param customerSchemaType
- * @returns Customer
+ * Create new sale
+ * @param formData
+ * @returns Sale
  */
-export const createCustomer = async (body: CustomerSchemaType) => {
+export const createSale = async (body: FormData) => {
   try {
-    const response = await fetchData("customers", {
+    const response = await fetchData("sales", {
       method: "POST",
-      body: JSON.stringify(body),
+      body,
     });
 
     if (!response?.success && !response?.errors) {
@@ -85,13 +85,13 @@ export const createCustomer = async (body: CustomerSchemaType) => {
 };
 
 /**
- * Delete customer by id
+ * Delete sale by id
  * @param id
- * @returns Customer
+ * @returns Sale
  */
-export const deleteCustomerById = async (id: number) => {
+export const deleteSaleById = async (id: number) => {
   try {
-    const response = await fetchData(`customers/${id}`, {
+    const response = await fetchData(`sales/${id}`, {
       method: "DELETE",
     });
 
@@ -119,13 +119,13 @@ export const deleteCustomerById = async (id: number) => {
 };
 
 /**
- * Get customer by id
+ * Get sale by id
  * @param id
- * @returns Customer
+ * @returns Sale
  */
-export const getCustomerById = async (id: number) => {
+export const getSaleById = async (id: number) => {
   try {
-    const response = await fetchData(`customers/${id}`);
+    const response = await fetchData(`sales/${id}`);
 
     if (!response?.success && !response?.errors) {
       const error = new Error(response.message) as Error & { status?: number };
@@ -151,16 +151,16 @@ export const getCustomerById = async (id: number) => {
 };
 
 /**
- * Update customer
+ * Update Sale schema
  * @param id
  * @param data
- * @returns Customer
+ * @returns Sale
  */
-export const updateCustomer = async (id: number, body: CustomerSchemaType) => {
+export const updateSale = async (id: number, body: FormData) => {
   try {
-    const response = await fetchData(`customers/${id}`, {
+    const response = await fetchData(`sales/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(body),
+      body,
     });
 
     if (!response?.success && !response?.errors) {
@@ -187,13 +187,13 @@ export const updateCustomer = async (id: number, body: CustomerSchemaType) => {
 };
 
 /**
- * Bulk delete customers
+ * Bulk delete sales
  * @param ids
- * @returns { success: boolean, data: {count: 4}, message: string }
+ * @returns Sales
  */
-export const bulkDeleteCustomers = async (ids: number[]) => {
+export const bulkDeleteSales = async (ids: number[]) => {
   try {
-    const response = await fetchData(`customers/bulk`, {
+    const response = await fetchData(`sales/bulk`, {
       method: "DELETE",
       body: JSON.stringify({ ids }),
     });
@@ -204,6 +204,7 @@ export const bulkDeleteCustomers = async (ids: number[]) => {
       throw error;
     }
 
+    revalidatePath("/admin/sales");
     return response;
   } catch (error) {
     if (error instanceof Error) {

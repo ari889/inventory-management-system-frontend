@@ -4,7 +4,6 @@ import { getSettings } from "@/actions/SettingsAction";
 import { Setting } from "@/@types/settings.types";
 import { getPurchaseById } from "@/actions/PurchaseAction";
 import { Purchase } from "@/@types/purchase.types";
-import EditPurchase from "./_components/EditPurchaseForm";
 import EditPurchaseForm from "./_components/EditPurchaseForm";
 
 export const generateMetadata = async () => {

@@ -1,14 +1,14 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { PurchasePaymentSchemaType } from "@/schemas/purchase-payment.schema";
+import { SalePaymentSchemaType } from "@/schemas/sale-payment.schema";
 
 /**
- * Create new purchase payment
- * @param PurchasePaymentSchemaType
+ * Create new sale payment
+ * @param SalePaymentSchemaType
  * @returns Payment
  */
-export const createPayment = async (body: PurchasePaymentSchemaType) => {
+export const createPayment = async (body: SalePaymentSchemaType) => {
   try {
     const response = await fetchData("payments", {
       method: "POST",
@@ -39,7 +39,7 @@ export const createPayment = async (body: PurchasePaymentSchemaType) => {
 };
 
 /**
- * Delete purchase payment by id
+ * Delete sale payment by id
  * @param id
  * @returns Payment
  */
@@ -79,7 +79,7 @@ export const deletePaymentById = async (id: number) => {
  */
 export const getPaymentById = async (id: number, columns?: string) => {
   try {
-    const url = `payments/${id}` + (columns ? `?columns=${columns}` : "");
+    const url = `payments/${id}` + (columns ? `?column=${columns}` : "");
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

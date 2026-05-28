@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-export const purchasePaymentSchema = z.object({
+export const salePaymentSchema = z.object({
   accountId: z.number().int().positive().optional(),
-  purchaseId: z.number().int().positive().optional(),
+  saleId: z.number().int().positive().optional(),
   amount: z
     .string({
       message: "Amount is required!",
@@ -28,4 +28,4 @@ export const purchasePaymentSchema = z.object({
   paymentNote: z.string().max(255).nullable().optional(),
 });
 
-export type PurchasePaymentSchemaType = z.infer<typeof purchasePaymentSchema>;
+export type SalePaymentSchemaType = z.infer<typeof salePaymentSchema>;

@@ -109,7 +109,7 @@ const CreatePayrollForm = ({
           data={[
             { value: "CASH", label: "Cash" },
             { value: "CHEQUE", label: "Cheque" },
-            { value: "BANK", label: "Bank" },
+            { value: "MOBILE", label: "Mobile" },
           ]}
         />
         <Field>

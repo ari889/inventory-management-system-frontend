@@ -8,6 +8,6 @@ export interface Payment extends BaseType, Author {
   paymentNo: string;
   amount: string;
   change: string;
-  paymentMethod: "CASH" | "CHEQUE" | "BANK";
+  paymentMethod: "CASH" | "CHEQUE" | "MOBILE";
   paymentNote: string;
 }

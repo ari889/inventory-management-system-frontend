@@ -23,8 +23,6 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircleIcon,
-  ArrowUpRightIcon,
-  Ban,
   Edit,
   Save,
   ShoppingBasket,
@@ -44,7 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ButtonGroup } from "@/components/ui/button-group";
-import ProductEditModal from "../../_components/ProductEditModal";
+import PurchaseProductEditModal from "../../_components/PurchaseProductEditModal";
 import { setApiErrors } from "@/utils/setFormErrors";
 import { createPurchase } from "@/actions/PurchaseAction";
 import { toast } from "sonner";
@@ -55,14 +53,13 @@ import { Unit } from "@/@types/unit.types";
 import { Tax } from "@/@types/tax.types";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
 
-const EditPurchase = () => {
+const CreatePurchaseForm = () => {
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
@@ -326,11 +323,10 @@ const EditPurchase = () => {
           label="Purchase Status"
           disabled={isPending}
           data={[
-            { value: "PENDING", label: "Pending" },
-            { value: "ORDERED", label: "Ordered" },
             { value: "RECEIVED", label: "Received" },
             { value: "PARTIAL", label: "Partial" },
-            { value: "CANCELLED", label: "Cancelled" },
+            { value: "PENDING", label: "Pending" },
+            { value: "ORDERED", label: "Ordered" },
           ]}
         />
 
@@ -562,7 +558,7 @@ const EditPurchase = () => {
         </div>
       </FieldGroup>
       {selectedProduct && selectedProductData ? (
-        <ProductEditModal
+        <PurchaseProductEditModal
           key={selectedProduct}
           open={editOpen}
           setOpen={setEditOpen}
@@ -574,4 +570,4 @@ const EditPurchase = () => {
   );
 };
 
-export default EditPurchase;
+export default CreatePurchaseForm;

@@ -1,6 +1,6 @@
 "use client";
-import { Purchase } from "@/@types/purchase.types";
-import { createPayment } from "@/actions/PurchasePaymentAction";
+import { Sale } from "@/@types/sale.types";
+import { createPayment } from "@/actions/SalePaymentAction";
 import AccountAutocomplete from "@/components/common/autocompletes/AccountAutocomplete";
 import CustomSelect from "@/components/common/CustomSelect";
 import FormInput from "@/components/common/FormInput";
@@ -15,9 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  purchasePaymentSchema,
-  PurchasePaymentSchemaType,
-} from "@/schemas/purchase-payment.schema";
+  salePaymentSchema,
+  SalePaymentSchemaType,
+} from "@/schemas/sale-payment.schema";
 import { setApiErrors } from "@/utils/setFormErrors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
@@ -25,13 +25,16 @@ import { useEffect, useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
-const AddPurchasePaymentForm = ({
-  purchase,
+const AddSalePaymentForm = ({
+  sale,
   onSuccess,
   toggleModal,
 }: {
-  purchase: Purchase;
-  onSuccess: (paymentSatatus: boolean, paidAmount: string) => void;
+  sale: Sale;
+  onSuccess: (
+    paymentSatatus: "PAID" | "PARTIAL" | "DUE",
+    paidAmount: string,
+  ) => void;
   toggleModal: () => void;
 }) => {
   const [error, setError] = useState<string>("");
@@ -41,13 +44,13 @@ const AddPurchasePaymentForm = ({
     handleSubmit,
     setError: setFormError,
     setValue,
-  } = useForm<PurchasePaymentSchemaType>({
-    resolver: zodResolver(purchasePaymentSchema),
+  } = useForm<SalePaymentSchemaType>({
+    resolver: zodResolver(salePaymentSchema),
     defaultValues: {
       accountId: undefined,
-      purchaseId: purchase?.id,
+      saleId: sale?.id,
       amount: "0.00",
-      change: purchase?.grandTotal,
+      change: sale?.grandTotal,
       paymentMethod: "CASH",
       paymentNote: "",
     },
@@ -56,15 +59,15 @@ const AddPurchasePaymentForm = ({
   const amount = useWatch({ control, name: "amount" });
 
   useEffect(() => {
-    const total = parseFloat(purchase?.grandTotal || "0.00");
+    const total = parseFloat(sale?.grandTotal || "0.00");
     const paid = parseFloat(amount || "0.00");
 
     const change = total - paid;
 
     setValue("change", change.toFixed(2));
-  }, [amount, setValue, purchase?.grandTotal]);
+  }, [amount, setValue, sale?.grandTotal]);
 
-  const onSubmit = (data: PurchasePaymentSchemaType) =>
+  const onSubmit = (data: SalePaymentSchemaType) =>
     startTransition(async () => {
       try {
         const response = await createPayment(data);
@@ -76,7 +79,7 @@ const AddPurchasePaymentForm = ({
         else {
           onSuccess(response?.data?.paymentStatus, response?.data?.paidAmount);
           toggleModal();
-          toast.success("PurchasePayment created successfully");
+          toast.success("Sale Payment created successfully");
         }
       } catch (error) {
         if (error instanceof Error) setError(error?.message);
@@ -112,7 +115,7 @@ const AddPurchasePaymentForm = ({
           disabled={isPending}
           type="number"
           min={0}
-          max={purchase?.grandTotal}
+          max={sale?.grandTotal}
           step="0.01"
           decimalScale={2}
         />
@@ -156,4 +159,4 @@ const AddPurchasePaymentForm = ({
   );
 };
 
-export default AddPurchasePaymentForm;
+export default AddSalePaymentForm;

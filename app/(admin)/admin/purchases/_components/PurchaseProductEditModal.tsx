@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Dispatch, SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 
-const ProductEditModal = ({
+const PurchaseProductEditModal = ({
   open,
   setOpen,
   product,
@@ -157,4 +157,4 @@ const ProductEditModal = ({
   );
 };
 
-export default ProductEditModal;
+export default PurchaseProductEditModal;

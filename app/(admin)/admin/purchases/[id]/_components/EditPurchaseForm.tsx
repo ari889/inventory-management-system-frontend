@@ -42,7 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ButtonGroup } from "@/components/ui/button-group";
-import ProductEditModal from "../../_components/ProductEditModal";
+import PurchaseProductEditModal from "../../_components/PurchaseProductEditModal";
 import { setApiErrors } from "@/utils/setFormErrors";
 import { updatePurchase } from "@/actions/PurchaseAction";
 import { toast } from "sonner";
@@ -584,7 +584,7 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
         </div>
       </FieldGroup>
       {selectedProduct && selectedProductData ? (
-        <ProductEditModal
+        <PurchaseProductEditModal
           key={selectedProduct}
           open={editOpen}
           setOpen={setEditOpen}

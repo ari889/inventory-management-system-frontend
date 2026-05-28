@@ -124,7 +124,7 @@ const UpdatePayrollForm = ({
           data={[
             { value: "CASH", label: "Cash" },
             { value: "CHEQUE", label: "Cheque" },
-            { value: "BANK", label: "Bank" },
+            { value: "MOBILE", label: "Mobile" },
           ]}
         />
         <div className="col-span-2">

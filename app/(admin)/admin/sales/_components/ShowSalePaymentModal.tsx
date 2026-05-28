@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Purchase } from "@/@types/purchase.types";
+import { Sale } from "@/@types/sale.types";
 import {
   Table,
   TableBody,
@@ -22,10 +22,6 @@ import { Ban, Trash2 } from "lucide-react";
 import { useEffect, useEffectEvent, useState } from "react";
 import { Payment } from "@/@types/payment.types";
 import {
-  deletePaymentById,
-  getPaymentById,
-} from "@/actions/PurchasePaymentAction";
-import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -35,16 +31,20 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import DeleteModal from "@/components/common/DeleteModal";
-const ShowPurchasePaymentModal = ({
-  purchase,
+import { deletePaymentById, getPaymentById } from "@/actions/SalePaymentAction";
+const ShowSalePaymentModal = ({
+  sale,
   open,
   toggleModal,
   onDeleteSuccess,
 }: {
-  purchase: Purchase;
+  sale: Sale;
   open: boolean;
   toggleModal: () => void;
-  onDeleteSuccess: (paymentSatatus: boolean, paidAmount: string) => void;
+  onDeleteSuccess: (
+    paymentSatatus: "PAID" | "PARTIAL" | "DUE",
+    paidAmount: string,
+  ) => void;
 }) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -56,7 +56,8 @@ const ShowPurchasePaymentModal = ({
   const fetchPayments = useEffectEvent(async () => {
     setLoading(true);
     try {
-      const data = await getPaymentById(purchase?.id);
+      const data = await getPaymentById(sale?.id, "saleId");
+      console.log(data);
       if (!data?.success) throw new Error(data?.message);
       setPayments(data?.data);
     } catch (error) {
@@ -75,7 +76,7 @@ const ShowPurchasePaymentModal = ({
     return () => {
       mount = false;
     };
-  }, [purchase?.id]);
+  }, [sale?.id]);
 
   const deletePayment = async () => {
     setDeleteLoading(true);
@@ -163,8 +164,7 @@ const ShowPurchasePaymentModal = ({
               </EmptyMedia>
               <EmptyTitle>No payments found</EmptyTitle>
               <EmptyDescription>
-                There are no payments found for this purchase{" "}
-                {purchase.purchaseNo}.
+                There are no payments found for this sale {sale.saleNo}.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -205,25 +205,23 @@ const ShowPurchasePaymentModal = ({
               {loading ? (
                 <Skeleton className="h-5 w-1/2" />
               ) : (
-                `Payments for ${purchase.purchaseNo}`
+                `Payments for ${sale.saleNo}`
               )}
             </DialogTitle>
             <DialogDescription>
               {loading ? (
                 <Skeleton className="h-5 w-full block" as="span" />
               ) : (
-                "See and manage payments for this purchase."
+                "See and manage payments for this sale."
               )}
             </DialogDescription>
           </DialogHeader>
           <Table>
-            <TableCaption>
-              Payments for purchase {purchase.purchaseNo}
-            </TableCaption>
+            <TableCaption>Payments for sale {sale.saleNo}</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-center">Account</TableHead>
-                <TableHead className="text-center">Purchase No</TableHead>
+                <TableHead className="text-center">Sale No</TableHead>
                 <TableHead className="text-center">Amount</TableHead>
                 <TableHead className="text-center">Change</TableHead>
                 <TableHead className="text-center">Date</TableHead>
@@ -261,4 +259,4 @@ const ShowPurchasePaymentModal = ({
   );
 };
 
-export default ShowPurchasePaymentModal;
+export default ShowSalePaymentModal;
