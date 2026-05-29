@@ -5,9 +5,7 @@ import { getUser } from "@/actions/AuthAction";
 import UpdateProfileForm from "./_components/UpdateProfileForm";
 import { User } from "@/@types/user.types";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, User as UserIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { User as UserIcon } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
