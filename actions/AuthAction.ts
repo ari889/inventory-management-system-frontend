@@ -2,6 +2,7 @@
 
 import { MyJWT } from "@/@types/auth.types";
 import { fetchData } from "@/lib/api";
+import { ChangePasswordSchemaType } from "@/schemas/password.schema";
 import { ProfileSchemaType } from "@/schemas/profile.schema";
 import { revalidatePath, revalidateTag } from "next/cache";
 
@@ -127,6 +128,41 @@ export const updateProfile = async (data: FormData) => {
 
     revalidatePath("/admin/profile");
     revalidateTag("user", "max");
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
+ * Update Password
+ * @param data
+ * @returns none
+ */
+export const updatePassword = async (data: ChangePasswordSchemaType) => {
+  try {
+    const response = await fetchData(`auth/password`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
 
     return response;
   } catch (error) {

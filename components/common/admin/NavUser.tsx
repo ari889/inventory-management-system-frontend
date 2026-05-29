@@ -7,6 +7,7 @@ import {
   LogOut,
   Sparkles,
   Settings,
+  UserLock,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -111,6 +112,7 @@ export function NavUser({ user }: { user: User }) {
             <DropdownMenuGroup>
               {[
                 { icon: BadgeCheck, label: "Profile", link: "/admin/profile" },
+                { icon: UserLock, label: "Privacy", link: "/admin/privacy" },
                 { icon: CreditCard, label: "Billing", link: "/admin/accounts" },
                 {
                   icon: Bell,
