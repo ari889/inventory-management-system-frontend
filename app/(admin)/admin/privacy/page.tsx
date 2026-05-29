@@ -31,12 +31,6 @@ const ProfilePage = async () => {
                 </h3>
               </div>
             </div>
-            <Button type="button" asChild>
-              <Link href="/admin/sales">
-                <ArrowLeft />
-                Back
-              </Link>
-            </Button>
           </div>
           <UpdatePasswordForm />
         </CardContent>
