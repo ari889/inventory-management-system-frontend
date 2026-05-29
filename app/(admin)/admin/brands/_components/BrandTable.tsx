@@ -430,7 +430,7 @@ export default function BrandTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && !brands?.length)
+  if (!isLoading && !isError && brands?.length === 0)
     content = (
       <TableAlert
         message="No data found!"
@@ -439,7 +439,7 @@ export default function BrandTable() {
         className="w-full"
       />
     );
-  if (!isLoading && !isError && brands?.length)
+  if (!isLoading && !isError && brands?.length > 0)
     content = table.getRowModel().rows.map((row) => (
       <tr key={row.id} className="border-t hover:bg-muted/40 transition">
         {row.getVisibleCells().map((cell) => (
