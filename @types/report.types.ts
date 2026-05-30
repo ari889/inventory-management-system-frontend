@@ -61,3 +61,16 @@ type DailySaleSummary = {
 };
 
 export type DailySaleMap = Record<string, DailySaleSummary>;
+
+// report.types.ts
+export type MonthlySaleSummary = {
+  totalDiscount: number;
+  orderDiscount: number;
+  totalTax: number;
+  orderTax: number;
+  shippingCost: number;
+  grandTotal: number;
+};
+
+// key is 1-12 (month number)
+export type MonthlySaleMap = Record<number, MonthlySaleSummary>;
