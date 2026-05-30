@@ -1,4 +1,4 @@
-// components/reports/MonthlySalesReport.tsx
+// components/reports/MonthlyPurchaseReport.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,10 +14,10 @@ import {
 import { Button } from "@/components/ui/button";
 import WarehouseFilter from "@/components/common/filter/WarehouseFilter";
 import { MonthlyMap } from "@/@types/report.types";
-import { getMonthlySale } from "@/actions/ReportAction";
+import { getMonthlyPurchase } from "@/actions/ReportAction";
 import { debounce } from "lodash";
 import CustomEmpty from "@/components/common/CustomEmpty";
-import MonthlySalesReportSkeleton from "./MonthlySalesReportSkeleton";
+import MonthlyPurchaseReportSkeleton from "./MonthlyPurchaseReportSkeleton";
 
 const MONTHS = [
   "January",
@@ -41,18 +41,18 @@ function formatNumber(value: number) {
   });
 }
 
-export default function MonthlySalesReport() {
+export default function MonthlyPurchaseReport() {
   const [report, setReport] = useState<MonthlyMap>({});
   const [year, setYear] = useState(new Date().getFullYear());
   const [warehouseId, setWarehouseId] = useState<number | null>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchMonthlySales = useCallback(async () => {
+  const fetchMonthlyPurchase = useCallback(async () => {
     setError("");
     setLoading(true);
     try {
-      const data = await getMonthlySale(warehouseId, year);
+      const data = await getMonthlyPurchase(warehouseId, year);
       if (!data?.success)
         throw new Error(data?.message ?? "Something went wrong");
       setReport(data.data);
@@ -64,8 +64,8 @@ export default function MonthlySalesReport() {
   }, [warehouseId, year]);
 
   const debouncedFetch = useMemo(
-    () => debounce(() => fetchMonthlySales(), 300),
-    [fetchMonthlySales],
+    () => debounce(() => fetchMonthlyPurchase(), 300),
+    [fetchMonthlyPurchase],
   );
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function MonthlySalesReport() {
    * decide what to be rendered
    */
   let content = null;
-  if (loading) content = <MonthlySalesReportSkeleton />;
+  if (loading) content = <MonthlyPurchaseReportSkeleton />;
   else if (!loading && error)
     content = (
       <CustomEmpty
@@ -95,7 +95,7 @@ export default function MonthlySalesReport() {
         <Button
           type="button"
           variant="destructive"
-          onClick={() => fetchMonthlySales()}
+          onClick={() => fetchMonthlyPurchase()}
         >
           <RefreshCcw />
           Refetch

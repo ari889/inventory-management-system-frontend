@@ -51,7 +51,7 @@ export interface SummaryReportType {
   }[];
 }
 
-type DailySaleSummary = {
+type DailySummary = {
   totalDiscount: number;
   orderDiscount: number;
   totalTax: number;
@@ -60,10 +60,10 @@ type DailySaleSummary = {
   grandTotal: number;
 };
 
-export type DailySaleMap = Record<string, DailySaleSummary>;
+export type DailyMap = Record<string, DailySummary>;
 
 // report.types.ts
-export type MonthlySaleSummary = {
+export type MonthlySummary = {
   totalDiscount: number;
   orderDiscount: number;
   totalTax: number;
@@ -73,4 +73,4 @@ export type MonthlySaleSummary = {
 };
 
 // key is 1-12 (month number)
-export type MonthlySaleMap = Record<number, MonthlySaleSummary>;
+export type MonthlyMap = Record<number, MonthlySummary>;
