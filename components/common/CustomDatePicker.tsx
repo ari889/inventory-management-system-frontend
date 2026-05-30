@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { type DateRange } from "react-day-picker";
 
@@ -18,14 +18,21 @@ export function CustomDatePicker({
   date,
   setDate,
   label = "Date Range",
+  className = "",
 }: {
   date: DateRange | undefined;
   setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
   label?: string;
+  className?: string;
 }) {
   return (
-    <Field className="w-60 my-5">
-      <FieldLabel htmlFor="date-picker-range">{label}</FieldLabel>
+    <Field className={`flex flex-col gap-1.5 ${className}`}>
+      <FieldLabel
+        htmlFor="date-picker-range"
+        className="text-sm font-medium leading-none"
+      >
+        {label}
+      </FieldLabel>
       <Popover>
         <PopoverTrigger asChild>
           <Button

@@ -3,11 +3,15 @@
 import { SummaryReportType } from "@/@types/report.types";
 import { getSummaryReport } from "@/actions/ReportAction";
 import { CustomDatePicker } from "@/components/common/CustomDatePicker";
+import CustomEmpty from "@/components/common/CustomEmpty";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { debounce } from "lodash";
+import { Ban, RefreshCcw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import SummaryReportSkeleton from "./SummaryReportSkeleton";
 
 const ShowSummaryReport = () => {
   const [report, setReport] = useState<SummaryReportType>();
@@ -28,7 +32,6 @@ const ShowSummaryReport = () => {
 
     try {
       const data = await getSummaryReport(from, to);
-      console.log(data);
 
       if (!data?.success && !data?.errors) throw new Error(data.message);
 
@@ -58,9 +61,31 @@ const ShowSummaryReport = () => {
     };
   }, [date, debouncedFetch]);
 
-  return (
-    <>
-      <CustomDatePicker date={date} setDate={setDate} />
+  /**
+   * decide what to be rendered
+   */
+  let content = null;
+  if (loading) content = <SummaryReportSkeleton />;
+  else if (!loading && error)
+    content = (
+      <CustomEmpty
+        title={error}
+        type="error"
+        icon={Ban}
+        description="Something went wrong. Please try again or contact support."
+      >
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => fetchSummaryReport()}
+        >
+          <RefreshCcw />
+          Refetch
+        </Button>
+      </CustomEmpty>
+    );
+  else
+    content = (
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardHeader>
@@ -420,6 +445,12 @@ const ShowSummaryReport = () => {
           </Card>
         ))}
       </div>
+    );
+
+  return (
+    <>
+      <CustomDatePicker date={date} setDate={setDate} className="my-5" />
+      {content}
     </>
   );
 };

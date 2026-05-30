@@ -39,3 +39,38 @@ export const getSummaryReport = async (
     };
   }
 };
+
+export const getDailySale = async (
+  warehouseId: number | null,
+  from: Date | undefined,
+  to: Date | undefined,
+) => {
+  try {
+    let url = `reports/daily-sale-report`;
+    if (warehouseId) url += `?warehouseId=${warehouseId}`;
+    if (from) url += `${warehouseId ? "&" : "?"}from=${from}`;
+    if (to) url += `&to=${to}`;
+    const response = await fetchData(url);
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
