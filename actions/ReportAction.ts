@@ -1,6 +1,7 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
+import { DateRange } from "react-day-picker";
 
 /**
  * Get summary report
@@ -177,6 +178,60 @@ export const getMonthlyPurchase = async (
     let url = `reports/monthly-purchase-report`;
     if (warehouseId) url += `?warehouseId=${warehouseId}`;
     if (year) url += `${warehouseId ? "&" : "?"}year=${year}`;
+    const response = await fetchData(url);
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
+ * Get supplier report from server
+ * @param param0
+ * @returns Customer
+ */
+export const getSupplierReport = async ({
+  page = 0,
+  limit = 10,
+  order = "id",
+  direction = "desc",
+  dateRange = { from: undefined, to: undefined },
+  purchaseNo = "",
+  supplierId = undefined,
+}: {
+  page: number;
+  limit: number;
+  order: string;
+  direction: "asc" | "desc";
+  search?: string;
+  dateRange?: DateRange;
+  purchaseNo?: string;
+  supplierId?: number;
+}) => {
+  try {
+    let url = `reports/supplier-report?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (dateRange.from) url += `&from=${dateRange.from.toISOString()}`;
+    if (dateRange.to) url += `&to=${dateRange.to.toISOString()}`;
+    if (purchaseNo) url += `&purchaseNo=${purchaseNo}`;
+    if (supplierId) url += `&supplierId=${supplierId}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
