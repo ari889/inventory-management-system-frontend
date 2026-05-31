@@ -116,8 +116,8 @@ export function NavUser({ user }: { user: User }) {
                 { icon: CreditCard, label: "Billing", link: "/admin/accounts" },
                 {
                   icon: Bell,
-                  label: "Notifications",
-                  link: "/admin/notifications",
+                  label: "Product Quantity ALert",
+                  link: "/admin/reports/product-quantity-alert",
                 },
                 { icon: Settings, label: "Settings", link: "/admin/settings" },
               ].map(({ icon: Icon, label, link }) => (
