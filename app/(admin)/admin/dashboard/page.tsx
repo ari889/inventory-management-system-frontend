@@ -1,14 +1,41 @@
+import { getDashboardData } from "@/actions/DashboardAction";
+import CashFlow from "./_components/CashFlow";
+import { MonthlyOverview } from "./_components/MonthlyOverview";
+import { SectionCards } from "./_components/SectionCards";
+import YearlyReport from "./_components/YearlyReport";
+import { handleResponse } from "@/utils/handle-response";
+import { DashboardResponse } from "@/@types/dashbboard.types";
+import DateFilter from "./_components/DateFilter";
+
 export const dynamic = "force-dynamic";
-const DashboardPage = async () => {
+
+const DashboardPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>;
+}) => {
+  const { range } = await searchParams;
+
+  const { data } = handleResponse<DashboardResponse>(
+    await getDashboardData(range),
+  );
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
+    <>
+      <DateFilter />
+      <SectionCards data={data?.sectionCards} />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-5">
+        <CashFlow data={data?.cashFlow ?? []} />
+        <MonthlyOverview
+          purchase={data?.monthlyOverview?.purchase ?? 0}
+          sale={data?.monthlyOverview?.sale ?? 0}
+          expense={data?.monthlyOverview?.expense ?? 0}
+        />
       </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
-    </div>
+      <div className="mt-5">
+        <YearlyReport data={data?.yearlyReport ?? []} />
+      </div>
+    </>
   );
 };
 
