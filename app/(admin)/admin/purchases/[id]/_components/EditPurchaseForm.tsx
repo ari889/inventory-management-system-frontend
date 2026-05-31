@@ -28,7 +28,7 @@ import {
   ShoppingBasket,
   Trash,
 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import SelectProductAutocomplete from "../../_components/SelectProductAutocomplete";
 import { Product } from "@/@types/product.types";
@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/empty";
 
 const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
+  const router = useRouter();
   const [error, setError] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
@@ -78,12 +79,15 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
       unitName: p?.unit?.unitName,
       unitCost: p.netUnitCost,
       quantity: p.qty,
+      received: p.received,
       discount: p.discount,
       subtotal: String(parseFloat(p.product?.price) * p.qty),
     })) ?? [],
   );
-  const router = useRouter();
 
+  /**
+   * React hook form initializer
+   */
   const {
     control,
     handleSubmit,
@@ -104,6 +108,31 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
     resolver: zodResolver(purchaseSchema),
   });
 
+  /**
+   * Watch purchase status, order discount, shipping cost
+   */
+  const purchaseStatus = useWatch({
+    control,
+    name: "purchaseStatus",
+  });
+  const watchedOrderDiscount = useWatch({ control, name: "orderDiscount" });
+  const watchedShippingCost = useWatch({ control, name: "shippingCost" });
+
+  /**
+   * If user select other status rather than PARTIAL, set received to 0
+   */
+  useEffect(() => {
+    if (purchaseStatus !== "PARTIAL") {
+      setProducts((prevProducts) =>
+        prevProducts.map((p) => ({ ...p, received: 0 })),
+      );
+    }
+  }, [purchaseStatus]);
+
+  /**
+   * Set new Product
+   * @param product
+   */
   const setProduct = (product: Product) => {
     setProducts((prevProducts: PurchaseProductType[]) => {
       if (prevProducts.find((p) => p.productId === product.id))
@@ -121,6 +150,7 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
         unitName: product?.unit?.unitName,
         unitCost: product.price,
         quantity: 1,
+        received: 0,
         discount: "0.00",
         subtotal: String(parseFloat(product.price) * 1),
       };
@@ -129,10 +159,18 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
     });
   };
 
+  /**
+   * Get selected product data
+   */
   const selectedProductData = products?.find(
     (p: PurchaseProductType) => p.productId === selectedProduct,
   );
 
+  /**
+   * Update product
+   * @param id
+   * @param product
+   */
   const updateProduct = (
     id: number,
     product: PurchaseProductSchemaType & {
@@ -145,6 +183,7 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
         return {
           ...p,
           quantity: product?.quantity,
+          received: 0,
           unitCost: product?.unitCost,
           price: product?.unitCost,
           discount: product?.discount,
@@ -162,47 +201,66 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
     setSelectedProduct(null);
   };
 
-  const watchedOrderDiscount = useWatch({ control, name: "orderDiscount" });
-  const watchedShippingCost = useWatch({ control, name: "shippingCost" });
-
+  /**
+   * Submit Handler
+   * @param data
+   * @returns Purchase
+   */
   const onSubmit = (data: PurchaseSchemaType) =>
     startTransition(async () => {
       try {
+        /**
+         * If user not add any product then throw error
+         */
         if (!products.length)
           throw new Error("Please add at least one product");
-        const body = new FormData();
 
+        /**
+         * If the purchase status is PARTIAL and user add any of product received quantity as less than 1 or grater than product quantity then throw error
+         */
+        if (purchaseStatus === "PARTIAL") {
+          const invalidProduct = products.find(
+            (product) =>
+              Number(product.received) < 1 ||
+              Number(product.received) > Number(product.quantity),
+          );
+
+          if (invalidProduct) {
+            throw new Error(
+              `Invalid received quantity for "${invalidProduct.name}" (${invalidProduct.code}). Received quantity must be at least 1 and cannot exceed ordered quantity (${invalidProduct.quantity}).`,
+            );
+          }
+        }
+
+        /**
+         * Create form data
+         */
+        const body = new FormData();
         body.append("supplierId", String(data.supplierId));
         body.append("warehouseId", String(data.warehouseId));
         body.append("purchaseStatus", data.purchaseStatus);
-
         body.append("item", String(products.length));
-
         const totalQty = products.reduce(
           (acc, p) => acc + Number(p.quantity),
           0,
         );
         body.append("totalQty", String(totalQty));
-
         const totalDiscount = products.reduce(
           (acc, p) =>
             acc + parseFloat(p.discount || "0.00") * Number(p.quantity),
           0,
         );
         body.append("totalDiscount", totalDiscount.toFixed(2));
-
         const totalTax = products.reduce((acc, p) => {
           const { taxAmount } = calculateLineAmounts(p);
           return acc + taxAmount;
         }, 0);
         body.append("totalTax", totalTax.toFixed(2));
-
         const totalCost = products.reduce((acc, p) => {
           const { subtotal } = calculateLineAmounts(p);
           return acc + subtotal;
         }, 0);
         body.append("totalCost", totalCost.toFixed(2));
-
         if (data.taxId != null) {
           body.append("taxId", String(data?.taxId ?? null));
           body.append("orderTaxRate", data.orderTaxRate ?? "0.00");
@@ -214,11 +272,12 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
         if (data.shippingCost != null) {
           body.append("shippingCost", data.shippingCost);
         }
-
         body.append("grandTotal", grandTotal.toFixed(2));
-
         body.append("paidAmount", "0.00");
 
+        /**
+         * Mapped selected products
+         */
         const productsMap = products.map((p) => {
           const { taxAmount, subtotal } = calculateLineAmounts(p);
           return {
@@ -227,7 +286,7 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
             unitId: p.unitId,
             taxId: p.taxId ?? null,
             qty: p.quantity,
-            received: p.quantity,
+            received: p.received,
             netUnitCost: p.unitCost,
             discount: p.discount,
             taxRate: p.taxRate,
@@ -236,11 +295,9 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
           };
         });
         body.append("products", JSON.stringify(productsMap));
-
         if (data.document instanceof File) {
           body.append("document", data.document);
         }
-
         if (data.note) {
           body.append("note", data.note);
         }
@@ -261,6 +318,11 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
       }
     });
 
+  /**
+   * Calculate totalAmount and subtotal
+   * @param item
+   * @returns {taxAmount: number, subtotal: number}
+   */
   const calculateLineAmounts = (item: PurchaseProductType) => {
     const qty = Number(item.quantity);
     const cost = parseFloat(item.unitCost || "0.00");
@@ -276,7 +338,9 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
     return { taxAmount, subtotal };
   };
 
-  // Line-level totals
+  /**
+   * Calculate product totalQuantity, totalUnitCost, totalDiscount, totalTax, subtotal
+   */
   const totals = products.reduce(
     (acc, product) => {
       const { taxAmount, subtotal } = calculateLineAmounts(product);
@@ -292,8 +356,9 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
     { quantity: 0, unitCost: 0, discount: 0, tax: 0, subtotal: 0 },
   );
 
-  // Order-level calculations
-  // orderTax is a tax rate (%) applied on top of products subtotal
+  /**
+   * Calculate order taxAmount
+   */
   const watchedOrderTaxRate = useWatch({ control, name: "orderTaxRate" });
   const orderTaxRate = parseFloat(watchedOrderTaxRate || "0");
 
@@ -344,7 +409,6 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
             { value: "ORDERED", label: "Ordered" },
             { value: "RECEIVED", label: "Received" },
             { value: "PARTIAL", label: "Partial" },
-            { value: "CANCELLED", label: "Cancelled" },
           ]}
         />
 
@@ -356,6 +420,9 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead className="text-center">Quantity</TableHead>
+                {purchaseStatus === "PARTIAL" && (
+                  <TableHead className="text-center">Received</TableHead>
+                )}
                 <TableHead className="text-center">Net Unit Cost</TableHead>
                 <TableHead className="text-center">Discount</TableHead>
                 <TableHead className="text-center">Tax</TableHead>
@@ -410,6 +477,31 @@ const EditPurchase = ({ id, purchase }: { id: number; purchase: Purchase }) => {
                           />
                         </Field>
                       </TableCell>
+                      {purchaseStatus === "PARTIAL" && (
+                        <TableCell align="center">
+                          <Field>
+                            <Input
+                              id="received"
+                              placeholder="Eg: 10"
+                              type="number"
+                              className="text-center"
+                              value={product.received}
+                              onChange={(e) =>
+                                setProducts(
+                                  products?.map((p) =>
+                                    p.productId === product.productId
+                                      ? {
+                                          ...p,
+                                          received: Number(e.target.value),
+                                        }
+                                      : p,
+                                  ),
+                                )
+                              }
+                            />
+                          </Field>
+                        </TableCell>
+                      )}
                       <TableCell align="center">
                         {Number(product.unitCost) * Number(product.quantity)}
                       </TableCell>

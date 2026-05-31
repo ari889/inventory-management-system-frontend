@@ -19,6 +19,7 @@ export interface PurchaseProductType {
   unitName: string;
   unitCost: string;
   quantity: number;
+  received: number;
   discount: string;
   subtotal: string;
 }
@@ -39,7 +40,7 @@ export interface Purchase extends BaseType, Author {
   shippingCost: string;
   grandTotal: string;
   paidAmount: string;
-  purchaseStatus: "PENDING" | "ORDERED" | "RECEIVED" | "PARTIAL" | "CANCELLED";
+  purchaseStatus: "PENDING" | "ORDERED" | "RECEIVED" | "PARTIAL";
   paymentStatus: boolean; // true: Paid, false: Due
   document: string;
   note: string;
