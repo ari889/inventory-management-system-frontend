@@ -6,11 +6,14 @@ import { InitialStateType } from "./reducer.types";
 import { SaleProduct } from "./sale.types";
 import { Tax } from "./tax.types";
 import { Unit } from "./unit.types";
+import { Warehouse } from "./warehouse.types";
 
 export interface WarehouseProduct {
   id: number;
   warehouseId: number;
+  warehouse: Warehouse;
   productId: number;
+  product: Product;
   qty: number;
 }
 
