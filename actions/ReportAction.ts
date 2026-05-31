@@ -256,3 +256,108 @@ export const getSupplierReport = async ({
     };
   }
 };
+
+/**
+ * Get customer report from server
+ * @param param0
+ * @returns Customer
+ */
+export const getCustomerReport = async ({
+  page = 0,
+  limit = 10,
+  order = "id",
+  direction = "desc",
+  dateRange = { from: undefined, to: undefined },
+  saleNo = "",
+  customerId = undefined,
+}: {
+  page: number;
+  limit: number;
+  order: string;
+  direction: "asc" | "desc";
+  search?: string;
+  dateRange?: DateRange;
+  saleNo?: string;
+  customerId?: number;
+}) => {
+  try {
+    let url = `reports/customer-report?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (dateRange.from) url += `&from=${dateRange.from.toISOString()}`;
+    if (dateRange.to) url += `&to=${dateRange.to.toISOString()}`;
+    if (saleNo) url += `&purchaseNo=${saleNo}`;
+    if (customerId) url += `&customerId=${customerId}`;
+    const response = await fetchData(url);
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
+ * Get product report from server
+ * @param param0
+ * @returns Product
+ */
+export const getProductReport = async ({
+  page = 0,
+  limit = 10,
+  order = "id",
+  direction = "desc",
+  dateRange = { from: undefined, to: undefined },
+  warehouseId = undefined,
+}: {
+  page: number;
+  limit: number;
+  order: string;
+  direction: "asc" | "desc";
+  search?: string;
+  dateRange?: DateRange;
+  warehouseId?: number;
+}) => {
+  try {
+    let url = `reports/product-report?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (dateRange.from) url += `&from=${dateRange.from.toISOString()}`;
+    if (dateRange.to) url += `&to=${dateRange.to.toISOString()}`;
+    if (warehouseId) url += `&warehouseId=${warehouseId}`;
+    const response = await fetchData(url);
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};

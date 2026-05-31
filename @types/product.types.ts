@@ -1,9 +1,18 @@
 import { Brand } from "./brand.types";
 import { Author, BaseType } from "./common.types";
 import { ProductCategory } from "./product-category.types";
+import { PurchaseProduct } from "./purchase.types";
 import { InitialStateType } from "./reducer.types";
+import { SaleProduct } from "./sale.types";
 import { Tax } from "./tax.types";
 import { Unit } from "./unit.types";
+
+export interface WarehouseProduct {
+  id: number;
+  warehouseId: number;
+  productId: number;
+  qty: number;
+}
 
 export interface Product extends BaseType, Author {
   name: string;
@@ -38,6 +47,10 @@ export interface Product extends BaseType, Author {
 
   description: string | null;
   status: boolean; // true = Active, false = Inactive
+
+  purchaseProducts: PurchaseProduct[];
+  saleProducts: SaleProduct[];
+  warehouseProducts: WarehouseProduct[];
 }
 
 export interface InitialProductState extends InitialStateType {
