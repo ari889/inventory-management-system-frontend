@@ -89,7 +89,7 @@ export const createMenu = async (formData: CreateMenuSchemaType) => {
 };
 
 /**
- * Delete meny by id
+ * Delete menu by id
  * @param id
  * @returns Menu
  */

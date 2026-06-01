@@ -151,7 +151,7 @@ export const getBrandById = async (id: number) => {
 };
 
 /**
- * Update Brand schema
+ * Update Brand
  * @param id
  * @param data
  * @returns Brand

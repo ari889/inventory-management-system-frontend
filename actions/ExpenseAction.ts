@@ -1,7 +1,6 @@
 "use server";
 
 import { fetchData } from "@/lib/api";
-import { ExpenseCategorySchemaType } from "@/schemas/expense-category.schema";
 import { ExpenseSchemaType } from "@/schemas/expense.schema";
 
 /**

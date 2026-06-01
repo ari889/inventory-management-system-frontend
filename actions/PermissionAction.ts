@@ -62,7 +62,7 @@ export const getPermissions = async ({
 };
 
 /**
- * Permission
+ * Find permission by id
  * @param id
  * @returns Permission
  */
@@ -204,7 +204,7 @@ export const updatePermission = async (
 };
 
 /**
- * Permission
+ * Bulk delete permissions
  * @param ids
  * @returns Permissions
  */

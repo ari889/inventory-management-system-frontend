@@ -3,7 +3,6 @@
 import { MyJWT } from "@/@types/auth.types";
 import { fetchData } from "@/lib/api";
 import { ChangePasswordSchemaType } from "@/schemas/password.schema";
-import { ProfileSchemaType } from "@/schemas/profile.schema";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 /**
@@ -39,36 +38,43 @@ export const getAuth = async (email: string, password: string) => {
 /**
  * Generate new access token using refresh token
  */
-let isCalled = false;
-export const getRefreshToken = async (token: MyJWT) => {
-  if (isCalled) return token;
-  isCalled = true;
-  try {
-    const data = await fetchData("auth/refresh", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token?.refreshToken}`,
-      },
-    });
+const refreshPromises = new Map<string, Promise<MyJWT>>();
 
-    if (!data?.success && !data?.errors) throw new Error(data.message);
+export const getRefreshToken = async (token: MyJWT): Promise<MyJWT> => {
+  const key = token.refreshToken as string;
 
-    return {
-      ...token,
-      accessToken: data?.data?.accessToken,
-      expiresIn: data?.data?.expiresIn,
-    };
-  } catch (error) {
-    if (error instanceof Error) {
+  if (refreshPromises.has(key)) {
+    return refreshPromises.get(key)!;
+  }
+
+  const promise = (async () => {
+    try {
+      const data = await fetchData("auth/refresh", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token?.refreshToken}`,
+        },
+      });
+
+      if (!data?.success && !data?.errors) throw new Error(data.message);
+
       return {
         ...token,
-        error: "RefreshAccessTokenError",
+        accessToken: data?.data?.accessToken,
+        expiresIn: data?.data?.expiresIn,
       };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { ...token, error: "RefreshAccessTokenError" };
+      }
+      return token;
+    } finally {
+      setTimeout(() => refreshPromises.delete(key), 5000);
     }
-    return token;
-  } finally {
-    isCalled = false;
-  }
+  })();
+
+  refreshPromises.set(key, promise);
+  return promise;
 };
 
 /**

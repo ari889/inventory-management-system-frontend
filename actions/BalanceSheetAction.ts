@@ -3,7 +3,7 @@
 import { fetchData } from "@/lib/api";
 
 /**
- * Get accounts from server
+ * Get balance sheet from server
  * @param param0
  * @returns Account[]
  */

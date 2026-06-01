@@ -8,7 +8,7 @@ import {
 import { revalidatePath } from "next/cache";
 
 /**
- * Get menu from server
+ * Get users from server
  * @param param0
  * @returns Menu
  */

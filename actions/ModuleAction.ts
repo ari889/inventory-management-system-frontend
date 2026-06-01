@@ -101,7 +101,7 @@ export const getModuleByMenuId = async (menuId: number) => {
 };
 
 /**
- * Create module by post
+ * Create module by menu id
  * @param module
  * @returns Module
  */
