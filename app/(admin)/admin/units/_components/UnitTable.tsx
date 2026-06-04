@@ -21,8 +21,9 @@ import {
   Trash2,
   SquarePen,
   Trash,
-  Percent,
   Weight,
+  CircleCheckBig,
+  CircleX,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -57,6 +58,11 @@ import {
 import { Unit } from "@/@types/unit.types";
 import UpdateUnitModal from "./UpdateUnitModal";
 import CreateUnit from "./CreateUnit";
+import { Badge } from "@/components/ui/badge";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import UserFilter from "@/components/common/filter/UserFilter";
+import UnitFilter from "@/components/common/filter/UnitFilter";
 
 export default function UnitTable() {
   const [state, dispatch] = useReducer(unitReducer, initialUnitState);
@@ -78,6 +84,10 @@ export default function UnitTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    search,
+    status,
+    baseUnitId,
+    createdBy,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -98,6 +108,10 @@ export default function UnitTable() {
           limit,
           order,
           direction,
+          search,
+          status,
+          baseUnitId,
+          createdBy,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_UNITS", payload: data.data.items });
@@ -112,7 +126,7 @@ export default function UnitTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, search, status, baseUnitId, createdBy],
   );
 
   /**
@@ -319,6 +333,25 @@ export default function UnitTable() {
         ),
       },
       {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.getValue("status") ? (
+              <Badge variant="default">
+                <CircleCheckBig />
+                Active
+              </Badge>
+            ) : (
+              <Badge variant="destructive">
+                <CircleX />
+                Inactive
+              </Badge>
+            )}
+          </div>
+        ),
+      },
+      {
         accessorKey: "createdAt",
         header: () => <div className="text-center">Created At</div>,
         cell: ({ row }) => (
@@ -493,7 +526,44 @@ export default function UnitTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(val) =>
+                dispatch({ type: "SET_CREATED_BY", payload: val })
+              }
+            />
+            <UnitFilter
+              value={baseUnitId ?? null}
+              onChange={(val) =>
+                dispatch({ type: "SET_BASE_UNIT_ID", payload: val })
+              }
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">

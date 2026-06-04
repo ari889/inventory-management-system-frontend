@@ -15,16 +15,25 @@ export const getUnits = async ({
   order = "id",
   direction = "desc",
   search = "",
+  status = undefined,
+  baseUnitId = undefined,
+  createdBy = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
+  status?: boolean;
+  baseUnitId?: number;
+  createdBy?: number;
 }) => {
   try {
     let url = `units?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (baseUnitId) url += `&baseUnitId=${baseUnitId}`;
+    if (createdBy) url += `&createdBy=${createdBy}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

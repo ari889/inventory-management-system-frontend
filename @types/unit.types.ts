@@ -14,4 +14,8 @@ export interface InitialUnitState extends InitialStateType {
   units: Unit[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
+  baseUnitId?: number;
+  createdBy?: number;
 }

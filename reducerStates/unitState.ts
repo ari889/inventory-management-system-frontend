@@ -6,4 +6,8 @@ export const initialUnitState: InitialUnitState = {
   units: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  status: undefined,
+  baseUnitId: undefined,
+  createdBy: undefined,
 };
