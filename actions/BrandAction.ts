@@ -14,16 +14,19 @@ export const getBrands = async ({
   order = "id",
   direction = "desc",
   search = "",
+  status = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
+  status?: boolean;
 }) => {
   try {
     let url = `brands?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
+    if (status !== undefined) url += `&status=${status}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

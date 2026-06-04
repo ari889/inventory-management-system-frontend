@@ -6,4 +6,6 @@ export const initialBrandState: InitialBrandState = {
   brands: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  status: undefined,
 };

@@ -11,4 +11,6 @@ export interface InitialBrandState extends InitialStateType {
   brands: Brand[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
 }

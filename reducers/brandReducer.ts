@@ -42,6 +42,10 @@ const brandCustomReducer = (
         ),
       };
     }
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean };
     default:
       return state;
   }
