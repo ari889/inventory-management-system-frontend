@@ -6,4 +6,6 @@ export const initialTaxState: InitialTaxState = {
   taxes: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  status: undefined,
 };

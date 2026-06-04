@@ -11,4 +11,6 @@ export interface InitialTaxState extends InitialStateType {
   taxes: Tax[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
 }

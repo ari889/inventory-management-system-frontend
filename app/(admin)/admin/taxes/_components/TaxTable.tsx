@@ -21,8 +21,9 @@ import {
   Trash2,
   SquarePen,
   Trash,
-  Users,
   Percent,
+  CircleCheckBig,
+  CircleX,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -53,6 +54,9 @@ import { bulkDeleteTaxes, deleteTaxById, getTaxes } from "@/actions/TaxAction";
 import { Tax } from "@/@types/tax.types";
 import CreateTax from "./CreateTax";
 import UpdateTaxModal from "./UpdateTaxModal";
+import { Badge } from "@/components/ui/badge";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
 
 export default function TaxTable() {
   const [state, dispatch] = useReducer(taxReducer, initialTaxState);
@@ -74,6 +78,8 @@ export default function TaxTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    search,
+    status,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -94,6 +100,8 @@ export default function TaxTable() {
           limit,
           order,
           direction,
+          search,
+          status,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_TAXES", payload: data.data.items });
@@ -108,7 +116,7 @@ export default function TaxTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, search, status],
   );
 
   /**
@@ -272,6 +280,25 @@ export default function TaxTable() {
         cell: ({ row }) => (
           <div className="font-medium">
             {row?.original?.creator?.name ?? "N/A"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-center">Status</div>,
+        cell: ({ row }) => (
+          <div className="font-medium">
+            {row?.getValue("status") ? (
+              <Badge variant="default">
+                <CircleCheckBig />
+                Active
+              </Badge>
+            ) : (
+              <Badge variant="destructive">
+                <CircleX />
+                Inactive
+              </Badge>
+            )}
           </div>
         ),
       },
@@ -450,7 +477,32 @@ export default function TaxTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">

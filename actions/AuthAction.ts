@@ -38,43 +38,37 @@ export const getAuth = async (email: string, password: string) => {
 /**
  * Generate new access token using refresh token
  */
-const refreshPromises = new Map<string, Promise<MyJWT>>();
+let isCalled = false;
+export const getRefreshToken = async (token: MyJWT) => {
+  console.log(token);
+  if (isCalled) return token;
+  isCalled = true;
+  try {
+    const data = await fetchData("auth/refresh", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token.refreshToken}`,
+      },
+    });
 
-export const getRefreshToken = async (token: MyJWT): Promise<MyJWT> => {
-  const key = token.refreshToken as string;
+    if (!data.success) throw new Error(data.message);
 
-  if (refreshPromises.has(key)) {
-    return refreshPromises.get(key)!;
-  }
-
-  const promise = (async () => {
-    try {
-      const data = await fetchData("auth/refresh", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token?.refreshToken}`,
-        },
-      });
-
-      if (!data?.success && !data?.errors) throw new Error(data.message);
-
+    return {
+      ...token,
+      accessToken: data.data.accessToken,
+      expiresIn: data.data.expiresIn,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
       return {
         ...token,
-        accessToken: data?.data?.accessToken,
-        expiresIn: data?.data?.expiresIn,
+        error: "RefreshAccessTokenError",
       };
-    } catch (error) {
-      if (error instanceof Error) {
-        return { ...token, error: "RefreshAccessTokenError" };
-      }
-      return token;
-    } finally {
-      setTimeout(() => refreshPromises.delete(key), 5000);
     }
-  })();
-
-  refreshPromises.set(key, promise);
-  return promise;
+    return token;
+  } finally {
+    isCalled = false;
+  }
 };
 
 /**
