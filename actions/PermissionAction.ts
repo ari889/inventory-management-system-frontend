@@ -16,26 +16,24 @@ export const getPermissions = async ({
   limit = 10,
   order = "id",
   direction = "desc",
-  name = "",
-  slug = "",
-  deletable = null,
+  search = "",
+  moduleId = undefined,
+  deletable = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
-  name: string;
-  slug: string;
-  deletable: boolean | null;
+  search?: string;
+  moduleId?: number;
+  deletable?: boolean;
 }) => {
   try {
     let url = `permissions?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
 
-    if (name) url += `&name=${name}`;
-
-    if (slug) url += `&slug=${slug}`;
-
-    if (deletable !== null) url += `&deletable=${deletable}`;
+    if (search) url += `&search=${search}`;
+    if (moduleId) url += `&moduleId=${moduleId}`;
+    if (deletable !== undefined) url += `&deletable=${deletable}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

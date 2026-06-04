@@ -14,16 +14,18 @@ export const fetchData = async (url: string, options: RequestInit = {}) => {
 
   const isFormData = options.body instanceof FormData;
 
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    // Merge any incoming headers first
+    ...(options.headers as Record<string, string>),
+  };
 
-  if (!isFormData) {
-    if (options.body && typeof options.body === "string") {
-      headers["Content-Type"] = "application/json";
-    }
-    Object.assign(headers, options.headers);
+  // Only set Content-Type for JSON — never set it for FormData
+  // because fetch must set it automatically with the correct boundary
+  if (!isFormData && options.body && typeof options.body === "string") {
+    headers["Content-Type"] = "application/json";
   }
 
-  if (session?.accessToken && headers["Authorization"] === undefined) {
+  if (session?.accessToken) {
     headers["Authorization"] = `Bearer ${session.accessToken}`;
   }
 

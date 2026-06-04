@@ -18,21 +18,21 @@ import { cn } from "@/lib/utils";
 import { useEffect, useReducer, useRef, useCallback, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import debounce from "lodash/debounce";
-import { Warehouse } from "@/@types/warehouse.types";
-import { getWarehouses } from "@/actions/WarehouseAction";
+import { Module } from "@/@types/module.types";
+import { getAllModules, getModules } from "@/actions/ModuleAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 
-type WarehouseOption = Pick<Warehouse, "id" | "name">;
+type ModuleOption = Pick<Module, "id" | "moduleName">;
 
 type Props = {
-  value: number | null;
+  value?: number;
   onChange: (value: number | null) => void;
   label?: string;
-  defaultWarehouse?: WarehouseOption | null;
+  defaultModule?: ModuleOption | null;
 };
 
 type State = {
-  warehouses: Warehouse[];
+  modules: Module[];
   loading: boolean;
   searching: boolean;
   loadingMore: boolean;
@@ -47,7 +47,7 @@ type Action =
   | {
       type: "FETCH_SUCCESS";
       payload: {
-        items: Warehouse[];
+        items: Module[];
         total: number;
         page: number;
         replace: boolean;
@@ -58,7 +58,7 @@ type Action =
   | { type: "SET_SEARCH"; payload: string };
 
 const initialState: State = {
-  warehouses: [],
+  modules: [],
   loading: true,
   searching: false,
   loadingMore: false,
@@ -79,7 +79,7 @@ function reducer(state: State, action: Action): State {
       const { items, total, page, replace } = action.payload;
       return {
         ...state,
-        warehouses: replace ? items : [...state.warehouses, ...items],
+        modules: replace ? items : [...state.modules, ...items],
         hasMore: (page + 1) * 10 < total,
         error: null,
         loading: false,
@@ -108,21 +108,22 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-export default function WarehouseFilter({
+export default function ModuleFilter({
   value,
   onChange,
-  label = "Select warehouse",
-  defaultWarehouse = null,
+  label = "Select module",
+  defaultModule = null,
 }: Props) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [selectedWarehouse, setSelectedWarehouse] =
-    useState<WarehouseOption | null>(defaultWarehouse);
+  const [selectedModule, setSelectedModule] = useState<ModuleOption | null>(
+    defaultModule,
+  );
   const listRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(0);
   const searchRef = useRef("");
   const initialLoadRef = useRef(true);
 
-  const fetchWarehouses = async (
+  const fetchModules = async (
     nextPage: number,
     nextSearch: string,
     replace: boolean,
@@ -133,7 +134,7 @@ export default function WarehouseFilter({
         payload: { replace, initial: initialLoadRef.current },
       });
 
-      const response = await getWarehouses({
+      const response = await getAllModules({
         page: nextPage,
         limit: 10,
         order: "id",
@@ -143,7 +144,7 @@ export default function WarehouseFilter({
 
       if (!response.success) throw new Error(response.message);
 
-      const items: Warehouse[] = response.data.items;
+      const items: Module[] = response.data.items;
       const total: number = response.data.totalItems;
 
       dispatch({
@@ -162,17 +163,17 @@ export default function WarehouseFilter({
   };
 
   useEffect(() => {
-    fetchWarehouses(0, "", true);
+    fetchModules(0, "", true);
   }, []);
 
   useEffect(() => {
-    if (defaultWarehouse) setSelectedWarehouse(defaultWarehouse);
-  }, [defaultWarehouse]);
+    if (defaultModule) setSelectedModule(defaultModule);
+  }, [defaultModule]);
 
   const debouncedFetch = useCallback(
     debounce((query: string) => {
       pageRef.current = 0;
-      fetchWarehouses(0, query, true);
+      fetchModules(0, query, true);
     }, 400),
     [],
   );
@@ -190,13 +191,13 @@ export default function WarehouseFilter({
     if (nearBottom) {
       const nextPage = pageRef.current + 1;
       pageRef.current = nextPage;
-      fetchWarehouses(nextPage, searchRef.current, false);
+      fetchModules(nextPage, searchRef.current, false);
     }
   }, [state.loadingMore, state.hasMore]);
 
   const selectedLabel =
-    selectedWarehouse?.name ??
-    state.warehouses.find((r) => r.id === value)?.name;
+    selectedModule?.moduleName ??
+    state.modules.find((r) => r.id === value)?.moduleName;
 
   return (
     <Field className="flex flex-col gap-1.5">
@@ -213,7 +214,7 @@ export default function WarehouseFilter({
           className="w-full justify-start font-normal"
         >
           <Spinner className="mr-2" />
-          Loading warehouses...
+          Loading modules...
         </Button>
       ) : (
         <Popover
@@ -229,7 +230,7 @@ export default function WarehouseFilter({
               className="w-full justify-between font-normal"
             >
               <span className={cn(!selectedLabel && "text-muted-foreground")}>
-                {selectedLabel ?? "Select a warehouse..."}
+                {selectedLabel ?? "Select a module..."}
               </span>
               <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
             </Button>
@@ -238,7 +239,7 @@ export default function WarehouseFilter({
           <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
             <Command shouldFilter={false}>
               <CommandInput
-                placeholder="Search warehouses..."
+                placeholder="Search modules..."
                 value={state.search}
                 onValueChange={handleSearch}
               />
@@ -249,17 +250,17 @@ export default function WarehouseFilter({
                   </div>
                 ) : (
                   <>
-                    <CommandEmpty>No warehouses found.</CommandEmpty>
-                    {state.warehouses.map((warehouse) => (
+                    <CommandEmpty>No modules found.</CommandEmpty>
+                    {state.modules.map((module) => (
                       <CommandItem
-                        key={warehouse.id}
-                        value={String(warehouse.id)}
+                        key={module.id}
+                        value={String(module.id)}
                         onSelect={(val) => {
                           const num = Number(val);
                           const picked =
-                            state.warehouses.find((u) => u.id === num) ?? null;
+                            state.modules.find((u) => u.id === num) ?? null;
                           const isDeselecting = num === value;
-                          setSelectedWarehouse(isDeselecting ? null : picked);
+                          setSelectedModule(isDeselecting ? null : picked);
                           onChange(isDeselecting ? null : num);
                           dispatch({ type: "SET_OPEN", payload: false });
                         }}
@@ -267,12 +268,10 @@ export default function WarehouseFilter({
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            value === warehouse.id
-                              ? "opacity-100"
-                              : "opacity-0",
+                            value === module.id ? "opacity-100" : "opacity-0",
                           )}
                         />
-                        {warehouse.name}
+                        {module.moduleName}
                       </CommandItem>
                     ))}
                     {state.loadingMore && (

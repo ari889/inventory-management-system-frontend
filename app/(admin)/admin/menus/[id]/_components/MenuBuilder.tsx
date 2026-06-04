@@ -81,7 +81,7 @@ const MenuBuilder = ({ menu, id }: { menu: Menu; id: number }) => {
         <CardAction>
           <ButtonGroup>
             <Button asChild variant="secondary">
-              <Link href="/admin/menu">
+              <Link href="/admin/menus">
                 <ArrowLeft />
                 Back
               </Link>

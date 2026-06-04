@@ -5,6 +5,55 @@ import { CreateModuleSchemaType } from "@/schemas/module.schema";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 /**
+ * Get modules from server
+ * @param param0
+ * @returns Menu
+ */
+export const getAllModules = async ({
+  page = 0,
+  limit = 10,
+  order = "id",
+  direction = "desc",
+  search = "",
+  deletable = undefined,
+}: {
+  page: number;
+  limit: number;
+  order: string;
+  direction: "asc" | "desc";
+  search?: string;
+  deletable?: boolean;
+}) => {
+  try {
+    let url = `modules?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (search) url += `&search=${search}`;
+    if (deletable !== null) url += `&deletable=${deletable}`;
+    const response = await fetchData(url);
+
+    if (!response?.success && !response?.errors) {
+      const error = new Error(response.message) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
+    }
+
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        status: (error as Error & { status?: number }).status ?? 500,
+        message: error.message || "Something went wrong",
+      };
+    }
+    return {
+      success: false,
+      status: 500,
+      message: "Something went wrong",
+    };
+  }
+};
+
+/**
  * Get current logged in user modules
  * @returns Module
  */

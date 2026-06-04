@@ -6,7 +6,7 @@ export const initialPermissionState: InititalPermissionState = {
   permissions: [],
   createModal: false,
   editModal: false,
-  name: "",
-  slug: "",
-  deletable: null,
+  search: "",
+  deletable: undefined,
+  moduleId: undefined,
 };

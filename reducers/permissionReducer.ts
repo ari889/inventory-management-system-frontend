@@ -49,14 +49,13 @@ const permissionCustomReducer = (
       };
     }
 
-    case "SET_NAME":
-      return { ...state, name: action.payload as string };
-
-    case "SET_SLUG":
-      return { ...state, slug: action.payload as string };
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string };
 
     case "SET_DELETABLE":
-      return { ...state, deletable: action.payload as boolean | null };
+      return { ...state, deletable: action.payload as boolean };
+    case "SET_MODULE_ID":
+      return { ...state, moduleId: action.payload as number };
 
     default:
       return state;

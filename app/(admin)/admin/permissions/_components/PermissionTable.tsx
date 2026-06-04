@@ -61,6 +61,9 @@ import { Input } from "@/components/ui/input";
 import { permissionReducer } from "@/reducers/permissionReducer";
 import { initialPermissionState } from "@/reducerStates/permissionState";
 import DeleteModal from "@/components/common/DeleteModal";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
+import ModuleFilter from "@/components/common/filter/ModuleFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
 
 export default function PermissionTable() {
   const [state, dispatch] = useReducer(
@@ -85,9 +88,9 @@ export default function PermissionTable() {
     selectedRows,
     bulkDeleteLoader,
     bulkDeleteOpen,
-    name,
-    slug,
+    search,
     deletable,
+    moduleId,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -108,8 +111,8 @@ export default function PermissionTable() {
           limit,
           order,
           direction,
-          name,
-          slug,
+          search,
+          moduleId,
           deletable,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
@@ -125,7 +128,7 @@ export default function PermissionTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting, name, slug, deletable],
+    [page, limit, sorting, search, moduleId, deletable],
   );
 
   /**
@@ -481,58 +484,38 @@ export default function PermissionTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-3 gap-4 mb-3">
-            <Field>
-              <FieldLabel htmlFor="permission-name">Permission Name</FieldLabel>
-              <Input
-                id="permission-name"
-                type="text"
-                placeholder="Type permission name..."
-                value={name}
-                onChange={(e) =>
-                  dispatch({ type: "SET_NAME", payload: e.target.value })
+            <ModuleFilter
+              onChange={(id) =>
+                dispatch({ type: "SET_MODULE_ID", payload: id })
+              }
+              value={moduleId}
+            />
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Is Deletable?"
+              placeholder="Filter by deletable"
+              groupLabel="Is Deletable"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Yes" },
+                { value: "false", label: "No" },
+              ]}
+              value={deletable === null ? "all" : String(deletable)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_DELETABLE", payload: null });
+                } else {
+                  dispatch({ type: "SET_DELETABLE", payload: val === "true" });
                 }
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="permission-slug">Permission Slug</FieldLabel>
-              <Input
-                id="permission-slug"
-                type="text"
-                placeholder="Type permission slug..."
-                value={slug}
-                onChange={(e) =>
-                  dispatch({ type: "SET_SLUG", payload: e.target.value })
-                }
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Is Deletable?</FieldLabel>
-              <Select
-                value={deletable === null ? "all" : String(deletable)}
-                onValueChange={(val) => {
-                  if (val === "all") {
-                    dispatch({ type: "SET_DELETABLE", payload: null });
-                  } else {
-                    dispatch({
-                      type: "SET_DELETABLE",
-                      payload: val === "true",
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Fulter by deletable" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Is Deletable</SelectLabel>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="true">Yes</SelectItem>
-                    <SelectItem value="false">No</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>
+              }}
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
