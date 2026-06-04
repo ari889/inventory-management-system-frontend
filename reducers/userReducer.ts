@@ -35,6 +35,12 @@ const userCustomReducer = (
         ),
       };
     }
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string, page: 0 };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean };
+    case "SET_GENDER":
+      return { ...state, gender: action.payload as boolean };
     default:
       return state;
   }

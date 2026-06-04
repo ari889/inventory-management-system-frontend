@@ -13,4 +13,7 @@ export interface InitialWarehouseState extends InitialStateType {
   warehouses: Warehouse[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
+  createdBy?: number;
 }

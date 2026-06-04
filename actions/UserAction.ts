@@ -17,14 +17,23 @@ export const getUsers = async ({
   limit = 10,
   order = "id",
   direction = "desc",
+  search = "",
+  gender = undefined,
+  status = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
+  search?: string;
+  gender?: boolean;
+  status?: boolean;
 }) => {
   try {
-    const url = `users?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `users?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (search) url += `&search=${search}`;
+    if (gender !== undefined) url += `&gender=${gender}`;
+    if (status !== undefined) url += `&status=${status}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

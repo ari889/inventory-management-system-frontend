@@ -65,6 +65,8 @@ import {
 import CreateUser from "./CreateUser";
 import UpdateUserModal from "./UpdateUserModal";
 import DeleteModal from "@/components/common/DeleteModal";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
 
 export default function UserTable() {
   const [state, dispatch] = useReducer(userReducer, initialUserState);
@@ -86,6 +88,9 @@ export default function UserTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    search,
+    status,
+    gender,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -106,6 +111,9 @@ export default function UserTable() {
           limit,
           order,
           direction,
+          search,
+          gender,
+          status,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_USERS", payload: data.data.items });
@@ -120,7 +128,7 @@ export default function UserTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, search, status, gender],
   );
 
   /**
@@ -504,8 +512,51 @@ export default function UserTable() {
               )}
             </ButtonGroup>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+          <div className="grid grid-cols-3 gap-4 mb-3">
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <FormFieldSelectFilter
+              label="Gender"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Male" },
+                { value: "false", label: "Female" },
+              ]}
+              value={gender === undefined ? "all" : String(gender)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_GENDER", payload: null });
+                } else {
+                  dispatch({ type: "SET_GENDER", payload: val === "true" });
+                }
+              }}
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">

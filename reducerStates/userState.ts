@@ -6,4 +6,7 @@ export const initialUserState: InitialUserState = {
   users: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  gender: undefined,
+  status: undefined,
 };

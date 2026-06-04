@@ -6,4 +6,7 @@ export const initialWarehouseState: InitialWarehouseState = {
   warehouses: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  status: undefined,
+  createdBy: undefined,
 };

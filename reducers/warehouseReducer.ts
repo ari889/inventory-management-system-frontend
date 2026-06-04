@@ -42,6 +42,12 @@ const warehouseCustomReducer = (
         ),
       };
     }
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean };
+    case "SET_CREATED_BY":
+      return { ...state, createdBy: action.payload as number };
     default:
       return state;
   }

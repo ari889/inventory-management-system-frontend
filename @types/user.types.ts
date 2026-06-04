@@ -19,4 +19,7 @@ export interface InitialUserState extends InitialStateType {
   users: User[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  gender?: boolean;
+  status?: boolean;
 }
