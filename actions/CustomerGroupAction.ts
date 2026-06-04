@@ -15,16 +15,22 @@ export const getCustomerGroups = async ({
   order = "id",
   direction = "desc",
   search = "",
+  status = undefined,
+  createdBy = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
+  status?: boolean;
+  createdBy?: number;
 }) => {
   try {
     let url = `customer-groups?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (createdBy) url += `&createdBy=${createdBy}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

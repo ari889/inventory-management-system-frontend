@@ -14,4 +14,7 @@ export interface InitialCustomerGroupState extends InitialStateType {
   customerGroups: CustomerGroup[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
+  createdBy?: number;
 }
