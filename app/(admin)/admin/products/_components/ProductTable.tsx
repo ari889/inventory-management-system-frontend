@@ -80,6 +80,11 @@ import BrandFilter from "@/components/common/filter/BrandFilter";
 import ProductCategoryFilter from "@/components/common/filter/ProductCategoryFilter";
 import UnitFilter from "@/components/common/filter/UnitFilter";
 import TaxFilter from "@/components/common/filter/TaxFilter";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ProductTable() {
   const [state, dispatch] = useReducer(productReducer, initialProductState);
@@ -253,20 +258,14 @@ export default function ProductTable() {
         header: () => {
           const allSelected =
             state.selectedRows.size === products.length && products.length > 0;
-
           return (
             <Checkbox
               checked={allSelected}
-              onCheckedChange={() => {
-                const allSelected =
-                  state.selectedRows.size === products.length &&
-                  products.length > 0;
-                if (allSelected) {
-                  dispatch({ type: "DESELECT_ALL_ROWS" });
-                } else {
-                  dispatch({ type: "SELECT_ALL_ROWS" });
-                }
-              }}
+              onCheckedChange={() =>
+                dispatch({
+                  type: allSelected ? "DESELECT_ALL_ROWS" : "SELECT_ALL_ROWS",
+                })
+              }
             />
           );
         },
@@ -286,20 +285,7 @@ export default function ProductTable() {
       {
         accessorKey: "id",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            SL <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => page * limit + row.index + 1,
-      },
-      {
-        accessorKey: "name",
-        header: ({ column }) => (
-          <div className="text-left">
+          <div className="text-center">
             <Button
               variant="ghost"
               onClick={() =>
@@ -307,285 +293,179 @@ export default function ProductTable() {
               }
               className="px-0"
             >
-              Product Name <ArrowUpDown className="ml-2 h-4 w-4" />
+              SL <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           </div>
         ),
         cell: ({ row }) => (
-          <div className="flex flex-row items-center">
-            <Avatar>
+          <div className="text-center">{page * limit + row.index + 1}</div>
+        ),
+        size: 50,
+      },
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Product <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
               <AvatarImage
-                src={
-                  `${process.env.NEXT_PUBLIC_API_URL}${row?.original?.image}` ||
-                  "https://github.com/shadcn.png"
-                }
-                alt={row?.original?.name}
+                src={`${process.env.NEXT_PUBLIC_API_URL}${row.original.image}`}
+                alt={row.original.name}
               />
-              <AvatarFallback>{row?.original?.name?.charAt(0)}</AvatarFallback>
-              <AvatarBadge className="bg-green-600 dark:bg-green-800" />
+              <AvatarFallback>{row.original.name?.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="ml-2 text-left">
-              <span className="font-medium block">{row?.original?.name}</span>
-              <span className="flex flex-row items-center space-x-2">
-                <span>By</span>
-                <div className="font-medium">
-                  {row?.original?.creator?.name ?? "N/A"}
-                </div>
-              </span>
-            </span>
+            <div>
+              <div className="font-medium">{row.original.name}</div>
+              <div className="text-xs text-muted-foreground">
+                {row.original.code ?? "N/A"}
+              </div>
+            </div>
           </div>
         ),
       },
       {
-        accessorKey: "code",
+        id: "category_brand",
+        header: () => <div className="text-center">Category / Brand</div>,
+        cell: ({ row }) => (
+          <div className="text-center text-sm">
+            <div>{row.original.category?.name ?? "N/A"}</div>
+            <div className="text-xs text-muted-foreground">
+              {row.original.brand?.title ?? "N/A"}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "price",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Code <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="px-0"
+            >
+              Cost / Price <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         ),
         cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("code") ?? "N/A"}</div>
+          <div className="text-center text-sm">
+            <div className="font-medium">{row.original.price ?? "N/A"}</div>
+            <div className="text-xs text-muted-foreground">
+              Cost: {row.original.cost ?? "N/A"}
+            </div>
+          </div>
         ),
       },
       {
-        accessorKey: "barcodeSymbology",
+        id: "qty",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Barcode Symbology <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="px-0"
+            >
+              Stock <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         ),
         cell: ({ row }) => (
-          <div className="font-medium">
-            {row.getValue("barcodeSymbology") ?? "N/A"}
+          <div className="text-center text-sm">
+            <div className="font-medium">{row.original.qty ?? "N/A"}</div>
+            <div className="text-xs text-muted-foreground">
+              Alert: {row.original.alertQty ?? "N/A"}
+            </div>
           </div>
         ),
       },
       {
-        accessorKey: "brand.id",
-        header: () => <div className="text-center">Brand</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.brand?.title ?? "N/A"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "category.id",
-        header: () => <div className="text-center">Category</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.category?.name ?? "N/A"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "unit.id",
-        header: () => <div className="text-center">Unit</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.unit?.unitName ?? "N/A"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "purchaseUnit.id",
-        header: () => <div className="text-center">Purchase Unit</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.purchaseUnit?.unitName ?? "N/A"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "saleUnit.id",
-        header: () => <div className="text-center">Sale Unit</div>,
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.saleUnit?.unitName ?? "N/A"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "cost",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Cost <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("cost") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "price",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Price <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("price") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "qty",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Quantity <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("qty") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "alertQty",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Alert Quantity <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">{row.getValue("alertQty") ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "tax.id",
+        id: "tax",
         header: () => <div className="text-center">Tax</div>,
         cell: ({ row }) => (
-          <div className="font-medium">{row?.original?.tax?.name ?? "N/A"}</div>
-        ),
-      },
-      {
-        accessorKey: "taxMethod",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Tax Method <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.getValue("taxMethod") ? (
-              <Badge variant="default">
-                <CircleCheckBig />
-                Exclusive
-              </Badge>
-            ) : (
-              <Badge variant="destructive">
-                <CircleX />
-                Inclusive
-              </Badge>
-            )}
+          <div className="text-center text-sm">
+            <div>{row.original.tax?.name ?? "N/A"}</div>
+            <Badge
+              variant={row.original.taxMethod ? "default" : "destructive"}
+              className="text-xs mt-1"
+            >
+              {row.original.taxMethod ? "Exclusive" : "Inclusive"}
+            </Badge>
           </div>
         ),
       },
       {
         accessorKey: "status",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="px-0"
-          >
-            Status <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.getValue("status") ? (
-              <Badge variant="default">
-                <CircleCheckBig />
-                Active
-              </Badge>
-            ) : (
-              <Badge variant="destructive">
-                <CircleX />
-                Inactive
-              </Badge>
-            )}
+          <div className="text-center">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="px-0"
+            >
+              Status <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         ),
-      },
-      {
-        accessorKey: "createdAt",
-        header: () => <div className="text-center">Created At</div>,
         cell: ({ row }) => (
-          <div className="font-medium">
-            {row?.original?.createdAt
-              ? new Date(row?.original?.createdAt).toLocaleDateString()
-              : "N/A"}
+          <div className="text-center">
+            <Badge variant={row.original.status ? "default" : "destructive"}>
+              {row.original.status ? "Active" : "Inactive"}
+            </Badge>
           </div>
         ),
       },
       {
         id: "actions",
         header: () => <div className="text-center">Actions</div>,
-        cell: ({ row }) => {
-          return (
-            <div className="flex justify-center">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-2xl">
-                  <DropdownMenuItem
-                    onClick={() =>
-                      dispatch({
-                        type: "TOGGLE_UPDATE_MODAL",
-                        payload: row.getValue("id"),
-                      })
-                    }
-                  >
-                    <SquarePen />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() =>
-                      dispatch({
-                        type: "OPEN_DELETE_MODAL",
-                        payload: row.getValue("id"),
-                      })
-                    }
-                  >
-                    <Trash />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          );
-        },
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-2xl">
+                <DropdownMenuItem
+                  onClick={() =>
+                    dispatch({
+                      type: "TOGGLE_UPDATE_MODAL",
+                      payload: row.getValue("id"),
+                    })
+                  }
+                >
+                  <SquarePen /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() =>
+                    dispatch({
+                      type: "OPEN_DELETE_MODAL",
+                      payload: row.getValue("id"),
+                    })
+                  }
+                >
+                  <Trash /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
       },
     ],
     [page, limit, products.length, state.selectedRows],
