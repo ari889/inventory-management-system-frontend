@@ -13,16 +13,43 @@ export const getProducts = async ({
   order = "id",
   direction = "desc",
   search = "",
+  status = undefined,
+  taxMethod = undefined,
+  createdBy = undefined,
+  brandId = undefined,
+  categoryId = undefined,
+  unitId = undefined,
+  purchaseUnitId = undefined,
+  saleUnitId = undefined,
+  taxId = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
+  status?: boolean;
+  taxMethod?: boolean;
+  createdBy?: number;
+  brandId?: number;
+  categoryId?: number;
+  unitId?: number;
+  purchaseUnitId?: number;
+  saleUnitId?: number;
+  taxId?: number;
 }) => {
   try {
     let url = `products?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (taxMethod !== undefined) url += `&taxMethod=${taxMethod}`;
+    if (createdBy) url += `&createdBy=${createdBy}`;
+    if (brandId) url += `&brandId=${brandId}`;
+    if (categoryId) url += `&categoryId=${categoryId}`;
+    if (unitId) url += `&unitId=${unitId}`;
+    if (purchaseUnitId) url += `&purchaseUnitId=${purchaseUnitId}`;
+    if (saleUnitId) url += `&saleUnitId=${saleUnitId}`;
+    if (taxId) url += `&taxId=${taxId}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

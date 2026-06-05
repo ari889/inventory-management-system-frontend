@@ -42,6 +42,26 @@ const productCustomReducer = (
         ),
       };
     }
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string, page: 0 };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean, page: 0 };
+    case "SET_TAX_METHOD":
+      return { ...state, taxMethod: action.payload as boolean, page: 0 };
+    case "SET_CREATED_BY":
+      return { ...state, createdBy: action.payload as number, page: 0 };
+    case "SET_BRAND_ID":
+      return { ...state, brandId: action.payload as number, page: 0 };
+    case "SET_CATEGORY_ID":
+      return { ...state, categoryId: action.payload as number, page: 0 };
+    case "SET_UNIT_ID":
+      return { ...state, unitId: action.payload as number, page: 0 };
+    case "SET_PURCHASE_UNIT_ID":
+      return { ...state, purchaseUnitId: action.payload as number, page: 0 };
+    case "SET_SALE_UNIT_ID":
+      return { ...state, saleUnitId: action.payload as number, page: 0 };
+    case "SET_TAX_ID":
+      return { ...state, taxId: action.payload as number, page: 0 };
     default:
       return state;
   }

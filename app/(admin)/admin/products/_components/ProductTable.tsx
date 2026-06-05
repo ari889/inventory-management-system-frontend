@@ -73,6 +73,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import UserFilter from "@/components/common/filter/UserFilter";
+import BrandFilter from "@/components/common/filter/BrandFilter";
+import ProductCategoryFilter from "@/components/common/filter/ProductCategoryFilter";
+import UnitFilter from "@/components/common/filter/UnitFilter";
+import TaxFilter from "@/components/common/filter/TaxFilter";
 
 export default function ProductTable() {
   const [state, dispatch] = useReducer(productReducer, initialProductState);
@@ -94,6 +101,16 @@ export default function ProductTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    search,
+    status,
+    taxMethod,
+    createdBy,
+    brandId,
+    categoryId,
+    unitId,
+    purchaseUnitId,
+    saleUnitId,
+    taxId,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -114,6 +131,16 @@ export default function ProductTable() {
           limit,
           order,
           direction,
+          search,
+          status,
+          taxMethod,
+          createdBy,
+          brandId,
+          categoryId,
+          unitId,
+          purchaseUnitId,
+          saleUnitId,
+          taxId,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_PRODUCTS", payload: data.data.items });
@@ -128,7 +155,21 @@ export default function ProductTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [
+      page,
+      limit,
+      sorting,
+      search,
+      status,
+      taxMethod,
+      createdBy,
+      brandId,
+      categoryId,
+      unitId,
+      purchaseUnitId,
+      saleUnitId,
+      taxId,
+    ],
   );
 
   /**
@@ -667,8 +708,89 @@ export default function ProductTable() {
               )}
             </ButtonGroup>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+          <div className="grid grid-cols-3 gap-4 mb-3">
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <FormFieldSelectFilter
+              label="Tax Methode"
+              placeholder="Select option"
+              groupLabel="Filter by tax method"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Inclusive" },
+                { value: "false", label: "Exclusive" },
+              ]}
+              value={taxMethod === undefined ? "all" : String(taxMethod)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_TAX_METHOD", payload: null });
+                } else {
+                  dispatch({ type: "SET_TAX_METHOD", payload: val === "true" });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CREATED_BY", payload: id })
+              }
+            />
+            <BrandFilter
+              value={brandId ?? null}
+              onChange={(id) => dispatch({ type: "SET_BRAND_ID", payload: id })}
+            />
+            <ProductCategoryFilter
+              value={categoryId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CATEGORY_ID", payload: id })
+              }
+            />
+            <UnitFilter
+              value={unitId ?? null}
+              onChange={(id) => dispatch({ type: "SET_UNIT_ID", payload: id })}
+            />
+            <UnitFilter
+              value={purchaseUnitId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_PURCHASE_UNIT_ID", payload: id })
+              }
+              label="Purchase Unit"
+            />
+            <UnitFilter
+              value={saleUnitId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_SALE_UNIT_ID", payload: id })
+              }
+              label="Sale Unit"
+            />
+            <TaxFilter
+              value={taxId ?? null}
+              onChange={(id) => dispatch({ type: "SET_TAX_ID", payload: id })}
+            />
           </div>
           <div className="w-full overflow-x-auto rounded-xl border">
             <Table className="min-w-350">

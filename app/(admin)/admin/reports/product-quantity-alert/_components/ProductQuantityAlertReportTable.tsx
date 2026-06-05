@@ -41,7 +41,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { productQuantityAlertReportReducer } from "@/reducers/productQuantityAlertReducer";
 import { initialProductQuantityAlertReportState } from "@/reducerStates/productQuantityAlertState";
-import ProductCategoryFilter from "@/components/common/filter/CategoryFilter";
+import ProductCategoryFilter from "@/components/common/filter/ProductCategoryFilter";
 import BrandFilter from "@/components/common/filter/BrandFilter";
 import { Product } from "@/@types/product.types";
 

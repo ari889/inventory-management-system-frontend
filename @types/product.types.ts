@@ -60,4 +60,14 @@ export interface InitialProductState extends InitialStateType {
   products: Product[];
   open: boolean;
   showUpdateModal: boolean;
+  search: string;
+  status?: boolean;
+  taxMethod?: boolean;
+  createdBy?: number;
+  brandId?: number;
+  categoryId?: number;
+  unitId?: number;
+  purchaseUnitId?: number;
+  saleUnitId?: number;
+  taxId?: number;
 }
