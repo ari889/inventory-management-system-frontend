@@ -19,4 +19,7 @@ export interface InitialSupplierState extends InitialStateType {
   suppliers: Supplier[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
+  createdBy?: number;
 }

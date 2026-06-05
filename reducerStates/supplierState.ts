@@ -6,4 +6,7 @@ export const initialSupplierState: InitialSupplierState = {
   suppliers: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  status: undefined,
+  createdBy: undefined,
 };
