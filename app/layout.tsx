@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { getSettings } from "@/actions/SettingsAction";
 import { Setting } from "@/@types/settings.types";
 import { handleResponse } from "@/utils/handle-response";
+import LogoutProvider from "@/providers/LogoutProvider";
 
 export const generateMetadata = async () => {
   const { data } = handleResponse<Setting[]>(await getSettings());
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <NextAuthProvider>{children}</NextAuthProvider>
+        <NextAuthProvider>
+          <LogoutProvider>{children}</LogoutProvider>
+        </NextAuthProvider>
         <Toaster />
       </body>
     </html>

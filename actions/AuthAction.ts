@@ -36,42 +36,6 @@ export const getAuth = async (email: string, password: string) => {
 };
 
 /**
- * Generate new access token using refresh token
- */
-let isCalled = false;
-export const getRefreshToken = async (token: MyJWT) => {
-  console.log(token);
-  if (isCalled) return token;
-  isCalled = true;
-  try {
-    const data = await fetchData("auth/refresh", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token.refreshToken}`,
-      },
-    });
-
-    if (!data.success) throw new Error(data.message);
-
-    return {
-      ...token,
-      accessToken: data.data.accessToken,
-      expiresIn: data.data.expiresIn,
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        ...token,
-        error: "RefreshAccessTokenError",
-      };
-    }
-    return token;
-  } finally {
-    isCalled = false;
-  }
-};
-
-/**
  * Fetched user details
  * @returns User
  */

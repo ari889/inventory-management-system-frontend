@@ -1,7 +1,8 @@
+"use client";
 import { signOut, useSession } from "next-auth/react";
 import React, { useEffect } from "react";
 
-const LogoutProvider = () => {
+const LogoutProvider = ({ children }: { children: React.ReactNode }) => {
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -10,7 +11,7 @@ const LogoutProvider = () => {
     }
   }, [session]);
 
-  return <div>LogoutProvider</div>;
+  return children;
 };
 
 export default LogoutProvider;

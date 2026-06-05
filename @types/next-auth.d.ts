@@ -4,7 +4,7 @@ import "next-auth";
 declare module "next-auth" {
   // Flat session: only accessToken
   interface Session {
-    accessToken: unknown | string;
+    accessToken?: string;
     error?: string;
   }
 
@@ -20,6 +20,6 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     refreshToken?: string;
     expiresIn?: number;
-    error?: string;
+    error?: "RefreshAccessTokenError";
   }
 }
