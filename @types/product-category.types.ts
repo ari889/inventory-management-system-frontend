@@ -11,4 +11,6 @@ export interface InitialProductCategoryState extends InitialStateType {
   open: boolean;
   showUpdateModal: boolean;
   search: string;
+  status?: boolean;
+  createdBy?: number;
 }

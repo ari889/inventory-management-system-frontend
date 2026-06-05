@@ -7,4 +7,6 @@ export const initialProductCategoryState: InitialProductCategoryState = {
   open: false,
   showUpdateModal: false,
   search: "",
+  status: undefined,
+  createdBy: undefined,
 };
