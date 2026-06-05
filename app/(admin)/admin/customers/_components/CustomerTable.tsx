@@ -64,6 +64,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import UserFilter from "@/components/common/filter/UserFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
+import CustomerGroupFilter from "@/components/common/filter/CustomerGroupFilter";
 
 export default function CustomerTable() {
   const [state, dispatch] = useReducer(customerReducer, initialCustomerState);
@@ -85,6 +89,10 @@ export default function CustomerTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    search,
+    status,
+    createdBy,
+    customerGroupId,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -105,6 +113,10 @@ export default function CustomerTable() {
           limit,
           order,
           direction,
+          search,
+          status,
+          createdBy,
+          customerGroupId,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_CUSTOMERS", payload: data.data.items });
@@ -119,7 +131,7 @@ export default function CustomerTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, search, status, createdBy, customerGroupId],
   );
 
   /**
@@ -534,7 +546,44 @@ export default function CustomerTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CREATED_BY", payload: id })
+              }
+            />
+            <CustomerGroupFilter
+              value={customerGroupId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CUSTOMER_GROUP_ID", payload: id })
+              }
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">

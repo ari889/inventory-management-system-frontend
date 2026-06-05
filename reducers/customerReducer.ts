@@ -42,6 +42,14 @@ const customerCustomReducer = (
         ),
       };
     }
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string, page: 0 };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean, page: 0 };
+    case "SET_CREATED_BY":
+      return { ...state, createdBy: action.payload as number, page: 0 };
+    case "SET_CUSTOMER_GROUP_ID":
+      return { ...state, customerGroupId: action.payload as number, page: 0 };
     default:
       return state;
   }

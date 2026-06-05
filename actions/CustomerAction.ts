@@ -14,16 +14,26 @@ export const getCustomers = async ({
   order = "id",
   direction = "desc",
   search = "",
+  status = undefined,
+  createdBy = undefined,
+  customerGroupId = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
+  status?: boolean;
+  createdBy?: number;
+  customerGroupId?: number;
 }) => {
   try {
     let url = `customers?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (createdBy !== undefined) url += `&createdBy=${createdBy}`;
+    if (customerGroupId !== undefined)
+      url += `&customerGroupId=${customerGroupId}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

@@ -6,4 +6,8 @@ export const initialCustomerState: InitialCustomerState = {
   customers: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  status: undefined,
+  createdBy: undefined,
+  customerGroupId: undefined,
 };

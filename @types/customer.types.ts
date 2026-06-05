@@ -21,4 +21,8 @@ export interface InitialCustomerState extends InitialStateType {
   customers: Customer[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
+  createdBy?: number;
+  customerGroupId?: number;
 }
