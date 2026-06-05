@@ -7,4 +7,6 @@ export const initialAccountState: InitialAccountState = {
   open: false,
   showUpdateModal: false,
   search: "",
+  status: undefined,
+  createdBy: undefined,
 };
