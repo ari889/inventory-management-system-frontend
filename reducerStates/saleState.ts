@@ -9,4 +9,9 @@ export const initialSaleState: InitialSaleState = {
   showAddPaymentModal: false,
   saleIdForPayment: null,
   showSalePayments: false,
+  search: "",
+  status: undefined,
+  createdBy: undefined,
+  customerId: undefined,
+  warehouseId: undefined,
 };

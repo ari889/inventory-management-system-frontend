@@ -39,6 +39,16 @@ const saleCustomReducer = (
           ? null
           : (action.payload as number),
       };
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string, page: 0 };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean, page: 0 };
+    case "SET_CREATED_BY":
+      return { ...state, createdBy: action.payload as number, page: 0 };
+    case "SET_CUSTOMER_ID":
+      return { ...state, customerId: action.payload as number, page: 0 };
+    case "SET_WAREHOUSE_ID":
+      return { ...state, warehouseId: action.payload as number, page: 0 };
     default:
       return state;
   }

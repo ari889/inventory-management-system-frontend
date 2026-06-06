@@ -22,9 +22,9 @@ import {
   SquarePen,
   Trash,
   PlusCircle,
-  ShoppingCart,
   SquarePlus,
   Eye,
+  CircleDollarSign,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -68,6 +68,11 @@ import { saleReducer } from "@/reducers/saleReducer";
 import ShowSalePaymentModal from "./ShowSalePaymentModal";
 import { Badge } from "@/components/ui/badge";
 import AddSalePaymentModal from "./AddSalePaymentModal";
+import WarehouseFilter from "@/components/common/filter/WarehouseFilter";
+import CustomerFilter from "@/components/common/filter/CustomerFilter";
+import UserFilter from "@/components/common/filter/UserFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
 
 export default function SaleTable() {
   const [state, dispatch] = useReducer(saleReducer, initialSaleState);
@@ -90,6 +95,11 @@ export default function SaleTable() {
     saleIdForPayment,
     showSalePayments,
     showAddPaymentModal,
+    search,
+    status,
+    createdBy,
+    customerId,
+    warehouseId,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -110,6 +120,11 @@ export default function SaleTable() {
           limit,
           order,
           direction,
+          search,
+          status,
+          createdBy,
+          customerId,
+          warehouseId,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_SALES", payload: data.data.items });
@@ -124,7 +139,7 @@ export default function SaleTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, search, status, createdBy, customerId, warehouseId],
   );
 
   /**
@@ -649,7 +664,7 @@ export default function SaleTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <ShoppingCart className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <CircleDollarSign className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
                 <h2 className="text-xl font-semibold">Sales</h2>
                 <h3 className="text-gray-500">See and manage your sales</h3>
@@ -674,7 +689,52 @@ export default function SaleTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CREATED_BY", payload: id })
+              }
+            />
+            <CustomerFilter
+              value={customerId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CUSTOMER_ID", payload: id })
+              }
+            />
+            <div className="col-span-2">
+              <WarehouseFilter
+                value={warehouseId ?? null}
+                onChange={(id) =>
+                  dispatch({ type: "SET_WAREHOUSE_ID", payload: id })
+                }
+              />
+            </div>
           </div>
           <div className="w-full overflow-x-auto rounded-xl border">
             <Table className="min-w-350">

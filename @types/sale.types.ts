@@ -70,4 +70,9 @@ export interface InitialSaleState extends InitialStateType {
   showAddPaymentModal: boolean;
   saleIdForPayment: number | null;
   showSalePayments: boolean;
+  search?: string;
+  status?: boolean;
+  createdBy?: number;
+  customerId?: number;
+  warehouseId?: number;
 }
