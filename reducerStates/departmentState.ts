@@ -7,4 +7,6 @@ export const initialDepartmentState: InitialDepartmentState = {
   open: false,
   showUpdateModal: false,
   search: "",
+  status: undefined,
+  createdBy: undefined,
 };

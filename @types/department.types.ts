@@ -10,5 +10,7 @@ export interface InitialDepartmentState extends InitialStateType {
   departments: Department[];
   open: boolean;
   showUpdateModal: boolean;
-  search: string;
+  search?: string;
+  status?: boolean;
+  createdBy?: number;
 }
