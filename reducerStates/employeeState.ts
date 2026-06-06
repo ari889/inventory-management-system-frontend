@@ -6,4 +6,8 @@ export const initialEmployeeState: InitialEmployeeState = {
   employees: [],
   open: false,
   showUpdateModal: false,
+  search: "",
+  status: undefined,
+  createdBy: undefined,
+  departmentId: undefined,
 };

@@ -20,4 +20,8 @@ export interface InitialEmployeeState extends InitialStateType {
   employees: Employee[];
   open: boolean;
   showUpdateModal: boolean;
+  search?: string;
+  status?: boolean;
+  createdBy?: number;
+  departmentId?: number;
 }

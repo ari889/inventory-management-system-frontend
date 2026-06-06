@@ -65,6 +65,10 @@ import {
 import { Employee } from "@/@types/employee.types";
 import CreateEmployee from "./CreateEmployee";
 import UpdateEmployeeModal from "./UpdateEmployeeModal";
+import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import UserFilter from "@/components/common/filter/UserFilter";
+import DepartmentFilter from "@/components/common/filter/DepartmentFilter";
 
 export default function EmployeeTable() {
   const [state, dispatch] = useReducer(employeeReducer, initialEmployeeState);
@@ -86,6 +90,10 @@ export default function EmployeeTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    search,
+    status,
+    createdBy,
+    departmentId,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -106,6 +114,10 @@ export default function EmployeeTable() {
           limit,
           order,
           direction,
+          search,
+          status,
+          createdBy,
+          departmentId,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_EMPLOYEES", payload: data.data.items });
@@ -120,7 +132,7 @@ export default function EmployeeTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, search, status, createdBy, departmentId],
   );
 
   /**
@@ -520,7 +532,44 @@ export default function EmployeeTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldFilter
+              id="search"
+              label="Search"
+              placeholder="Type something..."
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", payload: e.target.value })
+              }
+            />
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CREATED_BY", payload: id })
+              }
+            />
+            <DepartmentFilter
+              value={departmentId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_DEPARTMENT_ID", payload: id })
+              }
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">

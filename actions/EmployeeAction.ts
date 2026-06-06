@@ -13,16 +13,25 @@ export const getEmployees = async ({
   order = "id",
   direction = "desc",
   search = "",
+  status = undefined,
+  createdBy = undefined,
+  departmentId = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
+  status?: boolean;
+  createdBy?: number;
+  departmentId?: number;
 }) => {
   try {
     let url = `employees?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (createdBy !== undefined) url += `&createdBy=${createdBy}`;
+    if (departmentId !== undefined) url += `&departmentId=${departmentId}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
