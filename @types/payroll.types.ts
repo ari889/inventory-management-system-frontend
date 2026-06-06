@@ -15,4 +15,8 @@ export interface InitialPayrollState extends InitialStateType {
   payrolls: Payroll[];
   open: boolean;
   showUpdateModal: boolean;
+  employeeId?: number;
+  accountId?: number;
+  paymentMethods?: "CASH" | "CHEQUE" | "BANK";
+  createdBy?: number;
 }

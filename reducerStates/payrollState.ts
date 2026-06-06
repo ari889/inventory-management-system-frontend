@@ -6,4 +6,8 @@ export const initialPayrollState: InitialPayrollState = {
   payrolls: [],
   open: false,
   showUpdateModal: false,
+  employeeId: undefined,
+  accountId: undefined,
+  paymentMethods: undefined,
+  createdBy: undefined,
 };

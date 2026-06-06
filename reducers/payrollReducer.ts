@@ -42,6 +42,18 @@ const payrollCustomReducer = (
         ),
       };
     }
+    case "SET_EMPLOYEE_ID":
+      return { ...state, employeeId: action.payload as number, page: 0 };
+    case "SET_ACCOUNT_ID":
+      return { ...state, accountId: action.payload as number, page: 0 };
+    case "SET_PAYMENT_METHODS":
+      return {
+        ...state,
+        paymentMethods: action.payload as "CASH" | "CHEQUE" | "BANK",
+        page: 0,
+      };
+    case "SET_CREATED_BY":
+      return { ...state, createdBy: action.payload as number, page: 0 };
     default:
       return state;
   }

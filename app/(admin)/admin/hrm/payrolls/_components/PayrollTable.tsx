@@ -56,6 +56,10 @@ import {
 import { Payroll } from "@/@types/payroll.types";
 import CreatePayroll from "./CreatePayroll";
 import UpdatePayrollModal from "./UpdatePayrollModal";
+import UserFilter from "@/components/common/filter/UserFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import AccountFilter from "@/components/common/filter/AccountFilter";
+import EmployeeFilter from "@/components/common/filter/EmployeeFilter";
 
 export default function PayrollTable() {
   const [state, dispatch] = useReducer(payrollReducer, initialPayrollState);
@@ -77,6 +81,10 @@ export default function PayrollTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    employeeId,
+    accountId,
+    paymentMethods,
+    createdBy,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -97,6 +105,10 @@ export default function PayrollTable() {
           limit,
           order,
           direction,
+          employeeId,
+          accountId,
+          paymentMethods,
+          createdBy,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_PAYROLLS", payload: data.data.items });
@@ -111,7 +123,7 @@ export default function PayrollTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, employeeId, accountId, paymentMethods, createdBy],
   );
 
   /**
@@ -472,7 +484,48 @@ export default function PayrollTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldSelectFilter
+              label="Payment Method"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "CASH", label: "Cash" },
+                { value: "CHEQUE", label: "Cheque" },
+                { value: "BANK", label: "Bank" },
+              ]}
+              value={
+                paymentMethods === undefined ? "all" : String(paymentMethods)
+              }
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_PAYMENT_METHODS", payload: undefined });
+                } else {
+                  dispatch({
+                    type: "SET_PAYMENT_METHODS",
+                    payload: val,
+                  });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CREATED_BY", payload: id })
+              }
+            />
+            <AccountFilter
+              value={accountId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_ACCOUNT_ID", payload: id })
+              }
+            />
+            <EmployeeFilter
+              value={employeeId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_EMPLOYEE_ID", payload: id })
+              }
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">

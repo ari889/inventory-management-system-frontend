@@ -13,14 +13,27 @@ export const getPayrolls = async ({
   limit = 10,
   order = "id",
   direction = "desc",
+  employeeId = undefined,
+  accountId = undefined,
+  paymentMethods = undefined,
+  createdBy = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
+  employeeId?: number;
+  accountId?: number;
+  paymentMethods?: "CASH" | "CHEQUE" | "BANK";
+  createdBy?: number;
 }) => {
   try {
-    const url = `payrolls?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `payrolls?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (employeeId !== undefined) url += `&employeeId=${employeeId}`;
+    if (accountId !== undefined) url += `&accountId=${accountId}`;
+    if (paymentMethods !== undefined)
+      url += `&paymentMethods=${paymentMethods}`;
+    if (createdBy !== undefined) url += `&createdBy=${createdBy}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {
