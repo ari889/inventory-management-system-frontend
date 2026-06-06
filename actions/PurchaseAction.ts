@@ -14,16 +14,28 @@ export const getPurchases = async ({
   order = "id",
   direction = "desc",
   search = "",
+  status = undefined,
+  createdBy = undefined,
+  supplierId = undefined,
+  warehouseId = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
+  status?: boolean;
+  createdBy?: number;
+  supplierId?: number;
+  warehouseId?: number;
 }) => {
   try {
     let url = `purchases?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (createdBy !== undefined) url += `&createdBy=${createdBy}`;
+    if (supplierId !== undefined) url += `&supplierId=${supplierId}`;
+    if (warehouseId !== undefined) url += `&warehouseId=${warehouseId}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

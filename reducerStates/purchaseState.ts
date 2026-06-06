@@ -9,4 +9,9 @@ export const initialPurchaseState: InitialPurchaseState = {
   showAddPaymentModal: false,
   purchaseIdForPayment: null,
   showPurchasePayments: false,
+  search: "",
+  status: undefined,
+  createdBy: undefined,
+  supplierId: undefined,
+  warehouseId: undefined,
 };
