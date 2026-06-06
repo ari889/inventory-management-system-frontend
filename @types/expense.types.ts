@@ -17,5 +17,9 @@ export interface InitialExpenseState extends InitialStateType {
   expenses: Expense[];
   open: boolean;
   showUpdateModal: boolean;
-  search: string;
+  expenseCategoryId: number | undefined;
+  warehouseId: number | undefined;
+  accountId: number | undefined;
+  status: boolean | undefined;
+  createdBy: number | undefined;
 }

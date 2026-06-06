@@ -13,14 +13,30 @@ export const getExpense = async ({
   limit = 10,
   order = "id",
   direction = "desc",
+  expenseCategoryId = undefined,
+  warehouseId = undefined,
+  accountId = undefined,
+  status = undefined,
+  createdBy = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
+  expenseCategoryId?: number;
+  warehouseId?: number;
+  accountId?: number;
+  status?: boolean;
+  createdBy?: number;
 }) => {
   try {
-    const url = `expenses?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `expenses?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (expenseCategoryId !== undefined)
+      url += `&expenseCategoryId=${expenseCategoryId}`;
+    if (warehouseId !== undefined) url += `&warehouseId=${warehouseId}`;
+    if (accountId !== undefined) url += `&accountId=${accountId}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (createdBy !== undefined) url += `&createdBy=${createdBy}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

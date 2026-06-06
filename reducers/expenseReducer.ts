@@ -45,6 +45,16 @@ const expenseCustomReducer = (
         ),
       };
     }
+    case "SET_EXPENSE_CATEGORY_ID":
+      return { ...state, expenseCategoryId: action.payload as number, page: 0 };
+    case "SET_WAREHOUSE_ID":
+      return { ...state, warehouseId: action.payload as number, page: 0 };
+    case "SET_ACCOUNT_ID":
+      return { ...state, accountId: action.payload as number, page: 0 };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean, page: 0 };
+    case "SET_CREATED_BY":
+      return { ...state, createdBy: action.payload as number, page: 0 };
     default:
       return state;
   }

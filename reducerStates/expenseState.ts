@@ -6,5 +6,9 @@ export const initialExpenseState: InitialExpenseState = {
   expenses: [],
   open: false,
   showUpdateModal: false,
-  search: "",
+  expenseCategoryId: undefined,
+  warehouseId: undefined,
+  accountId: undefined,
+  status: undefined,
+  createdBy: undefined,
 };

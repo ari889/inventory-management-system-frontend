@@ -59,6 +59,11 @@ import {
 import { Expense } from "@/@types/expense.types";
 import CreateExpense from "./CreateExpense";
 import UpdateExpenseModal from "./UpdateExpenseModal";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import UserFilter from "@/components/common/filter/UserFilter";
+import ExpenseCategoryFilter from "@/components/common/filter/ExpenseCategoryFilter";
+import WarehouseFilter from "@/components/common/filter/WarehouseFilter";
+import AccountFilter from "@/components/common/filter/AccountFilter";
 
 export default function ExpenseTable() {
   const [state, dispatch] = useReducer(expenseReducer, initialExpenseState);
@@ -80,6 +85,11 @@ export default function ExpenseTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    expenseCategoryId,
+    warehouseId,
+    accountId,
+    status,
+    createdBy,
   } = state;
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -100,6 +110,11 @@ export default function ExpenseTable() {
           limit,
           order,
           direction,
+          expenseCategoryId,
+          warehouseId,
+          accountId,
+          status,
+          createdBy,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_EXPENSES", payload: data.data.items });
@@ -114,7 +129,16 @@ export default function ExpenseTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [
+      page,
+      limit,
+      sorting,
+      expenseCategoryId,
+      warehouseId,
+      accountId,
+      status,
+      createdBy,
+    ],
   );
 
   /**
@@ -468,10 +492,8 @@ export default function ExpenseTable() {
             <div className="flex flex-row justify-start items-center">
               <CreditCard className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
-                <h2 className="text-xl font-semibold">Expense Categories</h2>
-                <h3 className="text-gray-500">
-                  See and manage your expense categories
-                </h3>
+                <h2 className="text-xl font-semibold">Expenses</h2>
+                <h3 className="text-gray-500">See and manage your expenses</h3>
               </div>
             </div>
             <ButtonGroup>
@@ -492,7 +514,50 @@ export default function ExpenseTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CREATED_BY", payload: id })
+              }
+            />
+            <ExpenseCategoryFilter
+              value={expenseCategoryId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_EXPENSE_CATEGORY_ID", payload: id })
+              }
+            />
+            <WarehouseFilter
+              value={warehouseId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_WAREHOUSE_ID", payload: id })
+              }
+            />
+            <div className="col-span-2">
+              <AccountFilter
+                value={accountId ?? null}
+                onChange={(id) =>
+                  dispatch({ type: "SET_ACCOUNT_ID", payload: id })
+                }
+              />
+            </div>
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
