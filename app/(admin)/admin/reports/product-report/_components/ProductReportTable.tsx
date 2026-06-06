@@ -42,7 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CustomDatePicker } from "@/components/common/filter/CustomDatePicker";
+import { CustomDateRangePicker } from "@/components/common/filter/CustomDateRangePicker";
 import { Input } from "@/components/ui/input";
 import { Sale } from "@/@types/sale.types";
 import { Product } from "@/@types/product.types";
@@ -330,7 +330,7 @@ export default function ProductReportTable() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            <CustomDatePicker
+            <CustomDateRangePicker
               label="Select Date Range"
               date={dateRange}
               setDate={(range) =>

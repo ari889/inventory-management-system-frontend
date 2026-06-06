@@ -1,9 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { type DateRange } from "react-day-picker";
+import { CalendarIcon, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,54 +12,75 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+interface CustomDatePickerProps {
+  date?: string; // "yyyy-MM-dd"
+  onChange: (date: string | undefined) => void;
+  label?: string;
+  placeholder?: string;
+  className?: string;
+}
+
 export function CustomDatePicker({
   date,
-  setDate,
-  label = "Date Range",
+  onChange,
+  label = "Date",
+  placeholder = "Pick a date",
   className = "",
-}: {
-  date: DateRange | undefined;
-  setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
-  label?: string;
-  className?: string;
-}) {
+}: CustomDatePickerProps) {
+  // Convert "yyyy-MM-dd" string → Date for the Calendar
+  const selectedDate = date ? new Date(`${date}T00:00:00`) : undefined;
+
+  const handleSelect = (picked: Date | undefined) => {
+    if (!picked) {
+      onChange(undefined);
+      return;
+    }
+    // Format to "yyyy-MM-dd" without timezone shift
+    const formatted = format(picked, "yyyy-MM-dd");
+    onChange(formatted);
+  };
+
   return (
     <Field className={`flex flex-col gap-1.5 ${className}`}>
       <FieldLabel
-        htmlFor="date-picker-range"
+        htmlFor="date-picker"
         className="text-sm font-medium leading-none"
       >
         {label}
       </FieldLabel>
+
       <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            id="date-picker-range"
+            id="date-picker"
             className="justify-start px-2.5 font-normal"
           >
-            <CalendarIcon />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
-                </>
-              ) : (
-                format(date.from, "LLL dd, y")
-              )
+            <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+
+            {date ? (
+              <span className="flex flex-1 items-center justify-between">
+                {format(new Date(`${date}T00:00:00`), "LLL dd, yyyy")}
+                <X
+                  className="h-4 w-4 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(undefined);
+                  }}
+                />
+              </span>
             ) : (
-              <span>Pick a date</span>
+              <span className="text-muted-foreground">{placeholder}</span>
             )}
           </Button>
         </PopoverTrigger>
+
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={setDate}
-            numberOfMonths={2}
+            mode="single"
+            selected={selectedDate}
+            onSelect={handleSelect}
+            defaultMonth={selectedDate}
           />
         </PopoverContent>
       </Popover>

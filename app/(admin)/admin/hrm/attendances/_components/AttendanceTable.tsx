@@ -23,7 +23,6 @@ import {
   CircleX,
   SquarePen,
   Trash,
-  CreditCard,
   BriefcaseBusiness,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -61,6 +60,10 @@ import { Attendance } from "@/@types/attendance.types";
 import CreateAttendance from "./CreateAttendance";
 import UpdateAttendanceModal from "./UpdateAttendanceModal";
 import { format } from "date-fns";
+import UserFilter from "@/components/common/filter/UserFilter";
+import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import EmployeeFilter from "@/components/common/filter/EmployeeFilter";
+import { CustomDatePicker } from "@/components/common/filter/CustomDatePicker";
 
 export default function AttendanceTable() {
   const [state, dispatch] = useReducer(
@@ -85,7 +88,13 @@ export default function AttendanceTable() {
     bulkDeleteLoader,
     bulkDeleteOpen,
     showUpdateModal,
+    employeeId,
+    status,
+    createdBy,
+    date,
   } = state;
+
+  console.log(date);
 
   const totalPages = Math.ceil(totalCount / limit);
 
@@ -105,6 +114,10 @@ export default function AttendanceTable() {
           limit,
           order,
           direction,
+          employeeId,
+          status,
+          createdBy,
+          date,
         });
         if (!data?.success && !data?.errors) throw new Error(data.message);
         dispatch({ type: "SET_ATTENDANCES", payload: data.data.items });
@@ -119,7 +132,7 @@ export default function AttendanceTable() {
         dispatch({ type: "SET_LOADING", payload: false });
       }
     }, 300),
-    [page, limit, sorting],
+    [page, limit, sorting, employeeId, status, createdBy, date],
   );
 
   /**
@@ -518,7 +531,46 @@ export default function AttendanceTable() {
             </ButtonGroup>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
-            {/* add filter here */}
+            <FormFieldSelectFilter
+              label="Status"
+              placeholder="Select option"
+              groupLabel="Filter by status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={status === undefined ? "all" : String(status)}
+              onValueChange={(val) => {
+                if (val === "all") {
+                  dispatch({ type: "SET_STATUS", payload: null });
+                } else {
+                  dispatch({ type: "SET_STATUS", payload: val === "true" });
+                }
+              }}
+            />
+            <UserFilter
+              value={createdBy ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_CREATED_BY", payload: id })
+              }
+            />
+            <EmployeeFilter
+              value={employeeId ?? null}
+              onChange={(id) =>
+                dispatch({ type: "SET_EMPLOYEE_ID", payload: id })
+              }
+            />
+            <CustomDatePicker
+              label="Select Date"
+              date={date}
+              onChange={(date) =>
+                dispatch({
+                  type: "SET_DATE",
+                  payload: date,
+                })
+              }
+            />
           </div>
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">

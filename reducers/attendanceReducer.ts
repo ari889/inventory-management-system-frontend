@@ -45,6 +45,14 @@ const attendanceCustomReducer = (
         ),
       };
     }
+    case "SET_EMPLOYEE_ID":
+      return { ...state, employeeId: action.payload as number, page: 0 };
+    case "SET_CREATED_BY":
+      return { ...state, createdBy: action.payload as number, page: 0 };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean, page: 0 };
+    case "SET_DATE":
+      return { ...state, date: action.payload as string, page: 0 };
     default:
       return state;
   }

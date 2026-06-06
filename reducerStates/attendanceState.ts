@@ -6,4 +6,8 @@ export const initialAttendanceState: InitialAttendanceState = {
   attendances: [],
   open: false,
   showUpdateModal: false,
+  employeeId: undefined,
+  createdBy: undefined,
+  status: undefined,
+  date: undefined,
 };

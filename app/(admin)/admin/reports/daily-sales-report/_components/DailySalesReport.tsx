@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import WarehouseFilter from "@/components/common/filter/WarehouseFilter";
 import { DateRange } from "react-day-picker";
-import { CustomDatePicker } from "@/components/common/filter/CustomDatePicker";
+import { CustomDateRangePicker } from "@/components/common/filter/CustomDateRangePicker";
 import { DailySaleMap } from "@/@types/report.types";
 import { debounce } from "lodash";
 import { getDailySale } from "@/actions/ReportAction";
@@ -284,7 +284,7 @@ export default function DailySalesReport() {
           onChange={setWarehouseId}
           label="Choose warehouse"
         />
-        <CustomDatePicker date={date} setDate={setDate} />
+        <CustomDateRangePicker date={date} setDate={setDate} />
       </div>
 
       {content}

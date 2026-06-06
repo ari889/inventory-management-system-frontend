@@ -12,14 +12,29 @@ export const getAttendances = async ({
   limit = 10,
   order = "id",
   direction = "desc",
+  employeeId = undefined,
+  createdBy = undefined,
+  status = undefined,
+  date = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
+  employeeId?: number;
+  createdBy?: number;
+  status?: boolean;
+  date?: string;
 }) => {
   try {
-    const url = `attendances?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    let url = `attendances?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
+    if (employeeId !== undefined) url += `&employeeId=${employeeId}`;
+    if (createdBy !== undefined) url += `&createdBy=${createdBy}`;
+    if (status !== undefined) url += `&status=${status}`;
+    if (date !== undefined) url += `&date=${date}`;
+
+    console.log(url);
+
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

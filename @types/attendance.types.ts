@@ -14,4 +14,8 @@ export interface InitialAttendanceState extends InitialStateType {
   attendances: Attendance[];
   open: boolean;
   showUpdateModal: boolean;
+  employeeId?: number;
+  createdBy?: number;
+  status?: boolean;
+  date?: string;
 }
