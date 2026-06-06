@@ -51,6 +51,10 @@ const expenseCategoryCustomReducer = (
         ),
       };
     }
+    case "SET_SEARCH":
+      return { ...state, search: action.payload as string, page: 0 };
+    case "SET_STATUS":
+      return { ...state, status: action.payload as boolean, page: 0 };
     default:
       return state;
   }

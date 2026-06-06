@@ -7,4 +7,5 @@ export const initialExpenseCategoryState: InitialExpenseCategoryState = {
   open: false,
   showUpdateModal: false,
   search: "",
+  status: undefined,
 };

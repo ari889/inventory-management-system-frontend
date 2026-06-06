@@ -10,5 +10,6 @@ export interface InitialExpenseCategoryState extends InitialStateType {
   expenseCategoris: ExpenseCategory[];
   open: boolean;
   showUpdateModal: boolean;
-  search: string;
+  search?: string;
+  status?: boolean;
 }
