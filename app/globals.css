@@ -4,6 +4,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+#nprogress .bar {
+  background: #000000 !important;
+}
+html.dark #nprogress .bar {
+  background: #ffffff !important;
+}
+
 @keyframes collapsible-down {
   from {
     height: 0;
