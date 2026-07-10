@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { useMemo, useReducer, useRef, useCallback, useState } from "react";
+import { useMemo, useReducer, useRef } from "react";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 
 type CurrencyOption = { value: string; label: string; symbol: string };

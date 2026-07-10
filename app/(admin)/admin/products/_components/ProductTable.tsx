@@ -19,11 +19,9 @@ import {
   MoreHorizontal,
   ArrowUpDown,
   Trash2,
-  CircleCheckBig,
-  CircleX,
   SquarePen,
   Trash,
-  Users,
+  PackageSearch,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -59,12 +57,7 @@ import {
 import { Product } from "@/@types/product.types";
 import CreateProduct from "./CreateProduct";
 import UpdateProductModal from "./UpdateProductModal";
-import {
-  Avatar,
-  AvatarBadge,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -80,11 +73,6 @@ import BrandFilter from "@/components/common/filter/BrandFilter";
 import ProductCategoryFilter from "@/components/common/filter/ProductCategoryFilter";
 import UnitFilter from "@/components/common/filter/UnitFilter";
 import TaxFilter from "@/components/common/filter/TaxFilter";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 export default function ProductTable() {
   const [state, dispatch] = useReducer(productReducer, initialProductState);
@@ -123,8 +111,8 @@ export default function ProductTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchProductsDebounced = useCallback(
-    debounce(async (page: number, limit: number) => {
+  const fetchProducts = useCallback(
+    async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
       try {
@@ -159,10 +147,8 @@ export default function ProductTable() {
       } finally {
         dispatch({ type: "SET_LOADING", payload: false });
       }
-    }, 300),
+    },
     [
-      page,
-      limit,
       sorting,
       search,
       status,
@@ -175,6 +161,11 @@ export default function ProductTable() {
       saleUnitId,
       taxId,
     ],
+  );
+
+  const fetchProductsDebounced = useMemo(
+    () => debounce(fetchProducts, 500),
+    [fetchProducts],
   );
 
   /**
@@ -565,7 +556,7 @@ export default function ProductTable() {
         <CardContent className="min-w-0">
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <Users className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <PackageSearch className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
                 <h2 className="text-xl font-semibold">Products</h2>
                 <h3 className="text-gray-500">See and manage your products</h3>

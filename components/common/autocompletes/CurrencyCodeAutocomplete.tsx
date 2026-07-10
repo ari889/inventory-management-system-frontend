@@ -88,7 +88,7 @@ export default function CurrencyCodeAutocomplete<T extends FieldValues>({
     return ALL_CURRENCIES.filter(
       (c) =>
         c.value.toLowerCase().includes(q) || c.label.toLowerCase().includes(q),
-    ).slice(0, 50); // cap for performance
+    ).slice(0, 50);
   }, [state.search]);
 
   const handleSearch = useCallback((query: string) => {

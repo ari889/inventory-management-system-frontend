@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { useEffect, useReducer, useRef, useCallback, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useCallback,
+  useState,
+  useMemo,
+} from "react";
 import { Spinner } from "@/components/ui/spinner";
 import debounce from "lodash/debounce";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
@@ -150,66 +157,70 @@ export default function SupplierAutocomplete<T extends FieldValues>({
    * @param nextSearch
    * @param replace
    */
-  const fetchSuppliers = async (
-    nextPage: number,
-    nextSearch: string,
-    replace: boolean,
-  ) => {
-    try {
-      dispatch({
-        type: "FETCH_START",
-        payload: { replace, initial: initialLoadRef.current },
-      });
+  const fetchSuppliers = useCallback(
+    async (nextPage: number, nextSearch: string, replace: boolean) => {
+      try {
+        dispatch({
+          type: "FETCH_START",
+          payload: { replace, initial: initialLoadRef.current },
+        });
 
-      const response = await getSuppliers({
-        page: nextPage,
-        limit: 10,
-        order: "id",
-        direction: "desc",
-        search: nextSearch,
-      });
+        const response = await getSuppliers({
+          page: nextPage,
+          limit: 10,
+          order: "id",
+          direction: "desc",
+          search: nextSearch,
+        });
 
-      if (!response.success) throw new Error(response.message);
+        if (!response.success) throw new Error(response.message);
 
-      const items: Supplier[] = response.data.items;
-      const total: number = response.data.totalItems;
+        const items: Supplier[] = response.data.items;
+        const total: number = response.data.totalItems;
 
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: { items, total, page: nextPage, replace },
-      });
-    } catch (error) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload:
-          error instanceof Error ? error.message : "Something went wrong",
-      });
-    } finally {
-      initialLoadRef.current = false;
-    }
-  };
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { items, total, page: nextPage, replace },
+        });
+      } catch (error) {
+        dispatch({
+          type: "FETCH_ERROR",
+          payload:
+            error instanceof Error ? error.message : "Something went wrong",
+        });
+      } finally {
+        initialLoadRef.current = false;
+      }
+    },
+    [],
+  );
 
   /**
    * Initial fetch of suppliers when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
    */
   useEffect(() => {
     fetchSuppliers(0, "", true);
-  }, []);
+  }, [fetchSuppliers]);
 
   /**
    * Set the default selected supplier when the component mounts or when the defaultSupplier prop changes. This ensures that if an initial supplier is provided from the parent component, it will be displayed as the selected option in the autocomplete.
    */
   useEffect(() => {
     if (defaultSupplier) setSelectedSupplier(defaultSupplier);
-  }, [defaultSupplier?.id]);
+  }, [defaultSupplier]);
 
-  const debouncedFetch = useCallback(
-    debounce((query: string) => {
-      pageRef.current = 0;
-      fetchSuppliers(0, query, true);
-    }, 400),
-    [],
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        pageRef.current = 0;
+        fetchSuppliers(0, query, true);
+      }, 400),
+    [fetchSuppliers],
   );
+
+  useEffect(() => {
+    return () => debouncedFetch.cancel();
+  }, [debouncedFetch]);
 
   /**
    * Handle search input changes by updating the search state and triggering a debounced fetch to retrieve units matching the search query. This allows users to find specific units quickly without overwhelming the server with requests on every keystroke.
@@ -233,7 +244,7 @@ export default function SupplierAutocomplete<T extends FieldValues>({
       pageRef.current = nextPage;
       fetchSuppliers(nextPage, searchRef.current, false);
     }
-  }, [state.loadingMore, state.hasMore]);
+  }, [state.loadingMore, state.hasMore, fetchSuppliers]);
 
   return (
     <Controller

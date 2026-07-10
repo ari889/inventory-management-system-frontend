@@ -23,7 +23,7 @@ import {
   CircleX,
   SquarePen,
   Trash,
-  CreditCard,
+  ListChecks,
 } from "lucide-react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -96,8 +96,8 @@ export default function ProductCategoryTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchProductCategoriesDebounced = useCallback(
-    debounce(async (page: number, limit: number) => {
+  const fetchProductCategories = useCallback(
+    async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
       try {
@@ -125,8 +125,13 @@ export default function ProductCategoryTable() {
       } finally {
         dispatch({ type: "SET_LOADING", payload: false });
       }
-    }, 300),
-    [page, limit, sorting, search, status, createdBy],
+    },
+    [sorting, search, status, createdBy],
+  );
+
+  const fetchProductCategoriesDebounced = useMemo(
+    () => debounce(fetchProductCategories, 500),
+    [fetchProductCategories],
   );
 
   /**
@@ -307,7 +312,15 @@ export default function ProductCategoryTable() {
       },
       {
         accessorKey: "createdAt",
-        header: () => <div className="text-center">Created At</div>,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-0"
+          >
+            Created At <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
           <div className="font-medium">
             {row?.original?.createdAt
@@ -460,7 +473,7 @@ export default function ProductCategoryTable() {
         <CardContent>
           <div className="flex flex-row justify-between items-center my-3">
             <div className="flex flex-row justify-start items-center">
-              <CreditCard className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
+              <ListChecks className="mr-2 border rounded border-gray-300 p-2 w-12 h-12" />
               <div>
                 <h2 className="text-xl font-semibold">Product Categories</h2>
                 <h3 className="text-gray-500">

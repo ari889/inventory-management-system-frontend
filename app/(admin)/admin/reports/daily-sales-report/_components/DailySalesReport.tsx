@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import WarehouseFilter from "@/components/common/filter/WarehouseFilter";
 import { DateRange } from "react-day-picker";
 import { CustomDateRangePicker } from "@/components/common/filter/CustomDateRangePicker";
-import { DailySaleMap } from "@/@types/report.types";
+import { DailyMap } from "@/@types/report.types";
 import { debounce } from "lodash";
 import { getDailySale } from "@/actions/ReportAction";
 import CustomEmpty from "@/components/common/CustomEmpty";
@@ -32,7 +32,7 @@ function formatNumber(value: number) {
 }
 
 export default function DailySalesReport() {
-  const [report, setReport] = useState<DailySaleMap>({});
+  const [report, setReport] = useState<DailyMap>({});
   const [currentDate, setCurrentDate] = useState(new Date());
   const [warehouseId, setWarehouseId] = useState<number | null>(null);
   const [error, setError] = useState<string>("");

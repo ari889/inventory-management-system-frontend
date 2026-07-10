@@ -15,19 +15,19 @@ export const getAllModules = async ({
   order = "id",
   direction = "desc",
   search = "",
-  deletable = undefined,
+  type = undefined,
 }: {
   page: number;
   limit: number;
   order: string;
   direction: "asc" | "desc";
   search?: string;
-  deletable?: boolean;
+  type?: boolean;
 }) => {
   try {
     let url = `modules?page=${page}&limit=${limit}&order=${order}&direction=${direction}`;
     if (search) url += `&search=${search}`;
-    if (deletable !== null) url += `&deletable=${deletable}`;
+    if (type !== null) url += `&type=${type}`;
     const response = await fetchData(url);
 
     if (!response?.success && !response?.errors) {

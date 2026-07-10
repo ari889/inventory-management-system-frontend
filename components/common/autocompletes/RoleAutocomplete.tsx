@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { useEffect, useReducer, useRef, useCallback, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useCallback,
+  useState,
+  useMemo,
+} from "react";
 import { Role } from "@/@types/role.types";
 import { Spinner } from "@/components/ui/spinner";
 import { getRoles } from "@/actions/RoleAction";
@@ -145,67 +152,71 @@ export default function RoleAutocomplete<T extends FieldValues>({
    * @param nextSearch
    * @param replace
    */
-  const fetchRoles = async (
-    nextPage: number,
-    nextSearch: string,
-    replace: boolean,
-  ) => {
-    try {
-      dispatch({
-        type: "FETCH_START",
-        payload: { replace, initial: initialLoadRef.current },
-      });
+  const fetchRoles = useCallback(
+    async (nextPage: number, nextSearch: string, replace: boolean) => {
+      try {
+        dispatch({
+          type: "FETCH_START",
+          payload: { replace, initial: initialLoadRef.current },
+        });
 
-      const response = await getRoles({
-        page: nextPage,
-        limit: 10,
-        order: "id",
-        direction: "desc",
-        search: nextSearch,
-        deletable: null,
-      });
+        const response = await getRoles({
+          page: nextPage,
+          limit: 10,
+          order: "id",
+          direction: "desc",
+          search: nextSearch,
+          deletable: null,
+        });
 
-      if (!response.success) throw new Error(response.message);
+        if (!response.success) throw new Error(response.message);
 
-      const items: Role[] = response.data.items;
-      const total: number = response.data.totalItems;
+        const items: Role[] = response.data.items;
+        const total: number = response.data.totalItems;
 
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: { items, total, page: nextPage, replace },
-      });
-    } catch (error) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload:
-          error instanceof Error ? error.message : "Something went wrong",
-      });
-    } finally {
-      initialLoadRef.current = false;
-    }
-  };
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { items, total, page: nextPage, replace },
+        });
+      } catch (error) {
+        dispatch({
+          type: "FETCH_ERROR",
+          payload:
+            error instanceof Error ? error.message : "Something went wrong",
+        });
+      } finally {
+        initialLoadRef.current = false;
+      }
+    },
+    [],
+  );
 
   /**
    * Initial fetch of roles when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
    */
   useEffect(() => {
     fetchRoles(0, "", true);
-  }, []);
+  }, [fetchRoles]);
 
   /**
    * Set the default selected role when the component mounts or when the defaultRole prop changes. This ensures that if an initial role is provided from the parent component, it will be displayed as the selected option in the autocomplete.
    */
   useEffect(() => {
     if (defaultRole) setSelectedRole(defaultRole);
-  }, [defaultRole?.id]);
+  }, [defaultRole]);
 
-  const debouncedFetch = useCallback(
-    debounce((query: string) => {
-      pageRef.current = 0;
-      fetchRoles(0, query, true);
-    }, 400),
-    [],
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        pageRef.current = 0;
+        fetchRoles(0, query, true);
+      }, 400),
+    [fetchRoles],
   );
+
+  useEffect(() => {
+    return () => debouncedFetch.cancel();
+  }, [debouncedFetch]);
 
   /**
    * Handle search input changes by updating the search state and triggering a debounced fetch to retrieve roles matching the search query. This allows users to find specific roles quickly without overwhelming the server with requests on every keystroke.
@@ -229,7 +240,7 @@ export default function RoleAutocomplete<T extends FieldValues>({
       pageRef.current = nextPage;
       fetchRoles(nextPage, searchRef.current, false);
     }
-  }, [state.loadingMore, state.hasMore]);
+  }, [state.loadingMore, state.hasMore, fetchRoles]);
 
   return (
     <Controller

@@ -127,6 +127,8 @@ const CreatePermission = ({
       }
     });
 
+  console.log(modules);
+
   /**
    * get module groups
    */
@@ -147,10 +149,21 @@ const CreatePermission = ({
         });
       }
 
+      // Push the parent module
       acc[acc.length - 1].options.push({
         value: module.id,
         label: module.moduleName,
       });
+
+      // Push children with "-" prefix
+      if (module.children && module.children.length > 0) {
+        module.children.forEach((child) => {
+          acc[acc.length - 1].options.push({
+            value: child.id,
+            label: `- ${child.moduleName}`,
+          });
+        });
+      }
     }
 
     return acc;

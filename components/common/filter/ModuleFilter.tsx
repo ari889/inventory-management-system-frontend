@@ -15,11 +15,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useEffect, useReducer, useRef, useCallback, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useCallback,
+  useMemo,
+  memo,
+} from "react";
 import { Spinner } from "@/components/ui/spinner";
 import debounce from "lodash/debounce";
 import { Module } from "@/@types/module.types";
-import { getAllModules, getModules } from "@/actions/ModuleAction";
+import { getAllModules } from "@/actions/ModuleAction";
 import { Field, FieldLabel } from "@/components/ui/field";
 
 type ModuleOption = Pick<Module, "id" | "moduleName">;
@@ -33,6 +40,7 @@ type Props = {
 
 type State = {
   modules: Module[];
+  selectedModule: ModuleOption | null;
   loading: boolean;
   searching: boolean;
   loadingMore: boolean;
@@ -55,18 +63,22 @@ type Action =
     }
   | { type: "FETCH_ERROR"; payload: string | null }
   | { type: "SET_OPEN"; payload: boolean }
-  | { type: "SET_SEARCH"; payload: string };
+  | { type: "SET_SEARCH"; payload: string }
+  | { type: "SET_SELECTED"; payload: ModuleOption | null }; // ✅ new action
 
-const initialState: State = {
-  modules: [],
-  loading: true,
-  searching: false,
-  loadingMore: false,
-  hasMore: true,
-  error: null,
-  open: false,
-  search: "",
-};
+function makeInitialState(defaultModule: ModuleOption | null): State {
+  return {
+    modules: [],
+    selectedModule: defaultModule,
+    loading: true,
+    searching: false,
+    loadingMore: false,
+    hasMore: true,
+    error: null,
+    open: false,
+    search: "",
+  };
+}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -103,86 +115,95 @@ function reducer(state: State, action: Action): State {
     case "SET_SEARCH":
       return { ...state, search: action.payload };
 
+    case "SET_SELECTED":
+      return { ...state, selectedModule: action.payload, open: false };
+
     default:
       return state;
   }
 }
 
-export default function ModuleFilter({
+const ModuleFilter = memo(function ModuleFilter({
   value,
   onChange,
   label = "Select module",
   defaultModule = null,
 }: Props) {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const [selectedModule, setSelectedModule] = useState<ModuleOption | null>(
+  const [state, dispatch] = useReducer(
+    reducer,
     defaultModule,
+    makeInitialState,
   );
+
   const listRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef(0);
   const searchRef = useRef("");
   const initialLoadRef = useRef(true);
 
-  const fetchModules = async (
-    nextPage: number,
-    nextSearch: string,
-    replace: boolean,
-  ) => {
-    try {
-      dispatch({
-        type: "FETCH_START",
-        payload: { replace, initial: initialLoadRef.current },
-      });
+  const fetchModules = useCallback(
+    async (nextPage: number, nextSearch: string, replace: boolean) => {
+      try {
+        dispatch({
+          type: "FETCH_START",
+          payload: { replace, initial: initialLoadRef.current },
+        });
 
-      const response = await getAllModules({
-        page: nextPage,
-        limit: 10,
-        order: "id",
-        direction: "desc",
-        search: nextSearch,
-      });
+        const response = await getAllModules({
+          page: nextPage,
+          limit: 10,
+          order: "id",
+          direction: "desc",
+          search: nextSearch,
+          type: false,
+        });
 
-      if (!response.success) throw new Error(response.message);
+        if (!response.success) throw new Error(response.message);
 
-      const items: Module[] = response.data.items;
-      const total: number = response.data.totalItems;
+        const items: Module[] = response.data.items;
+        const total: number = response.data.totalItems;
 
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: { items, total, page: nextPage, replace },
-      });
-    } catch (error) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload:
-          error instanceof Error ? error.message : "Something went wrong",
-      });
-    } finally {
-      initialLoadRef.current = false;
-    }
-  };
-
-  useEffect(() => {
-    fetchModules(0, "", true);
-  }, []);
-
-  useEffect(() => {
-    if (defaultModule) setSelectedModule(defaultModule);
-  }, [defaultModule]);
-
-  const debouncedFetch = useCallback(
-    debounce((query: string) => {
-      pageRef.current = 0;
-      fetchModules(0, query, true);
-    }, 400),
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { items, total, page: nextPage, replace },
+        });
+      } catch (error) {
+        dispatch({
+          type: "FETCH_ERROR",
+          payload:
+            error instanceof Error ? error.message : "Something went wrong",
+        });
+      } finally {
+        initialLoadRef.current = false;
+      }
+    },
     [],
   );
 
-  const handleSearch = (query: string) => {
-    dispatch({ type: "SET_SEARCH", payload: query });
-    searchRef.current = query;
-    debouncedFetch(query);
-  };
+  useEffect(() => {
+    fetchModules(0, "", true);
+  }, [fetchModules]);
+
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        pageRef.current = 0;
+        fetchModules(0, query, true);
+      }, 400),
+    [fetchModules],
+  );
+
+  useEffect(() => {
+    return () => debouncedFetch.cancel();
+  }, [debouncedFetch]);
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      dispatch({ type: "SET_SEARCH", payload: query });
+      searchRef.current = query;
+      debouncedFetch(query);
+    },
+    [debouncedFetch],
+  );
 
   const handleScroll = useCallback(() => {
     const el = listRef.current;
@@ -193,10 +214,10 @@ export default function ModuleFilter({
       pageRef.current = nextPage;
       fetchModules(nextPage, searchRef.current, false);
     }
-  }, [state.loadingMore, state.hasMore]);
+  }, [state.loadingMore, state.hasMore, fetchModules]);
 
   const selectedLabel =
-    selectedModule?.moduleName ??
+    state.selectedModule?.moduleName ??
     state.modules.find((r) => r.id === value)?.moduleName;
 
   return (
@@ -260,9 +281,11 @@ export default function ModuleFilter({
                           const picked =
                             state.modules.find((u) => u.id === num) ?? null;
                           const isDeselecting = num === value;
-                          setSelectedModule(isDeselecting ? null : picked);
+                          dispatch({
+                            type: "SET_SELECTED",
+                            payload: isDeselecting ? null : picked,
+                          });
                           onChange(isDeselecting ? null : num);
-                          dispatch({ type: "SET_OPEN", payload: false });
                         }}
                       >
                         <Check
@@ -290,4 +313,6 @@ export default function ModuleFilter({
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
     </Field>
   );
-}
+});
+
+export default ModuleFilter;

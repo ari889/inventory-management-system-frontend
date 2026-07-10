@@ -31,7 +31,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -57,13 +56,20 @@ import CreatePermissionModal from "./CreatePermissionModal";
 import EditPermissionModal from "./EditPermissionModal";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { Input } from "@/components/ui/input";
 import { permissionReducer } from "@/reducers/permissionReducer";
 import { initialPermissionState } from "@/reducerStates/permissionState";
 import DeleteModal from "@/components/common/DeleteModal";
 import FormFieldFilter from "@/components/common/filter/FormFieldFilter";
 import ModuleFilter from "@/components/common/filter/ModuleFilter";
 import FormFieldSelectFilter from "@/components/common/filter/FormFieldSelectFilter";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function PermissionTable() {
   const [state, dispatch] = useReducer(
@@ -98,8 +104,8 @@ export default function PermissionTable() {
   /**
    * fetch data from server by payload
    */
-  const fetchPermissionsDebounced = useCallback(
-    debounce(async (page: number, limit: number) => {
+  const fetchPermissions = useCallback(
+    async (page: number, limit: number) => {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "REMOVE_ERROR" });
       try {
@@ -127,8 +133,13 @@ export default function PermissionTable() {
       } finally {
         dispatch({ type: "SET_LOADING", payload: false });
       }
-    }, 300),
-    [page, limit, sorting, search, moduleId, deletable],
+    },
+    [sorting, search, moduleId, deletable],
+  );
+
+  const fetchPermissionsDebounced = useMemo(
+    () => debounce(fetchPermissions, 500),
+    [fetchPermissions],
   );
 
   /**
@@ -443,13 +454,13 @@ export default function PermissionTable() {
     );
   if (!isLoading && !isError && permissions?.length)
     content = table.getRowModel().rows.map((row) => (
-      <tr key={row.id} className="border-t hover:bg-muted/40 transition">
+      <TableRow key={row.id}>
         {row.getVisibleCells().map((cell) => (
-          <td key={cell.id} className="px-4 py-3 text-center">
+          <TableCell key={cell.id}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </td>
+          </TableCell>
         ))}
-      </tr>
+      </TableRow>
     ));
 
   return (
@@ -518,25 +529,25 @@ export default function PermissionTable() {
             />
           </div>
           <div className="rounded-xl border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
+            <Table>
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
+                  <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <th key={header.id} className="px-4 py-3 font-medium">
+                      <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
                               header.getContext(),
                             )}
-                      </th>
+                      </TableHead>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </thead>
-              <tbody>{content}</tbody>
-            </table>
+              </TableHeader>
+              <TableBody>{content}</TableBody>
+            </Table>
           </div>
 
           <div className="flex flex-row items-center justify-end gap-4 mt-3">

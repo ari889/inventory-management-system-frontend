@@ -5,6 +5,7 @@ import { getSettings } from "@/actions/SettingsAction";
 import { Setting } from "@/@types/settings.types";
 import { handleResponse } from "@/utils/handle-response";
 import LogoutProvider from "@/providers/LogoutProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export const generateMetadata = async () => {
   const { data } = handleResponse<Setting[]>(await getSettings());
@@ -24,10 +25,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <NextAuthProvider>
-          <LogoutProvider>{children}</LogoutProvider>
-        </NextAuthProvider>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <NextAuthProvider>
+            <LogoutProvider>{children}</LogoutProvider>
+          </NextAuthProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

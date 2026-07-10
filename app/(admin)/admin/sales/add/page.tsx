@@ -6,6 +6,7 @@ import { ArrowLeft, ShoppingCart } from "lucide-react";
 import CreateSale from "./_components/CreateSaleForm";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
   const { data } = handleResponse<Setting[]>(await getSettings());

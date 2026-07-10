@@ -36,7 +36,7 @@ const UpdateTaxForm = ({
   } = useForm<TaxSchemaType>({
     defaultValues: {
       name: data?.name || "",
-      rate: data?.rate || 0,
+      rate: Number(data?.rate) || 0,
       status: data?.status || true,
     },
     resolver: zodResolver(taxSchema),

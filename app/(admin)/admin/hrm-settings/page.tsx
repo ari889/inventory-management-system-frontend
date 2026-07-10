@@ -6,6 +6,7 @@ import { handleResponse } from "@/utils/handle-response";
 import { CreditCard } from "lucide-react";
 import CreateOrUpdateHRMSetting from "./_components/CreateOrUpdateHrmSetting";
 import { HRMSetting } from "@/@types/hrm-settings.types";
+export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
   const { data } = handleResponse<Setting[]>(await getSettings());

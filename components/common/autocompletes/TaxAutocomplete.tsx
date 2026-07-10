@@ -16,7 +16,14 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { useEffect, useReducer, useRef, useCallback, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useCallback,
+  useState,
+  useMemo,
+} from "react";
 import { Spinner } from "@/components/ui/spinner";
 import debounce from "lodash/debounce";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
@@ -152,66 +159,70 @@ export default function TaxAutocomplete<T extends FieldValues>({
    * @param nextSearch
    * @param replace
    */
-  const fetchTaxs = async (
-    nextPage: number,
-    nextSearch: string,
-    replace: boolean,
-  ) => {
-    try {
-      dispatch({
-        type: "FETCH_START",
-        payload: { replace, initial: initialLoadRef.current },
-      });
+  const fetchTaxs = useCallback(
+    async (nextPage: number, nextSearch: string, replace: boolean) => {
+      try {
+        dispatch({
+          type: "FETCH_START",
+          payload: { replace, initial: initialLoadRef.current },
+        });
 
-      const response = await getTaxes({
-        page: nextPage,
-        limit: 10,
-        order: "id",
-        direction: "desc",
-        search: nextSearch,
-      });
+        const response = await getTaxes({
+          page: nextPage,
+          limit: 10,
+          order: "id",
+          direction: "desc",
+          search: nextSearch,
+        });
 
-      if (!response.success) throw new Error(response.message);
+        if (!response.success) throw new Error(response.message);
 
-      const items: Tax[] = response.data.items;
-      const total: number = response.data.totalItems;
+        const items: Tax[] = response.data.items;
+        const total: number = response.data.totalItems;
 
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: { items, total, page: nextPage, replace },
-      });
-    } catch (error) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload:
-          error instanceof Error ? error.message : "Something went wrong",
-      });
-    } finally {
-      initialLoadRef.current = false;
-    }
-  };
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { items, total, page: nextPage, replace },
+        });
+      } catch (error) {
+        dispatch({
+          type: "FETCH_ERROR",
+          payload:
+            error instanceof Error ? error.message : "Something went wrong",
+        });
+      } finally {
+        initialLoadRef.current = false;
+      }
+    },
+    [],
+  );
 
   /**
    * Initial fetch of taxs when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
    */
   useEffect(() => {
     fetchTaxs(0, "", true);
-  }, []);
+  }, [fetchTaxs]);
 
   /**
    * Set the default selected tax when the component mounts or when the defaultTax prop changes. This ensures that if an initial tax is provided from the parent component, it will be displayed as the selected option in the autocomplete.
    */
   useEffect(() => {
     setSelectedTax(defaultTax ?? null);
-  }, [defaultTax?.id, defaultTax?.name]);
+  }, [defaultTax]);
 
-  const debouncedFetch = useCallback(
-    debounce((query: string) => {
-      pageRef.current = 0;
-      fetchTaxs(0, query, true);
-    }, 400),
-    [],
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        pageRef.current = 0;
+        fetchTaxs(0, query, true);
+      }, 400),
+    [fetchTaxs],
   );
+
+  useEffect(() => {
+    return () => debouncedFetch.cancel();
+  }, [debouncedFetch]);
 
   /**
    * Handle search input changes by updating the search state and triggering a debounced fetch to retrieve units matching the search query. This allows users to find specific units quickly without overwhelming the server with requests on every keystroke.
@@ -235,7 +246,7 @@ export default function TaxAutocomplete<T extends FieldValues>({
       pageRef.current = nextPage;
       fetchTaxs(nextPage, searchRef.current, false);
     }
-  }, [state.loadingMore, state.hasMore]);
+  }, [state.loadingMore, state.hasMore, fetchTaxs]);
 
   return (
     <Controller

@@ -16,16 +16,20 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { useEffect, useReducer, useRef, useCallback, useState } from "react";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { Spinner } from "@/components/ui/spinner";
 import debounce from "lodash/debounce";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 import { Account } from "@/@types/account.types";
 import { getAccounts } from "@/actions/AccountAction";
 
-/**
- * A reusable autocomplete component for selecting a account. Fetches options from the server with support for searching and infinite scrolling.
- */
 type Props<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
@@ -33,9 +37,6 @@ type Props<T extends FieldValues> = {
   defaultAccount?: Pick<Account, "id" | "name"> | null;
 };
 
-/**
- * State management for the AccountAutocomplete component using useReducer. Handles loading states, error handling, and pagination for fetching accounts.
- */
 type State = {
   accounts: Account[];
   loading: boolean;
@@ -47,9 +48,6 @@ type State = {
   search: string;
 };
 
-/**
- * Actions for the reducer to manage the state of AccountAutocomplete, including fetching accounts, handling search input, and managing the open state of the popover.
- */
 type Action =
   | { type: "FETCH_START"; payload: { replace: boolean; initial: boolean } }
   | {
@@ -65,12 +63,6 @@ type Action =
   | { type: "SET_OPEN"; payload: boolean }
   | { type: "SET_SEARCH"; payload: string };
 
-/**
- * Reducer function to manage the state of the AccountAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
- * @param state - The current state of the component.
- * @param action - The action to be processed to update the state.
- * @returns The updated state based on the action type.
- */
 const initialState: State = {
   accounts: [],
   loading: true,
@@ -82,12 +74,6 @@ const initialState: State = {
   search: "",
 };
 
-/**
- * Reducer function to manage the state of the AccountAutocomplete component. Handles different action types to update the state accordingly, such as starting a fetch, successfully fetching data, handling errors, and updating search input.
- * @param state - The current state of the component.
- * @param action - The action to be processed to update the state.
- * @returns The updated state based on the action type.
- */
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "FETCH_START":
@@ -144,86 +130,74 @@ export default function AccountAutocomplete<T extends FieldValues>({
   const searchRef = useRef("");
   const initialLoadRef = useRef(true);
 
-  /**
-   * Fetch accounts from the server with support for pagination and searching. Dispatches actions to update the state based on the fetch status (loading, success, error) and whether it's an initial load, a search, or loading more items.
-   * @param nextPage
-   * @param nextSearch
-   * @param replace
-   */
-  const fetchAccounts = async (
-    nextPage: number,
-    nextSearch: string,
-    replace: boolean,
-  ) => {
-    try {
-      dispatch({
-        type: "FETCH_START",
-        payload: { replace, initial: initialLoadRef.current },
-      });
+  const fetchAccounts = useCallback(
+    async (nextPage: number, nextSearch: string, replace: boolean) => {
+      try {
+        dispatch({
+          type: "FETCH_START",
+          payload: { replace, initial: initialLoadRef.current },
+        });
 
-      const response = await getAccounts({
-        page: nextPage,
-        limit: 10,
-        order: "id",
-        direction: "desc",
-        search: nextSearch,
-      });
+        const response = await getAccounts({
+          page: nextPage,
+          limit: 10,
+          order: "id",
+          direction: "desc",
+          search: nextSearch,
+        });
 
-      if (!response.success) throw new Error(response.message);
+        if (!response.success) throw new Error(response.message);
 
-      const items: Account[] = response.data.items;
-      const total: number = response.data.totalItems;
+        const items: Account[] = response.data.items;
+        const total: number = response.data.totalItems;
 
-      dispatch({
-        type: "FETCH_SUCCESS",
-        payload: { items, total, page: nextPage, replace },
-      });
-    } catch (error) {
-      dispatch({
-        type: "FETCH_ERROR",
-        payload:
-          error instanceof Error ? error.message : "Something went wrong",
-      });
-    } finally {
-      initialLoadRef.current = false;
-    }
-  };
-
-  /**
-   * Initial fetch of accounts when the component mounts. This ensures that the autocomplete has options to display when the user interacts with it for the first time. The empty dependency array ensures this effect runs only once on mount.
-   */
-  useEffect(() => {
-    fetchAccounts(0, "", true);
-  }, []);
-
-  /**
-   * Set the default selected account when the component mounts or when the defaultAccount prop changes. This ensures that if an initial account is provided from the parent component, it will be displayed as the selected option in the autocomplete.
-   */
-  useEffect(() => {
-    if (defaultAccount) setSelectedAccount(defaultAccount);
-  }, [defaultAccount?.id]);
-
-  const debouncedFetch = useCallback(
-    debounce((query: string) => {
-      pageRef.current = 0;
-      fetchAccounts(0, query, true);
-    }, 400),
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { items, total, page: nextPage, replace },
+        });
+      } catch (error) {
+        dispatch({
+          type: "FETCH_ERROR",
+          payload:
+            error instanceof Error ? error.message : "Something went wrong",
+        });
+      } finally {
+        initialLoadRef.current = false;
+      }
+    },
     [],
   );
 
-  /**
-   * Handle search input changes by updating the search state and triggering a debounced fetch to retrieve units matching the search query. This allows users to find specific units quickly without overwhelming the server with requests on every keystroke.
-   * @param query
-   */
-  const handleSearch = (query: string) => {
-    dispatch({ type: "SET_SEARCH", payload: query });
-    searchRef.current = query;
-    debouncedFetch(query);
-  };
+  useEffect(() => {
+    fetchAccounts(0, "", true);
+  }, [fetchAccounts]);
 
-  /**
-   * Handle scroll events on the dropdown list to implement infinite scrolling. When the user scrolls near the bottom of the list, it triggers a fetch for the next page of items. It also prevents if there are more items to load and if a fetch is not already in progress.
-   */
+  useEffect(() => {
+    if (defaultAccount) setSelectedAccount(defaultAccount);
+  }, [defaultAccount]);
+
+  const debouncedFetch = useMemo(
+    () =>
+      debounce((query: string) => {
+        pageRef.current = 0;
+        fetchAccounts(0, query, true);
+      }, 400),
+    [fetchAccounts],
+  );
+
+  useEffect(() => {
+    return () => debouncedFetch.cancel();
+  }, [debouncedFetch]);
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      dispatch({ type: "SET_SEARCH", payload: query });
+      searchRef.current = query;
+      debouncedFetch(query);
+    },
+    [debouncedFetch],
+  );
+
   const handleScroll = useCallback(() => {
     const el = listRef.current;
     if (!el || state.loadingMore || !state.hasMore) return;
@@ -233,7 +207,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
       pageRef.current = nextPage;
       fetchAccounts(nextPage, searchRef.current, false);
     }
-  }, [state.loadingMore, state.hasMore]);
+  }, [state.loadingMore, state.hasMore, fetchAccounts]);
 
   return (
     <Controller
@@ -312,10 +286,7 @@ export default function AccountAutocomplete<T extends FieldValues>({
                                 field.onChange(
                                   num === field.value ? null : num,
                                 );
-                                dispatch({
-                                  type: "SET_OPEN",
-                                  payload: false,
-                                });
+                                dispatch({ type: "SET_OPEN", payload: false });
                               }}
                             >
                               <Check
