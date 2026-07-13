@@ -1,36 +1,222 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <a href="https://nextjs.org/" target="_blank">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg" width="220" alt="Next.js Logo" />
+  </a>
+</p>
 
-## Getting Started
+<h1 align="center">Inventory Management System</h1>
 
-First, run the development server:
+<p align="center">
+  A modern, responsive, and scalable <strong>Inventory Management System</strong><br />
+  built with <strong>Next.js 16</strong>, <strong>React 19</strong>, and <strong>Tailwind CSS 4</strong>.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-v16-000000?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-v19-61DAFB?logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-v5-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/NextAuth-v4-7C3AED" alt="NextAuth" />
+  <img src="https://img.shields.io/badge/License-UNLICENSED-red.svg" alt="License" />
+</p>
+
+---
+
+# 📋 Prerequisites
+
+Before getting started, make sure you have the following installed:
+
+- **Node.js 22.x or later**
+- **npm 10.x or later**
+- **Git**
+
+---
+
+# 📦 Installation
+
+Clone the repository and install dependencies.
+
+```bash
+git clone <repository_url>
+cd <project_directory>
+npm install
+```
+
+---
+
+# ⚙️ Environment Configuration
+
+Rename the provided `.env.example` file to `.env`.
+
+### Linux / macOS
+
+```bash
+cp .env.example .env
+```
+
+### Windows (Command Prompt)
+
+```cmd
+copy .env.example .env
+```
+
+Or simply rename the file manually:
+
+```text
+.env.example → .env
+```
+
+Update the `.env` file with your environment-specific configuration.
+
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret
+
+NEXTAUTH_SESSION_MAX_AGE=604800
+NEXTAUTH_JWT_MAX_AGE=604800
+
+API_URL=http://localhost:6000
+NEXT_PUBLIC_API_URL=http://localhost:6000
+```
+
+> **Note:** Replace the placeholder values with your own configuration before running the application.
+
+---
+
+# ▶️ Running the Application
+
+## Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open your browser and visit:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Production
 
-## Learn More
+Build the application.
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Start the production server.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run start
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 📁 Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+.
+├── app/
+│   ├── (auth)/
+│   ├── admin/
+│   ├── api/
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── loading.tsx
+│   ├── not-found.tsx
+│   └── page.tsx
+├── components/
+│   ├── common/
+│   ├── forms/
+│   ├── layouts/
+│   ├── providers/
+│   ├── tables/
+│   └── ui/
+├── constants/
+├── hooks/
+├── lib/
+├── providers/
+├── schemas/
+├── services/
+├── store/
+├── types/
+├── utils/
+├── public/
+├── middleware.ts
+├── .env.example
+├── .gitignore
+├── components.json
+├── eslint.config.mjs
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── tsconfig.json
+└── README.md
+```
+
+---
+
+# 🚀 Tech Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- NextAuth.js
+- React Hook Form
+- Zod
+- TanStack React Table
+- DnD Kit
+- Recharts
+- Lucide React
+- Shadcn/UI
+
+---
+
+# 📜 Available Scripts
+
+Start the development server.
+
+```bash
+npm run dev
+```
+
+Build the application.
+
+```bash
+npm run build
+```
+
+Start the production server.
+
+```bash
+npm run start
+```
+
+Run ESLint.
+
+```bash
+npm run lint
+```
+
+---
+
+# 🌐 Backend API
+
+This frontend communicates with the **Inventory Management System API**.
+
+Configure the backend URL using:
+
+```env
+API_URL=http://localhost:6000
+NEXT_PUBLIC_API_URL=http://localhost:6000
+```
+
+Make sure the backend server is running before starting the frontend.
+
+---
+
+# 📄 License
+
+This project is licensed under the **UNLICENSED** license.
