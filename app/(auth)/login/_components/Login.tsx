@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 import { authSchema, AuthSchema } from "@/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircleIcon } from "lucide-react";
@@ -81,6 +82,7 @@ const Login = ({ callbackUrl }: { callbackUrl: string }) => {
         />
         <Field>
           <Button type="submit" disabled={isPending}>
+            {isPending ? <Spinner /> : null}
             Login
           </Button>
         </Field>

@@ -45,7 +45,18 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: (data: User) => void }) => {
   const onSubmit = (data: CreateUserSchemaType) =>
     startTransition(async () => {
       try {
-        const response = await createUser(data);
+        const formData = new FormData();
+        formData.append("name", data.name);
+        formData.append("email", data.email);
+        formData.append("phoneNo", String(data.phoneNo));
+        formData.append("password", data.password);
+        formData.append("roleId", String(data.roleId));
+        if (data.avatar) {
+          formData.append("avatar", data.avatar);
+        }
+        formData.append("gender", String(data.gender));
+        formData.append("status", String(data.status));
+        const response = await createUser(formData);
 
         if (!response.success && response?.errors)
           setApiErrors(response.errors, setFormError);

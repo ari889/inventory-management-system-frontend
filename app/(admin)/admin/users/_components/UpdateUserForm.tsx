@@ -48,9 +48,22 @@ const UpdateUserForm = ({
     resolver: zodResolver(updateUserSchema),
   });
 
-  const onSubmit = (formData: UpdateUserSchemaType) =>
+  const onSubmit = (inputData: UpdateUserSchemaType) =>
     startTransition(async () => {
       try {
+        const formData = new FormData();
+        formData.append("name", inputData.name);
+        formData.append("email", inputData.email);
+        formData.append("phoneNo", String(inputData.phoneNo));
+        if (inputData.password) {
+          formData.append("password", inputData.password);
+        }
+        formData.append("roleId", String(inputData.roleId));
+        if (inputData.avatar) {
+          formData.append("avatar", inputData.avatar);
+        }
+        formData.append("gender", String(inputData.gender));
+        formData.append("status", String(inputData.status));
         const response = await updateUser(data.id, formData);
 
         if (!response.success && response?.errors)

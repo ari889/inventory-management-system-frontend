@@ -64,11 +64,11 @@ export const getUsers = async ({
  * @param formData
  * @returns User
  */
-export const createUser = async (formData: CreateUserSchemaType) => {
+export const createUser = async (formData: FormData) => {
   try {
     const response = await fetchData("users", {
       method: "POST",
-      body: JSON.stringify(formData),
+      body: formData,
     });
 
     if (!response?.success && !response?.errors) {
@@ -166,11 +166,11 @@ export const getUserById = async (id: number) => {
  * @param data
  * @returns User
  */
-export const updateUser = async (id: number, data: UpdateUserSchemaType) => {
+export const updateUser = async (id: number, data: FormData) => {
   try {
     const response = await fetchData(`users/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: data,
     });
 
     if (!response?.success && !response?.errors) {
